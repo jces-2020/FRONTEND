@@ -65,6 +65,13 @@ const LoginRegister = ({
   isLogin, tipoDoc, handleTipoDoc, form, setForm,
   handleDocumentoBlur, documentoValido, docLoading,
   mensaje, handleSubmit, documentoInputRef, loading, glass,
+  verificationPending = false,
+  verificationCode = "",
+  setVerificationCode = () => {},
+  verificationLoading = false,
+  verificationMessage = "",
+  onVerifyEmail = () => {},
+  onResendVerification = () => {},
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -87,6 +94,11 @@ const LoginRegister = ({
   const handleSubmitCustom = (e) => {
     e.preventDefault();
     hideTooltip();
+
+    if (verificationPending) {
+      onVerifyEmail();
+      return;
+    }
 
     if (!tipoDoc)         { showTooltip("tipoDoc");  return; }
     if (!form.documento)  { showTooltip("documento"); return; }
@@ -274,16 +286,50 @@ const LoginRegister = ({
           type="submit"
           className="lb-btn-yellow"
           style={{ marginTop: 2 }}
-          disabled={loading}
+          disabled={loading || verificationLoading}
         >
-          {loading ? "Registrando..." : "Crear Cuenta"}
+          {verificationPending ? "Verificar correo" : (loading ? "Registrando..." : "Crear Cuenta")}
         </button>
+
+        {verificationPending && (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 2 }}>
+              <span style={{ color: "#fff", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontFamily: "'Open Sans',sans-serif", fontWeight: 800 }}>
+                Código de verificación
+              </span>
+              <div style={{ position: "relative" }}>
+                <LbTooltip visible={tooltip.visible && tooltip.field === "verificationCode"} text={tooltip.text || "Ingresa el código"} />
+                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "rgba(180,225,245,0.85)", fontSize: 13 }}>
+                  <IconId stroke={1} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Código de 6 dígitos"
+                  value={verificationCode}
+                  onChange={e => { setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6)); hideTooltip(); }}
+                  onFocus={hideTooltip}
+                  className="lb-input"
+                  maxLength="6"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="lb-btn-ghost"
+              onClick={onResendVerification}
+              style={{ marginTop: 0 }}
+            >
+              Reenviar código
+            </button>
+          </>
+        )}
 
         <div className="lb-divider" style={{ margin: "2px 0 0" }}>O regístrate con</div>
         <div id="googleSignInDivRegistro" style={{ display: !isLogin ? "flex" : "none", justifyContent: "center" }} />
       </form>
 
-      {!isDocMsg(mensaje) && <NoticeMessage text={mensaje} />}
+      {!isDocMsg(mensaje) && <NoticeMessage text={verificationPending ? (verificationMessage || mensaje) : mensaje} />}
     </div>
   );
 };
