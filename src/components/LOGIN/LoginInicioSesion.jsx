@@ -340,6 +340,7 @@ function injectStyles() {
 
 export default function LoginInicioSesion() {
   const navigate = useNavigate(), location = useLocation(), docRef = useRef(null);
+  const googleInitRef = useRef(false);
 
   const [isLogin, setIsLogin]                 = useState(true);
   const [loginForm, setLoginForm]             = useState({ correo: "", contraseña: "" });
@@ -418,25 +419,28 @@ export default function LoginInicioSesion() {
       const div = document.getElementById(tid); if (!div) return;
       if (!window.google?.accounts) { if (retry++ < 10) setTimeout(render, 300); else setMensaje("No se pudo cargar Google."); return; }
       div.innerHTML = "";
-      window.google.accounts.id.initialize({
-        client_id: "1000681433446-mgbmp68bol11vjn56rfsb2ai9l732tbb.apps.googleusercontent.com",
-        callback: async (response) => {
-          setMensaje("Verificando con Google...");
-          try {
-            let res = await fetch(`${API_BASE}/api/auth/google-login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
-            let json = await res.json();
-            if (json.success) { saveCliente(json); navigate(fromPath || "/user", { replace: true }); return; }
-            if (res.status === 404 || json.message?.toLowerCase().includes("no registrado")) {
-              res = await fetch(`${API_BASE}/api/auth/google-register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
-              json = await res.json();
+      if (!googleInitRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: "1000681433446-mgbmp68bol11vjn56rfsb2ai9l732tbb.apps.googleusercontent.com",
+          callback: async (response) => {
+            setMensaje("Verificando con Google...");
+            try {
+              let res = await fetch(`${API_BASE}/api/auth/google-login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
+              let json = await res.json();
               if (json.success) { saveCliente(json); navigate(fromPath || "/user", { replace: true }); return; }
-              setMensaje(json.message || "No se pudo registrar con Google"); return;
-            }
-            setMensaje(json.message || "No se pudo iniciar sesión con Google");
-          } catch { setMensaje("Error de conexión con Google Auth"); }
-        },
-        ux_mode: "popup", auto_select: false,
-      });
+              if (res.status === 404 || json.message?.toLowerCase().includes("no registrado")) {
+                res = await fetch(`${API_BASE}/api/auth/google-register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
+                json = await res.json();
+                if (json.success) { saveCliente(json); navigate(fromPath || "/user", { replace: true }); return; }
+                setMensaje(json.message || "No se pudo registrar con Google"); return;
+              }
+              setMensaje(json.message || "No se pudo iniciar sesión con Google");
+            } catch { setMensaje("Error de conexión con Google Auth"); }
+          },
+          ux_mode: "popup", auto_select: false,
+        });
+        googleInitRef.current = true;
+      }
       window.google.accounts.id.renderButton(div, { theme: "filled_black", size: "medium", text: isReg ? "signup_with" : "signin_with", shape: "pill", logo_alignment: "left" });
     }
     render();
@@ -465,10 +469,11 @@ export default function LoginInicioSesion() {
     if (doc.length !== len) { setMensaje(`El ${tipoDoc} debe tener ${len} dígitos`); return; }
     setDocLoading(true);
     try {
-      const res  = await fetch("/api/consulta_documento_html", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: tipoDoc, numero: doc }) });
+      const res  = await fetch(`${API_BASE}/api/consulta_documento`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: tipoDoc, numero: doc }) });
       const data = await res.json();
-      if (!data.success || data.error) { setMensaje(data.message || "No se encontró en RENIEC/SUNAT"); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); return; }
-      if (data.html) setForm(f => ({ ...f, nombre: data.html }));
+      const nombreEncontrado = data.html || data.nombre || "";
+      if (!data.success || data.error) { setMensaje(data.message || data.error || "No se encontró en RENIEC/SUNAT"); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); return; }
+      if (nombreEncontrado) setForm(f => ({ ...f, nombre: nombreEncontrado }));
       setDocLoading(false); setDocumentoValido(true);
     } catch { setMensaje("Error consultando documento."); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); }
   };
