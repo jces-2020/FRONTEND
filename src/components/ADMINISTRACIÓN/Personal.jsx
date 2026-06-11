@@ -500,12 +500,20 @@ const Personal = () => {
           <h3 style={{ fontSize: "1.4rem", fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>
             Personal de la Empresa
           </h3>
-          <button
-            onClick={() => setMostrarNuevoPersonal((v) => !v)}
-            style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer" }}
-          >
-            {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
-          </button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button
+              onClick={() => setMostrarNuevoPersonal((v) => !v)}
+              style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer" }}
+            >
+              {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
+            </button>
+            <button
+              onClick={() => showToast("Funcionalidad de enviar correo pendiente", "info")}
+              style={{ background: COLORS.secondary, color: COLORS.white, border: "none", borderRadius: 8, padding: "8px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer" }}
+            >
+              Enviar correo
+            </button>
+          </div>
         </div>
 
         {mostrarNuevoPersonal && (
