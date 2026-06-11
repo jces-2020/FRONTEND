@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { IconMail, IconLock, IconLockFilled, IconUser, IconPhone, IconId, IconAlertCircle, IconCircleCheck, IconInfoCircle } from '@tabler/icons-react';
 
 const isDocMsg = (m) =>
@@ -74,6 +74,10 @@ const LoginRegister = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
+  // ── Refs de persistencia para evitar que los re-renders del padre destruyan el foco ──
+  const nombreInputRef = useRef(null);
+  const activeFieldRef = useRef(null);
+
   const [tooltip, setTooltip] = useState({ visible: false, field: null, text: "Completa este campo" });
   const tooltipTimerRef       = useRef(null);
 
@@ -88,6 +92,13 @@ const LoginRegister = ({
     setTooltip({ visible: false, field: null, text: "Completa este campo" });
   };
 
+  // ── TRUCO DEFENSIVO: Si el padre parpadea y nos quita el mouse, lo devolvemos a la fuerza ──
+  useEffect(() => {
+    if (activeFieldRef.current === "nombre" && nombreInputRef.current) {
+      nombreInputRef.current.focus();
+    }
+  });
+
   const handleSubmitCustom = (e) => {
     e.preventDefault();
     hideTooltip();
@@ -100,7 +111,6 @@ const LoginRegister = ({
     if (!tipoDoc)         { showTooltip("tipoDoc");  return; }
     if (!form.documento)  { showTooltip("documento"); return; }
     
-    // Validamos longitud básica ya que saltamos la restricción estricta de la API externa
     const longitudCorrecta = tipoDoc === "DNI" ? form.documento.length === 8 : form.documento.length === 11;
     if (!longitudCorrecta) {
       showTooltip("documento", `El ${tipoDoc} debe tener ${tipoDoc === "DNI" ? 8 : 11} dígitos`);
@@ -169,7 +179,7 @@ const LoginRegister = ({
                 value={form.documento}
                 onChange={e => { setForm({ ...form, documento: e.target.value.replace(/\D/g, "") }); hideTooltip(); }}
                 onBlur={handleDocumentoBlur}
-                onFocus={hideTooltip}
+                onFocus={() => { hideTooltip(); activeFieldRef.current = "documento"; }}
                 ref={documentoInputRef}
                 className="lb-input"
                 style={{ flex: 1 }}
@@ -178,21 +188,6 @@ const LoginRegister = ({
               />
             </div>
           </div>
-
-          {/* ── COMENTADO temporalmente para que no ensucie la vista el error de consulta de la API ── */}
-          {/* {isDocMsg(mensaje) && <NoticeMessage text={mensaje} />} */}
-          
-          {docLoading && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#80C2DC", fontSize: 11, fontFamily: "'Open Sans',sans-serif" }}>
-              <span style={{ display: "inline-block", width: 8, height: 8, border: "2px solid rgba(128,194,220,0.2)", borderTopColor: "#80C2DC", borderRadius: "50%", animation: "lb-spin 0.75s linear infinite" }} />
-              Consultando…
-            </div>
-          )}
-          {!docLoading && documentoValido && form.nombre && (
-            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#34d399", fontSize: 11, fontFamily: "'Open Sans',sans-serif" }}>
-              <span>✓</span> Documento verificado
-            </div>
-          )}
         </div>
 
         {/* ── Nombre completo ── */}
@@ -202,9 +197,11 @@ const LoginRegister = ({
             <IconUser stroke={2} />
           </span>
           <input
+            ref={nombreInputRef}
             type="text"
             placeholder="Nombre completo"
-            value={form.nombre}
+            value={form.nombre || ""}
+            autoComplete="off"
             onChange={e => {
               const value = e.target.value;
               if (value === '' || /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/.test(value)) {
@@ -212,10 +209,10 @@ const LoginRegister = ({
                 hideTooltip();
               }
             }}
-            onFocus={hideTooltip}
+            onFocus={() => { hideTooltip(); activeFieldRef.current = "nombre"; }}
+            onBlur={() => { activeFieldRef.current = null; }}
             className="lb-input"
             style={{ color: form.nombre ? "#fff" : "rgba(200,235,255,0.65)" }}
-            // REMOVIDO: disabled={!documentoValido} -> Ahora puedes escribir manualmente siempre
           />
         </div>
 
@@ -228,7 +225,7 @@ const LoginRegister = ({
           <input
             type="text"
             placeholder="Número de teléfono"
-            value={form.numero}
+            value={form.numero || ""}
             onChange={e => {
               const value = e.target.value;
               if (value === '' || /^[0-9]+$/.test(value)) {
@@ -238,7 +235,6 @@ const LoginRegister = ({
             }}
             onFocus={hideTooltip}
             className="lb-input"
-            // REMOVIDO: disabled={!documentoValido}
             maxLength="9"
           />
         </div>
@@ -252,12 +248,11 @@ const LoginRegister = ({
           <input
             type="email"
             placeholder="Correo electrónico"
-            value={form.correo}
+            value={form.correo || ""}
             onChange={e => { setForm({ ...form, correo: e.target.value }); hideTooltip(); }}
             onBlur={e => setForm({ ...form, correo: e.target.value.trimEnd() })}
             onFocus={hideTooltip}
             className="lb-input"
-            // REMOVIDO: disabled={!documentoValido}
           />
         </div>
 
@@ -273,11 +268,10 @@ const LoginRegister = ({
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Contraseña"
-            value={form.contraseña}
+            value={form.contraseña || ""}
             onChange={e => { setForm({ ...form, contraseña: e.target.value }); hideTooltip(); }}
             onFocus={hideTooltip}
             className="lb-input"
-            // REMOVIDO: disabled={!documentoValido}
           />
         </div>
 
@@ -327,9 +321,6 @@ const LoginRegister = ({
         <div className="lb-divider" style={{ margin: "2px 0 0" }}>O regístrate con</div>
         <div id="googleSignInDivRegistro" style={{ display: !isLogin ? "flex" : "none", justifyContent: "center" }} />
       </form>
-
-      {/* ── COMENTADO el aviso secundario para mantener el diseño limpio si falla la API externa ── */}
-      {/* {!isDocMsg(mensaje) && <NoticeMessage text={verificationPending ? (verificationMessage || mensaje) : mensaje} />} */}
     </div>
   );
 };
