@@ -100,7 +100,7 @@ const LoginRegister = ({
     if (!tipoDoc)         { showTooltip("tipoDoc");  return; }
     if (!form.documento)  { showTooltip("documento"); return; }
     
-    // ── CAMBIO 1: Validamos la longitud mínima por si APIs Perú falló y no bloqueó el flujo ──
+    // Validamos longitud básica ya que saltamos la restricción estricta de la API externa
     const longitudCorrecta = tipoDoc === "DNI" ? form.documento.length === 8 : form.documento.length === 11;
     if (!longitudCorrecta) {
       showTooltip("documento", `El ${tipoDoc} debe tener ${tipoDoc === "DNI" ? 8 : 11} dígitos`);
@@ -179,7 +179,9 @@ const LoginRegister = ({
             </div>
           </div>
 
-          {isDocMsg(mensaje) && <NoticeMessage text={mensaje} />}
+          {/* ── COMENTADO temporalmente para que no ensucie la vista el error de consulta de la API ── */}
+          {/* {isDocMsg(mensaje) && <NoticeMessage text={mensaje} />} */}
+          
           {docLoading && (
             <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#80C2DC", fontSize: 11, fontFamily: "'Open Sans',sans-serif" }}>
               <span style={{ display: "inline-block", width: 8, height: 8, border: "2px solid rgba(128,194,220,0.2)", borderTopColor: "#80C2DC", borderRadius: "50%", animation: "lb-spin 0.75s linear infinite" }} />
@@ -213,7 +215,7 @@ const LoginRegister = ({
             onFocus={hideTooltip}
             className="lb-input"
             style={{ color: form.nombre ? "#fff" : "rgba(200,235,255,0.65)" }}
-            // ── CAMBIO 2: Eliminamos 'disabled={!documentoValido}' para que puedan escribir si falla la API ──
+            // REMOVIDO: disabled={!documentoValido} -> Ahora puedes escribir manualmente siempre
           />
         </div>
 
@@ -236,7 +238,7 @@ const LoginRegister = ({
             }}
             onFocus={hideTooltip}
             className="lb-input"
-            // ── CAMBIO 3: Eliminamos 'disabled={!documentoValido}' ──
+            // REMOVIDO: disabled={!documentoValido}
             maxLength="9"
           />
         </div>
@@ -255,7 +257,7 @@ const LoginRegister = ({
             onBlur={e => setForm({ ...form, correo: e.target.value.trimEnd() })}
             onFocus={hideTooltip}
             className="lb-input"
-            // ── CAMBIO 4: Eliminamos 'disabled={!documentoValido}' ──
+            // REMOVIDO: disabled={!documentoValido}
           />
         </div>
 
@@ -275,7 +277,7 @@ const LoginRegister = ({
             onChange={e => { setForm({ ...form, contraseña: e.target.value }); hideTooltip(); }}
             onFocus={hideTooltip}
             className="lb-input"
-            // ── CAMBIO 5: Eliminamos 'disabled={!documentoValido}' ──
+            // REMOVIDO: disabled={!documentoValido}
           />
         </div>
 
@@ -326,7 +328,8 @@ const LoginRegister = ({
         <div id="googleSignInDivRegistro" style={{ display: !isLogin ? "flex" : "none", justifyContent: "center" }} />
       </form>
 
-      {!isDocMsg(mensaje) && <NoticeMessage text={verificationPending ? (verificationMessage || mensaje) : mensaje} />}
+      {/* ── COMENTADO el aviso secundario para mantener el diseño limpio si falla la API externa ── */}
+      {/* {!isDocMsg(mensaje) && <NoticeMessage text={verificationPending ? (verificationMessage || mensaje) : mensaje} />} */}
     </div>
   );
 };
