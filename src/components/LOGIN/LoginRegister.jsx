@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { IconMail, IconLock, IconLockFilled, IconUser, IconPhone, IconId, IconAlertCircle, IconCircleCheck, IconInfoCircle } from '@tabler/icons-react';
 
 const isDocMsg = (m) =>
@@ -24,12 +24,38 @@ const DocPill = ({ label, active, onClick }) => (
   </button>
 );
 
+// ── Tooltip temático reutilizable — misma estética que el del login ──
 const LbTooltip = ({ visible, text = "Completa este campo" }) => {
   if (!visible) return null;
   return (
     <div className="lb-tooltip">
       <span className="lb-tooltip-icon">!</span>
       <span className="lb-tooltip-text">{text}</span>
+    </div>
+  );
+};
+
+const getNoticeType = (text) => {
+  if (!text) return "info";
+  const lower = text.toLowerCase();
+  if (lower.includes("exitoso") || lower.includes("verificado")) return "success";
+  if (lower.includes("consultando") || lower.includes("verificando")) return "info";
+  return "error";
+};
+
+const NoticeMessage = ({ text }) => {
+  if (!text) return null;
+  const type = getNoticeType(text);
+  const icon = type === "success"
+    ? <IconCircleCheck size={17} stroke={2} />
+    : type === "info"
+      ? <IconInfoCircle size={17} stroke={2} />
+      : <IconAlertCircle size={17} stroke={2} />;
+
+  return (
+    <div className={`lb-notice lb-notice-${type}`} style={{ marginTop: 8 }}>
+      <span className="lb-notice-icon">{icon}</span>
+      <span className="lb-notice-text">{text}</span>
     </div>
   );
 };
@@ -49,13 +75,7 @@ const LoginRegister = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  // ── Refs de persistencia para el foco forzado ──
-  const nombreInputRef = useRef(null);
-  const activeFieldRef = useRef(null);
-  
-  // ── TRUCO: Input invisible para absorber el foco automático que manda el padre ──
-  const dummyFocusRef = useRef(null);
-
+  // ── Estado del tooltip personalizado ──
   const [tooltip, setTooltip] = useState({ visible: false, field: null, text: "Completa este campo" });
   const tooltipTimerRef       = useRef(null);
 
@@ -70,32 +90,7 @@ const LoginRegister = ({
     setTooltip({ visible: false, field: null, text: "Completa este campo" });
   };
 
-  // ── Interceptamos el ref del padre ──
-  // Si el padre intenta hacer `documentoInputRef.current.focus()`, redirigimos el foco
-  // al input invisible SIEMPRE Y CUANDO el usuario ya esté intentando escribir en el Nombre.
-  useEffect(() => {
-    if (documentoInputRef) {
-      const originalFocus = documentoInputRef.current?.focus;
-      
-      documentoInputRef.current.focus = function(...args) {
-        if (activeFieldRef.current === "nombre" && dummyFocusRef.current) {
-          // El usuario está escribiendo el nombre; mandamos el ataque del padre al vacío
-          dummyFocusRef.current.focus();
-        } else if (originalFocus) {
-          // Si no está en el nombre, dejamos que actúe normal
-          originalFocus.apply(this, args);
-        }
-      };
-    }
-  }, [documentoInputRef]);
-
-  // Forzado de foco local continuo en el renderizado por si acaso
-  useEffect(() => {
-    if (activeFieldRef.current === "nombre" && nombreInputRef.current && document.activeElement !== nombreInputRef.current) {
-      nombreInputRef.current.focus();
-    }
-  });
-
+  // ── Submit con validación secuencial custom (sin tooltips nativos) ──
   const handleSubmitCustom = (e) => {
     e.preventDefault();
     hideTooltip();
@@ -107,13 +102,7 @@ const LoginRegister = ({
 
     if (!tipoDoc)         { showTooltip("tipoDoc");  return; }
     if (!form.documento)  { showTooltip("documento"); return; }
-    
-    const longitudCorrecta = tipoDoc === "DNI" ? form.documento.length === 8 : form.documento.length === 11;
-    if (!longitudCorrecta) {
-      showTooltip("documento", `El ${tipoDoc} debe tener ${tipoDoc === "DNI" ? 8 : 11} dígitos`);
-      return;
-    }
-
+    if (!documentoValido) { return; } // el mensaje RENIEC/SUNAT ya se muestra
     if (!form.nombre)     { showTooltip("nombre");   return; }
     if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/.test((form.nombre || "").trim())) { showTooltip("nombre", "Solo letras en nombre completo"); return; }
     if (!form.numero)     { showTooltip("numero");   return; }
@@ -138,10 +127,9 @@ const LoginRegister = ({
       borderLeft: "1.5px solid rgba(128,194,220,0.35)",
       boxShadow: "inset 1px 0 0 rgba(255,255,255,0.1)",
     }}>
-      {/* Input trampa que absorbe los eventos de foco automáticos del padre */}
-      <input ref={dummyFocusRef} type="text" style={{ position: "absolute", opacity: 0, width: 0, height: 0, zIndex: -1 }} readOnly />
-
+      {/* Brillo superior */}
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,rgba(128,194,220,0.2),rgba(128,194,220,0.6),rgba(128,194,220,0.1))", pointerEvents: "none" }} />
+      {/* Brillo inferior */}
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(128,194,220,0.3),transparent)", pointerEvents: "none" }} />
 
       <div style={{ width: 30, height: 2.5, background: "linear-gradient(90deg,#80C2DC,#a8d9ed)", borderRadius: 2, marginBottom: 11, boxShadow: "0 0 10px rgba(128,194,220,0.6)" }} />
@@ -152,6 +140,7 @@ const LoginRegister = ({
         Registro
       </h2>
 
+      {/* noValidate suprime los tooltips nativos del browser */}
       <form onSubmit={handleSubmitCustom} noValidate className="lb-form-gap" style={{ display: "flex", flexDirection: "column", gap: 9 }}>
 
         {/* ── Tipo de documento ── */}
@@ -161,13 +150,16 @@ const LoginRegister = ({
           </span>
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
 
+            {/* Pill RUC — el tooltip de "tipoDoc" sale aquí */}
             <div style={{ position: "relative" }}>
               <LbTooltip visible={tooltip.visible && tooltip.field === "tipoDoc"} text={tooltip.text || "Selecciona un tipo"} />
               <DocPill label="RUC" active={tipoDoc === "RUC"} onClick={() => { handleTipoDoc("RUC"); hideTooltip(); }} />
             </div>
 
+            {/* Pill DNI */}
             <DocPill label="DNI" active={tipoDoc === "DNI"} onClick={() => { handleTipoDoc("DNI"); hideTooltip(); }} />
 
+            {/* Input número documento con su tooltip */}
             <div style={{ position: "relative", flex: 1 }}>
               <LbTooltip visible={tooltip.visible && tooltip.field === "documento"} text={tooltip.text || "Ingresa el número"} />
               <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "rgba(180,225,245,0.85)", fontSize: 13 }}>
@@ -177,9 +169,9 @@ const LoginRegister = ({
                 type="text"
                 placeholder={tipoDoc ? `Nº ${tipoDoc}` : "Número"}
                 value={form.documento}
-                onChange={e => { setForm({ ...form, documento: e.target.value.replace(/\D/g, "") }); hideTooltip(); }}
+                onChange={e => { setForm({ ...form, documento: e.target.value }); hideTooltip(); }}
                 onBlur={handleDocumentoBlur}
-                onFocus={() => { hideTooltip(); activeFieldRef.current = "documento"; }}
+                onFocus={hideTooltip}
                 ref={documentoInputRef}
                 className="lb-input"
                 style={{ flex: 1 }}
@@ -188,6 +180,19 @@ const LoginRegister = ({
               />
             </div>
           </div>
+
+          {isDocMsg(mensaje) && <NoticeMessage text={mensaje} />}
+          {docLoading && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#80C2DC", fontSize: 11, fontFamily: "'Open Sans',sans-serif" }}>
+              <span style={{ display: "inline-block", width: 8, height: 8, border: "2px solid rgba(128,194,220,0.2)", borderTopColor: "#80C2DC", borderRadius: "50%", animation: "lb-spin 0.75s linear infinite" }} />
+              Consultando…
+            </div>
+          )}
+          {!docLoading && documentoValido && form.nombre && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#34d399", fontSize: 11, fontFamily: "'Open Sans',sans-serif" }}>
+              <span>✓</span> Documento verificado
+            </div>
+          )}
         </div>
 
         {/* ── Nombre completo ── */}
@@ -197,22 +202,21 @@ const LoginRegister = ({
             <IconUser stroke={2} />
           </span>
           <input
-            ref={nombreInputRef}
             type="text"
             placeholder="Nombre completo"
-            value={form.nombre || ""}
-            autoComplete="off"
+            value={form.nombre}
             onChange={e => {
               const value = e.target.value;
+              // Permite solo letras y espacios.
               if (value === '' || /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/.test(value)) {
                 setForm({ ...form, nombre: value });
                 hideTooltip();
               }
             }}
-            onFocus={() => { hideTooltip(); activeFieldRef.current = "nombre"; }}
-            onBlur={() => { /* No limpiamos el ref inmediatamente para aguantar el parpadeo */ }}
+            onFocus={hideTooltip}
             className="lb-input"
             style={{ color: form.nombre ? "#fff" : "rgba(200,235,255,0.65)" }}
+            disabled={!documentoValido}
           />
         </div>
 
@@ -225,7 +229,7 @@ const LoginRegister = ({
           <input
             type="text"
             placeholder="Número de teléfono"
-            value={form.numero || ""}
+            value={form.numero}
             onChange={e => {
               const value = e.target.value;
               if (value === '' || /^[0-9]+$/.test(value)) {
@@ -233,8 +237,9 @@ const LoginRegister = ({
                 hideTooltip();
               }
             }}
-            onFocus={() => { hideTooltip(); activeFieldRef.current = "numero"; }}
+            onFocus={hideTooltip}
             className="lb-input"
+            disabled={!documentoValido}
             maxLength="9"
           />
         </div>
@@ -248,11 +253,12 @@ const LoginRegister = ({
           <input
             type="email"
             placeholder="Correo electrónico"
-            value={form.correo || ""}
+            value={form.correo}
             onChange={e => { setForm({ ...form, correo: e.target.value }); hideTooltip(); }}
             onBlur={e => setForm({ ...form, correo: e.target.value.trimEnd() })}
-            onFocus={() => { hideTooltip(); activeFieldRef.current = "correo"; }}
+            onFocus={hideTooltip}
             className="lb-input"
+            disabled={!documentoValido}
           />
         </div>
 
@@ -268,10 +274,11 @@ const LoginRegister = ({
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Contraseña"
-            value={form.contraseña || ""}
+            value={form.contraseña}
             onChange={e => { setForm({ ...form, contraseña: e.target.value }); hideTooltip(); }}
-            onFocus={() => { hideTooltip(); activeFieldRef.current = "pass"; }}
+            onFocus={hideTooltip}
             className="lb-input"
+            disabled={!documentoValido}
           />
         </div>
 
@@ -321,6 +328,8 @@ const LoginRegister = ({
         <div className="lb-divider" style={{ margin: "2px 0 0" }}>O regístrate con</div>
         <div id="googleSignInDivRegistro" style={{ display: !isLogin ? "flex" : "none", justifyContent: "center" }} />
       </form>
+
+      {!isDocMsg(mensaje) && <NoticeMessage text={verificationPending ? (verificationMessage || mensaje) : mensaje} />}
     </div>
   );
 };
