@@ -34,31 +34,6 @@ const LbTooltip = ({ visible, text = "Completa este campo" }) => {
   );
 };
 
-const getNoticeType = (text) => {
-  if (!text) return "info";
-  const lower = text.toLowerCase();
-  if (lower.includes("exitoso") || lower.includes("verificado")) return "success";
-  if (lower.includes("consultando") || lower.includes("verificando")) return "info";
-  return "error";
-};
-
-const NoticeMessage = ({ text }) => {
-  if (!text) return null;
-  const type = getNoticeType(text);
-  const icon = type === "success"
-    ? <IconCircleCheck size={17} stroke={2} />
-    : type === "info"
-      ? <IconInfoCircle size={17} stroke={2} />
-      : <IconAlertCircle size={17} stroke={2} />;
-
-  return (
-    <div className={`lb-notice lb-notice-${type}`} style={{ marginTop: 8 }}>
-      <span className="lb-notice-icon">{icon}</span>
-      <span className="lb-notice-text">{text}</span>
-    </div>
-  );
-};
-
 const LoginRegister = ({
   panelClassName = "",
   isLogin, tipoDoc, handleTipoDoc, form, setForm,
@@ -74,9 +49,12 @@ const LoginRegister = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  // ── Refs de persistencia para evitar que los re-renders del padre destruyan el foco ──
+  // ── Refs de persistencia para el foco forzado ──
   const nombreInputRef = useRef(null);
   const activeFieldRef = useRef(null);
+  
+  // ── TRUCO: Input invisible para absorber el foco automático que manda el padre ──
+  const dummyFocusRef = useRef(null);
 
   const [tooltip, setTooltip] = useState({ visible: false, field: null, text: "Completa este campo" });
   const tooltipTimerRef       = useRef(null);
@@ -92,9 +70,28 @@ const LoginRegister = ({
     setTooltip({ visible: false, field: null, text: "Completa este campo" });
   };
 
-  // ── TRUCO DEFENSIVO: Si el padre parpadea y nos quita el mouse, lo devolvemos a la fuerza ──
+  // ── Interceptamos el ref del padre ──
+  // Si el padre intenta hacer `documentoInputRef.current.focus()`, redirigimos el foco
+  // al input invisible SIEMPRE Y CUANDO el usuario ya esté intentando escribir en el Nombre.
   useEffect(() => {
-    if (activeFieldRef.current === "nombre" && nombreInputRef.current) {
+    if (documentoInputRef) {
+      const originalFocus = documentoInputRef.current?.focus;
+      
+      documentoInputRef.current.focus = function(...args) {
+        if (activeFieldRef.current === "nombre" && dummyFocusRef.current) {
+          // El usuario está escribiendo el nombre; mandamos el ataque del padre al vacío
+          dummyFocusRef.current.focus();
+        } else if (originalFocus) {
+          // Si no está en el nombre, dejamos que actúe normal
+          originalFocus.apply(this, args);
+        }
+      };
+    }
+  }, [documentoInputRef]);
+
+  // Forzado de foco local continuo en el renderizado por si acaso
+  useEffect(() => {
+    if (activeFieldRef.current === "nombre" && nombreInputRef.current && document.activeElement !== nombreInputRef.current) {
       nombreInputRef.current.focus();
     }
   });
@@ -141,6 +138,9 @@ const LoginRegister = ({
       borderLeft: "1.5px solid rgba(128,194,220,0.35)",
       boxShadow: "inset 1px 0 0 rgba(255,255,255,0.1)",
     }}>
+      {/* Input trampa que absorbe los eventos de foco automáticos del padre */}
+      <input ref={dummyFocusRef} type="text" style={{ position: "absolute", opacity: 0, width: 0, height: 0, zIndex: -1 }} readOnly />
+
       <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,rgba(128,194,220,0.2),rgba(128,194,220,0.6),rgba(128,194,220,0.1))", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,rgba(128,194,220,0.3),transparent)", pointerEvents: "none" }} />
 
@@ -210,7 +210,7 @@ const LoginRegister = ({
               }
             }}
             onFocus={() => { hideTooltip(); activeFieldRef.current = "nombre"; }}
-            onBlur={() => { activeFieldRef.current = null; }}
+            onBlur={() => { /* No limpiamos el ref inmediatamente para aguantar el parpadeo */ }}
             className="lb-input"
             style={{ color: form.nombre ? "#fff" : "rgba(200,235,255,0.65)" }}
           />
@@ -233,7 +233,7 @@ const LoginRegister = ({
                 hideTooltip();
               }
             }}
-            onFocus={hideTooltip}
+            onFocus={() => { hideTooltip(); activeFieldRef.current = "numero"; }}
             className="lb-input"
             maxLength="9"
           />
@@ -251,7 +251,7 @@ const LoginRegister = ({
             value={form.correo || ""}
             onChange={e => { setForm({ ...form, correo: e.target.value }); hideTooltip(); }}
             onBlur={e => setForm({ ...form, correo: e.target.value.trimEnd() })}
-            onFocus={hideTooltip}
+            onFocus={() => { hideTooltip(); activeFieldRef.current = "correo"; }}
             className="lb-input"
           />
         </div>
@@ -270,7 +270,7 @@ const LoginRegister = ({
             placeholder="Contraseña"
             value={form.contraseña || ""}
             onChange={e => { setForm({ ...form, contraseña: e.target.value }); hideTooltip(); }}
-            onFocus={hideTooltip}
+            onFocus={() => { hideTooltip(); activeFieldRef.current = "pass"; }}
             className="lb-input"
           />
         </div>
