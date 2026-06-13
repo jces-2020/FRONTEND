@@ -101,7 +101,10 @@ const Personal = () => {
     try {
       const res = await fetch("/api/personal");
       const data = await res.json();
-      setPersonalList(data.success ? data.data : []);
+      const list = data.success
+        ? (data.data || []).map((p) => ({ ...p, correo: p.email || p.correo }))
+        : [];
+      setPersonalList(list);
     } catch {
       showToast("Error al cargar personal", "error");
     }
@@ -197,7 +200,11 @@ const Personal = () => {
       const res = await fetch("/api/personal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...nuevoPersonal, cv: cvUrl }),
+        body: JSON.stringify({
+          ...nuevoPersonal,
+          email: nuevoPersonal.correo || nuevoPersonal.email || "",
+          cv: cvUrl,
+        }),
       });
       const data = await res.json();
       if (data.success) {
