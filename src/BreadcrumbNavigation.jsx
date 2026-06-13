@@ -18,6 +18,9 @@ const routeLabels = {
   '/operaciones': 'OBRAS',
 };
 
+// Rutas válidas permitidas
+const VALID_PATHS = new Set(Object.keys(routeLabels));
+
 const normalizeBreadcrumbPath = (path) => {
   if (!path) return '/';
   if (path === '/panelcliente') return '/user';
@@ -64,12 +67,24 @@ function BreadcrumbNavigation() {
     // Cargar historial
     const stored = localStorage.getItem('breadcrumb_history');
     let history = stored ? JSON.parse(stored) : [];
-    history = (history || []).map((b) => ({
-      ...b,
-      path: normalizeBreadcrumbPath(b.path),
-      label: routeLabels[normalizeBreadcrumbPath(b.path)] || b.label.toUpperCase(),
-    }));
+    history = (history || [])
+      .filter(b => b?.path && VALID_PATHS.has(b.path))
+      .map((b) => ({
+        ...b,
+        path: normalizeBreadcrumbPath(b.path),
+        label: routeLabels[normalizeBreadcrumbPath(b.path)] || b.label.toUpperCase(),
+      }));
     history = dedupeConsecutiveBreadcrumbs(history);
+    
+    // Limpiar localStorage si hay rutas inválidas almacenadas
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.some(b => !VALID_PATHS.has(b?.path))) {
+          localStorage.setItem('breadcrumb_history', JSON.stringify(history));
+        }
+      } catch {}
+    }
 
     // Siempre filtrar /personal del historial (es solo un gateway)
     history = history.filter(b => b.path !== '/personal');
