@@ -323,18 +323,14 @@ const Personal = () => {
         if (!cvUrl) return;
       }
 
-      const payload = {
-        ...nuevoPersonal,
-        cv: cvUrl,
-      };
-      if (nuevoPersonal.correo?.trim()) {
-        payload.email = nuevoPersonal.correo.trim();
-      }
-
       const res = await fetch("/api/personal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...nuevoPersonal,
+          email: nuevoPersonal.correo || nuevoPersonal.email || "",
+          cv: cvUrl,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -1142,3 +1138,5 @@ const Personal = () => {
     </div>
   );
 };
+
+export default Personal;
