@@ -50,4 +50,3 @@ export const consultarDocumentoApi = async (tipo, numero) => {
     return { success: false, error: error?.message || "Error consultando documento." };
   }
 };
-
