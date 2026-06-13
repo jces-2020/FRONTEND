@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { IconPhone, IconId, IconUser, IconAlertCircle, IconInfoCircle } from "@tabler/icons-react";
+import { consultarDocumentoApi } from "../config";
 
 const CompletaDatosGoogle = ({ onDatosActualizados, asModal = false, onClose }) => {
   const [form, setForm] = useState({
@@ -129,12 +130,7 @@ const CompletaDatosGoogle = ({ onDatosActualizados, asModal = false, onClose }) 
 
     setDocLoading(true);
     try {
-      const res = await fetch("/api/consulta_documento_html", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo: tipoConsulta, numero }),
-      });
-      const data = await res.json();
+      const data = await consultarDocumentoApi(tipoConsulta, numero);
       if (!data?.success || data?.error) {
         setMensaje(data?.message || "No se encontró el documento en RENIEC/SUNAT");
         setForm((f) => ({ ...f, nombre: "" }));

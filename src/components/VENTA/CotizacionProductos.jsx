@@ -20,6 +20,7 @@ import {
   eliminarProductoCotizacion,
   limpiarCotizacion,
 } from "../../utils/ramCotizacion";
+import { consultarDocumentoApi } from "../../config";
 
 const RED    = '#941918';
 const CELESTE  = '#80C2DC';
@@ -572,8 +573,7 @@ const CotizacionView = () => {
   const consultarDocumentoBackend=async(tipo,numero)=>{
     setErrorNombre('Consultando...'); setNombreCliente('');
     try{
-      const res=await fetch('/api/consulta_documento_html',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tipo,numero})});
-      const data=await res.json();
+      const data=await consultarDocumentoApi(tipo,numero);
       if (data.success&&data.html){setNombreCliente(normalizarNombreVisible(data.html));setErrorNombre('Consulta exitosa.');}
       else{setNombreCliente('');setErrorNombre(tipo==='DNI'&&numero.length===7?'DNI no encontrado. Puedes continuar e ingresar el nombre manualmente.':data.message||'No se encontró información para ese documento.');}
     }catch{setNombreCliente('');setErrorNombre('Error de conexión con el servidor.');}

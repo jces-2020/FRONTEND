@@ -340,6 +340,7 @@ function injectStyles() {
 
 export default function LoginInicioSesion() {
   const navigate = useNavigate(), location = useLocation(), docRef = useRef(null);
+  const googleInitRef = useRef(false);
 
   const [isLogin, setIsLogin]                 = useState(true);
   const [loginForm, setLoginForm]             = useState({ correo: "", contraseña: "" });
@@ -350,6 +351,10 @@ export default function LoginInicioSesion() {
   const [mensaje, setMensaje]                 = useState("");
   const [loading, setLoading]                 = useState(false);
   const [showPassword, setShowPassword]       = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationToken, setVerificationToken]     = useState("");
+  const [verificationCode, setVerificationCode]       = useState("");
+  const [verificationLoading, setVerificationLoading] = useState(false);
 
   // ── Estado del tooltip personalizado ──
   const [tooltip, setTooltip]   = useState({ visible: false, field: null });
@@ -414,25 +419,28 @@ export default function LoginInicioSesion() {
       const div = document.getElementById(tid); if (!div) return;
       if (!window.google?.accounts) { if (retry++ < 10) setTimeout(render, 300); else setMensaje("No se pudo cargar Google."); return; }
       div.innerHTML = "";
-      window.google.accounts.id.initialize({
-        client_id: "1000681433446-mgbmp68bol11vjn56rfsb2ai9l732tbb.apps.googleusercontent.com",
-        callback: async (response) => {
-          setMensaje("Verificando con Google...");
-          try {
-            let res = await fetch(`${API_BASE}/api/auth/google-login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
-            let json = await res.json();
-            if (json.success) { saveCliente(json); navigate(fromPath || "/user", { replace: true }); return; }
-            if (res.status === 404 || json.message?.toLowerCase().includes("no registrado")) {
-              res = await fetch(`${API_BASE}/api/auth/google-register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
-              json = await res.json();
+      if (!googleInitRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: "1000681433446-mgbmp68bol11vjn56rfsb2ai9l732tbb.apps.googleusercontent.com",
+          callback: async (response) => {
+            setMensaje("Verificando con Google...");
+            try {
+              let res = await fetch(`${API_BASE}/api/auth/google-login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
+              let json = await res.json();
               if (json.success) { saveCliente(json); navigate(fromPath || "/user", { replace: true }); return; }
-              setMensaje(json.message || "No se pudo registrar con Google"); return;
-            }
-            setMensaje(json.message || "No se pudo iniciar sesión con Google");
-          } catch { setMensaje("Error de conexión con Google Auth"); }
-        },
-        ux_mode: "popup", auto_select: false,
-      });
+              if (res.status === 404 || json.message?.toLowerCase().includes("no registrado")) {
+                res = await fetch(`${API_BASE}/api/auth/google-register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: response.credential }) });
+                json = await res.json();
+                if (json.success) { saveCliente(json); navigate(fromPath || "/user", { replace: true }); return; }
+                setMensaje(json.message || "No se pudo registrar con Google"); return;
+              }
+              setMensaje(json.message || "No se pudo iniciar sesión con Google");
+            } catch { setMensaje("Error de conexión con Google Auth"); }
+          },
+          ux_mode: "popup", auto_select: false,
+        });
+        googleInitRef.current = true;
+      }
       window.google.accounts.id.renderButton(div, { theme: "filled_black", size: "medium", text: isReg ? "signup_with" : "signin_with", shape: "pill", logo_alignment: "left" });
     }
     render();
@@ -461,10 +469,11 @@ export default function LoginInicioSesion() {
     if (doc.length !== len) { setMensaje(`El ${tipoDoc} debe tener ${len} dígitos`); return; }
     setDocLoading(true);
     try {
-      const res  = await fetch("/api/consulta_documento_html", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: tipoDoc, numero: doc }) });
+      const res  = await fetch(`${API_BASE}/api/consulta_documento`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: tipoDoc, numero: doc }) });
       const data = await res.json();
-      if (!data.success || data.error) { setMensaje(data.message || "No se encontró en RENIEC/SUNAT"); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); return; }
-      if (data.html) setForm(f => ({ ...f, nombre: data.html }));
+      const nombreEncontrado = data.html || data.nombre || "";
+      if (!data.success || data.error) { setMensaje(data.message || data.error || "No se encontró en RENIEC/SUNAT"); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); return; }
+      if (nombreEncontrado) setForm(f => ({ ...f, nombre: nombreEncontrado }));
       setDocLoading(false); setDocumentoValido(true);
     } catch { setMensaje("Error consultando documento."); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); }
   };
@@ -483,6 +492,14 @@ export default function LoginInicioSesion() {
       const res  = await fetch(`${API_BASE}/api/clientes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: nombreLimpio, correo: correoLimpio, contraseña: form.contraseña, numero: numeroLimpio, documento: form.documento, tipo_cliente_id: form.tipo_cliente_id, tipo_documento: form.tipo_documento }) });
       const text = await res.text(); let json; try { json = JSON.parse(text); } catch { json = { success: false, message: text }; }
       if (json.success) {
+        if (json.verification_token) {
+          setVerificationPending(true);
+          setVerificationToken(json.verification_token);
+          setVerificationCode("");
+          setMensaje(json.message || "Revisa tu correo para ver el código de verificación.");
+          setLoading(false);
+          return;
+        }
         if (json.token) {
           saveCliente(json);
           try { const id = json.cliente?.id_cliente, c = localStorage.getItem("carrito_id"); if (id && c) await fetch(`${API_BASE}/api/carrito_compras/attach`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ carrito_id: c, cliente_id: id }) }); } catch {}
@@ -509,6 +526,77 @@ export default function LoginInicioSesion() {
       } else { setMensaje(json.error?.message || json.error || json.message || "No se pudo registrar"); }
       setLoading(false);
     } catch { setMensaje("Error de conexión"); setLoading(false); }
+  };
+
+  const handleVerifyEmail = async () => {
+    if (!verificationToken) {
+      setMensaje("Falta el token de verificación.");
+      return;
+    }
+    if (!verificationCode || verificationCode.length !== 6) {
+      setMensaje("Ingresa el código de 6 dígitos.");
+      return;
+    }
+
+    setVerificationLoading(true);
+    setMensaje("");
+    try {
+      const res = await fetch(`${API_BASE}/api/clientes/verificar-correo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verification_token: verificationToken, codigo: verificationCode })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success) {
+        saveCliente(json);
+        setVerificationPending(false);
+        setVerificationToken("");
+        setVerificationCode("");
+        try {
+          const c = localStorage.getItem("carrito_id"), id = json.cliente?.id_cliente;
+          if (id) {
+            if (c) await fetch(`${API_BASE}/api/carrito_compras/attach`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ carrito_id: c, cliente_id: id }) });
+            else {
+              const r = await fetch(`${API_BASE}/api/carrito_compras`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cliente_id: id }) });
+              const j = await r.json().catch(() => ({}));
+              if (j?.carrito_id) localStorage.setItem("carrito_id", j.carrito_id);
+            }
+          }
+        } catch {}
+        navigate(fromPath || "/user", { replace: true });
+        return;
+      }
+      setMensaje(json.message || "No se pudo verificar el correo");
+    } catch {
+      setMensaje("Error de conexión verificando el correo");
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!form.correo) {
+      setMensaje("Ingresa el correo del registro primero.");
+      return;
+    }
+    try {
+      setMensaje("Reenviando código...");
+      const res = await fetch(`${API_BASE}/api/clientes/enviar-codigo-verificacion`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo: form.correo.trim() })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.success) {
+        setVerificationPending(true);
+        setVerificationToken(json.verification_token || verificationToken);
+        setMensaje(json.message || "Código reenviado");
+        return;
+      }
+      setMensaje(json.message || "No se pudo reenviar el código");
+    } catch {
+      setMensaje("Error reenviando el código");
+    }
   };
 
   // ── Login con validación personalizada (sin tooltip nativo del browser) ──
@@ -743,6 +831,13 @@ export default function LoginInicioSesion() {
           documentoValido={documentoValido} docLoading={docLoading}
           mensaje={mensaje} handleSubmit={handleSubmit}
           documentoInputRef={docRef} loading={loading}
+          verificationPending={verificationPending}
+          verificationCode={verificationCode}
+          setVerificationCode={setVerificationCode}
+          verificationLoading={verificationLoading}
+          verificationMessage={mensaje}
+          onVerifyEmail={handleVerifyEmail}
+          onResendVerification={handleResendVerification}
           glass={{
             background: "linear-gradient(160deg, rgba(128,194,220,0.22) 0%, rgba(80,160,200,0.18) 40%, rgba(40,120,170,0.25) 100%)",
             backdropFilter: "blur(28px) saturate(200%) brightness(1.08)",

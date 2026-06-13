@@ -35,3 +35,18 @@ export const apiFetch = async (resource, init) => {
 
   return res;
 };
+
+export const consultarDocumentoApi = async (tipo, numero) => {
+  const body = JSON.stringify({ tipo, numero });
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/consulta_documento`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+
+    return await response.json().catch(() => ({}));
+  } catch (error) {
+    return { success: false, error: error?.message || "Error consultando documento." };
+  }
+};

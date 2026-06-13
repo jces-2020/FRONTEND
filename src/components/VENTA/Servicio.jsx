@@ -205,7 +205,7 @@ export default function Servicio() {
     setNombreCliente('');
 
     const [apisRes, bdRes] = await Promise.allSettled([
-      fetch('/api/consulta_documento_html', {
+      fetch('/api/consulta_documento', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo, numero }),
@@ -235,7 +235,7 @@ export default function Servicio() {
     } else if (esOk) {
       estado = 'Verificado - No registrado en sistema';
     } else {
-      estado = 'No se encontro informacion para ese documento.';
+      estado = apisData?.error || bdData?.message || 'No se encontro informacion para ese documento.';
     }
 
     setNombreCliente(nombreFinal);
