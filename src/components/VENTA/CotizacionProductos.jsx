@@ -1336,3 +1336,4 @@ const CotizacionView = () => {
 };
 
 export default CotizacionView;
+
