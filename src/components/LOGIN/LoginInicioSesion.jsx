@@ -490,11 +490,41 @@ export default function LoginInicioSesion() {
     if (!/^9\d{8}$/.test(numeroLimpio)) { setMensaje("El número debe iniciar con 9 y tener 9 dígitos."); return; }
 
     setLoading(true);
+    setMensaje("Validando Gmail...");
+
     try {
-      const res = await fetch(`${API_BASE}/api/clientes`, {
+      // Paso 1: Validar email
+      const validateRes = await fetch(`${API_BASE}/api/clientes/validar-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: nombreLimpio, correo: correoLimpio, contraseña: form.contraseña, numero: numeroLimpio, documento: form.documento, tipo_cliente_id: form.tipo_cliente_id, tipo_documento: form.tipo_documento })
+        body: JSON.stringify({ correo: correoLimpio, contraseña: form.contraseña })
+      });
+      const validateText = await validateRes.text();
+      let validateJson;
+      try { validateJson = JSON.parse(validateText); } catch { validateJson = { success: false, email_valido: false, message: validateText }; }
+
+      if (!validateJson.email_valido) {
+        setMensaje(validateJson.message || "Gmail inválido. Verifica que sea correcto.");
+        setLoading(false);
+        return;
+      }
+
+      const authId = validateJson.auth_id;
+
+      // Paso 2: Registrar con datos completos
+      setMensaje("Guardando datos...");
+      const res = await fetch(`${API_BASE}/api/clientes/registrar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          auth_id: authId,
+          nombre: nombreLimpio,
+          correo: correoLimpio,
+          numero: numeroLimpio,
+          documento: form.documento,
+          tipo_cliente_id: form.tipo_cliente_id,
+          tipo_documento: form.tipo_documento
+        })
       });
       const text = await res.text();
       let json;
