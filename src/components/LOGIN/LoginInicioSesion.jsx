@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { COLORS, FONTS } from "../../colors";
 import LoginRegister from "./LoginRegister";
 import { IconMail, IconLock, IconLockFilled, IconAlertCircle, IconCircleCheck, IconInfoCircle } from '@tabler/icons-react';
+import { consultarDocumentoApi } from "../../config";
 
 const API_BASE = (import.meta.env.VITE_API_URL || "https://api.vidriobras.com").replace(/\/$/, "");
 
@@ -469,8 +470,7 @@ export default function LoginInicioSesion() {
     if (doc.length !== len) { setMensaje(`El ${tipoDoc} debe tener ${len} dígitos`); return; }
     setDocLoading(true);
     try {
-      const res  = await fetch(`${API_BASE}/api/consulta_documento`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: tipoDoc, numero: doc }) });
-      const data = await res.json();
+      const data = await consultarDocumentoApi(tipoDoc, doc);
       const nombreEncontrado = data.html || data.nombre || "";
       if (!data.success || data.error) { setMensaje(data.message || data.error || "No se encontró en RENIEC/SUNAT"); setForm(f => ({ ...f, nombre: "" })); setDocLoading(false); setDocumentoValido(false); setTimeout(() => docRef.current?.focus(), 100); return; }
       if (nombreEncontrado) setForm(f => ({ ...f, nombre: nombreEncontrado }));
@@ -479,7 +479,8 @@ export default function LoginInicioSesion() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); setMensaje("");
+    e.preventDefault();
+    setMensaje("");
     if (!documentoValido) { setMensaje("Valida el documento."); return; }
     const nombreLimpio = (form.nombre || "").trim();
     const numeroLimpio = (form.numero || "").trim();
@@ -487,45 +488,35 @@ export default function LoginInicioSesion() {
     if (!nombreLimpio || !correoLimpio || !form.contraseña || !numeroLimpio) { setMensaje("Completa todos los campos."); return; }
     if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/.test(nombreLimpio)) { setMensaje("El nombre solo debe contener letras."); return; }
     if (!/^9\d{8}$/.test(numeroLimpio)) { setMensaje("El número debe iniciar con 9 y tener 9 dígitos."); return; }
+
     setLoading(true);
     try {
-      const res  = await fetch(`${API_BASE}/api/clientes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: nombreLimpio, correo: correoLimpio, contraseña: form.contraseña, numero: numeroLimpio, documento: form.documento, tipo_cliente_id: form.tipo_cliente_id, tipo_documento: form.tipo_documento }) });
-      const text = await res.text(); let json; try { json = JSON.parse(text); } catch { json = { success: false, message: text }; }
-      if (json.success) {
-        if (json.verification_token) {
-          setVerificationPending(true);
-          setVerificationToken(json.verification_token);
-          setVerificationCode("");
-          setMensaje(json.message || "Revisa tu correo para ver el código de verificación.");
-          setLoading(false);
-          return;
-        }
-        if (json.token) {
-          saveCliente(json);
-          try { const id = json.cliente?.id_cliente, c = localStorage.getItem("carrito_id"); if (id && c) await fetch(`${API_BASE}/api/carrito_compras/attach`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ carrito_id: c, cliente_id: id }) }); } catch {}
-          navigate(fromPath || "/user", { replace: true });
-          return;
-        }
+      const res = await fetch(`${API_BASE}/api/clientes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: nombreLimpio, correo: correoLimpio, contraseña: form.contraseña, numero: numeroLimpio, documento: form.documento, tipo_cliente_id: form.tipo_cliente_id, tipo_documento: form.tipo_documento })
+      });
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch { json = { success: false, message: text }; }
 
-        // Respaldo: login interno si el endpoint de registro no devuelve token.
-        const loginRes = await fetch(`${API_BASE}/api/clientes/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ correo: correoLimpio, contraseña: form.contraseña })
-        });
-        const loginJson = await loginRes.json().catch(() => ({}));
-        if (!(loginRes.status === 200 && loginJson.success)) {
-          setMensaje("La cuenta se creó, pero no se pudo iniciar sesión automática. Inicia sesión manualmente.");
-          setLoading(false);
-          return;
-        }
-        saveCliente(loginJson);
-        try { const id = loginJson.cliente?.id_cliente, c = localStorage.getItem("carrito_id"); if (id && c) await fetch(`${API_BASE}/api/carrito_compras/attach`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ carrito_id: c, cliente_id: id }) }); } catch {}
-        navigate(fromPath || "/user", { replace: true });
+      if (json.success) {
+        setMensaje("✓ Cuenta creada. Verifica tu correo y luego inicia sesión.");
+        setLoading(false);
+        setTimeout(() => {
+          setIsLogin(true);
+          setForm({ nombre: "", correo: "", contraseña: "", numero: "", documento: "", tipo_documento: "", tipo_cliente_id: "" });
+          setMensaje("");
+        }, 2000);
         return;
-      } else { setMensaje(json.error?.message || json.error || json.message || "No se pudo registrar"); }
+      } else {
+        setMensaje(json.error?.message || json.error || json.message || "No se pudo registrar");
+      }
       setLoading(false);
-    } catch { setMensaje("Error de conexión"); setLoading(false); }
+    } catch {
+      setMensaje("Error de conexión");
+      setLoading(false);
+    }
   };
 
   const handleVerifyEmail = async () => {
