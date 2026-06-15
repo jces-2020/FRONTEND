@@ -35,11 +35,6 @@ const Personal = () => {
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
 
-  const [mostrarModalPagoIndividual, setMostrarModalPagoIndividual] = useState(false);
-  const [mostrarModalPagoTodos, setMostrarModalPagoTodos] = useState(false);
-  const [montoPagoModal, setMontoPagoModal] = useState("");
-  const [loadingPagoIndividual, setLoadingPagoIndividual] = useState(false);
-  const [loadingPagoTodos, setLoadingPagoTodos] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -89,12 +84,6 @@ const Personal = () => {
     return true;
   };
 
-  const limpiarMonto = (valor) => {
-    const limpio = valor.replace(/[^0-9.]/g, "");
-    const partes = limpio.split(".");
-    if (partes.length > 2) return partes[0] + "." + partes.slice(1).join("");
-    return limpio;
-  };
 
   // ─── Toast ───────────────────────────────────────────────────────────────────
 
@@ -175,117 +164,6 @@ const Personal = () => {
   }, []);
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
-
-  const abrirModalPagoIndividual = () => {
-    if (!selectedPersonal) {
-      showToast("Selecciona un personal primero", "error");
-      return;
-    }
-    setMontoPagoModal("");
-    setMostrarModalPagoIndividual(true);
-  };
-
-  const abrirModalPagoTodos = () => {
-    setMontoPagoModal("");
-    setMostrarModalPagoTodos(true);
-  };
-
-  const confirmarPagoIndividual = async () => {
-    if (!validarMontoPagoModal()) return;
-    if (!selectedPersonal) return;
-
-    setLoadingPagoIndividual(true);
-    try {
-      const monto = parseFloat(montoPagoModal);
-      const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto,
-          fecha: new Date().toISOString().split("T")[0],
-        }),
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        showToast(data.message || "Error al registrar pago individual", "error");
-        return;
-      }
-
-      const mailRes = await fetch(buildApiUrl("/mail/send-payment"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: selectedPersonal.correo,
-          nombre: selectedPersonal.nombre,
-          monto,
-          tipo: "mensual",
-        }),
-      });
-      const mailData = await mailRes.json();
-
-      if (!mailData.ok) {
-        showToast(mailData.error || "Pago registrado, pero no se pudo enviar el correo", "error");
-        return;
-      }
-
-      showToast("Pago individual registrado y correo enviado");
-      setMostrarModalPagoIndividual(false);
-      setMontoPagoModal("");
-      await fetchPersonal();
-    } catch {
-      showToast("Error al pagar individual", "error");
-    } finally {
-      setLoadingPagoIndividual(false);
-    }
-  };
-
-  const confirmarPagoTodos = async () => {
-    if (!validarMontoPagoModal()) return;
-
-    setLoadingPagoTodos(true);
-    try {
-      const monto = parseFloat(montoPagoModal);
-      const res = await fetch("/api/personal/pago-todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto,
-          fecha: new Date().toISOString().split("T")[0],
-        }),
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        showToast(data.message || "Error al registrar pago a todos", "error");
-        return;
-      }
-
-      const mailRes = await fetch(buildApiUrl("/mail/send-payment-all"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto,
-          tipo: "mensual",
-        }),
-      });
-      const mailData = await mailRes.json();
-
-      if (!mailData.ok) {
-        showToast(mailData.error || "Pago registrado, pero no se pudo enviar el correo a todos", "error");
-        return;
-      }
-
-      showToast(`Pago a todos registrado. Correos enviados: ${mailData.sent}`);
-      setMostrarModalPagoTodos(false);
-      setMontoPagoModal("");
-      await fetchPersonal();
-    } catch {
-      showToast("Error al pagar a todos", "error");
-    } finally {
-      setLoadingPagoTodos(false);
-    }
-  };
 
   const handleCrearPersonal = async () => {
     const errores = validarPersonal(nuevoPersonal);
@@ -697,125 +575,7 @@ const Personal = () => {
         </div>
       )}
 
-      {mostrarModalPagoIndividual && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <h3 style={{ margin: 0, marginBottom: 14, fontFamily: FONTS.heading, color: COLORS.text }}>
-              Pagar a {selectedPersonal?.nombre || "personal"}
-            </h3>
-            <input
-              type="text"
-              placeholder="Monto a pagar"
-              value={montoPagoModal}
-              onChange={(e) => setMontoPagoModal(limpiarMonto(e.target.value))}
-              style={{
-                width: "100%",
-                padding: 12,
-                borderRadius: 10,
-                border: `1px solid ${COLORS.border}`,
-                fontFamily: FONTS.body,
-                color: COLORS.text,
-                marginBottom: 12,
-              }}
-            />
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                onClick={confirmarPagoIndividual}
-                disabled={loadingPagoIndividual}
-                style={{
-                  flex: 1,
-                  background: loadingPagoIndividual ? COLORS.textLight : COLORS.success,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: loadingPagoIndividual ? "not-allowed" : "pointer",
-                }}
-              >
-                {loadingPagoIndividual ? "Procesando..." : "Confirmar pago individual"}
-              </button>
-              <button
-                onClick={() => setMostrarModalPagoIndividual(false)}
-                style={{
-                  flex: 1,
-                  background: COLORS.textLight,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {mostrarModalPagoTodos && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <h3 style={{ margin: 0, marginBottom: 14, fontFamily: FONTS.heading, color: COLORS.text }}>
-              Pagar a todo el personal
-            </h3>
-            <input
-              type="text"
-              placeholder="Monto total a pagar"
-              value={montoPagoModal}
-              onChange={(e) => setMontoPagoModal(limpiarMonto(e.target.value))}
-              style={{
-                width: "100%",
-                padding: 12,
-                borderRadius: 10,
-                border: `1px solid ${COLORS.border}`,
-                fontFamily: FONTS.body,
-                color: COLORS.text,
-                marginBottom: 12,
-              }}
-            />
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                onClick={confirmarPagoTodos}
-                disabled={loadingPagoTodos}
-                style={{
-                  flex: 1,
-                  background: loadingPagoTodos ? COLORS.textLight : COLORS.success,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: loadingPagoTodos ? "not-allowed" : "pointer",
-                }}
-              >
-                {loadingPagoTodos ? "Procesando..." : "Confirmar pago a todos"}
-              </button>
-              <button
-                onClick={() => setMostrarModalPagoTodos(false)}
-                style={{
-                  flex: 1,
-                  background: COLORS.textLight,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* ── Tabla de personal ─────────────────────────────────────────────── */}
       <div>
@@ -856,36 +616,7 @@ const Personal = () => {
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
             </button>
-            <button
-              onClick={abrirModalPagoIndividual}
-              style={{
-                background: COLORS.secondary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor: "pointer",
-              }}
-            >
-              Pagar elegido
-            </button>
-            <button
-              onClick={abrirModalPagoTodos}
-              style={{
-                background: COLORS.secondary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor: "pointer",
-              }}
-            >
-              Pagar a todos
-            </button>
+            
             <button
               onClick={handleEnviarCorreo}
               disabled={enviandoCorreo}
