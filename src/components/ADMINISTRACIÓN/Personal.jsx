@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { COLORS, FONTS } from "../../colors";
-import { buildApiUrl } from "../../config";
 
 const Personal = () => {
   const [personalList, setPersonalList] = useState([]);
@@ -35,12 +34,6 @@ const Personal = () => {
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
 
-  const [mostrarModalPagoIndividual, setMostrarModalPagoIndividual] = useState(false);
-  const [mostrarModalPagoTodos, setMostrarModalPagoTodos] = useState(false);
-  const [montoPagoModal, setMontoPagoModal] = useState("");
-  const [loadingPagoIndividual, setLoadingPagoIndividual] = useState(false);
-  const [loadingPagoTodos, setLoadingPagoTodos] = useState(false);
-
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
@@ -68,6 +61,14 @@ const Personal = () => {
     if (personal.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.correo)) {
       errores.correo = "Ingresa un correo electrónico válido";
     }
+    if (personal.fecha_nacimiento) {
+      const fecha = new Date(personal.fecha_nacimiento);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      if (fecha < hoy) {
+        errores.fecha_nacimiento = "La fecha no puede ser en el pasado";
+      }
+    }
     return errores;
   };
 
@@ -78,15 +79,6 @@ const Personal = () => {
     if (num <= 0) return `El monto debe ser mayor a 0`;
     if (num > 999999) return `El monto no puede exceder 999,999`;
     return "";
-  };
-
-  const validarMontoPagoModal = () => {
-    const error = validarMonto(montoPagoModal, "pago");
-    if (error) {
-      showToast(error, "error");
-      return false;
-    }
-    return true;
   };
 
   const limpiarMonto = (valor) => {
@@ -175,117 +167,6 @@ const Personal = () => {
   }, []);
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
-
-  const abrirModalPagoIndividual = () => {
-    if (!selectedPersonal) {
-      showToast("Selecciona un personal primero", "error");
-      return;
-    }
-    setMontoPagoModal("");
-    setMostrarModalPagoIndividual(true);
-  };
-
-  const abrirModalPagoTodos = () => {
-    setMontoPagoModal("");
-    setMostrarModalPagoTodos(true);
-  };
-
-  const confirmarPagoIndividual = async () => {
-    if (!validarMontoPagoModal()) return;
-    if (!selectedPersonal) return;
-
-    setLoadingPagoIndividual(true);
-    try {
-      const monto = parseFloat(montoPagoModal);
-      const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto,
-          fecha: new Date().toISOString().split("T")[0],
-        }),
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        showToast(data.message || "Error al registrar pago individual", "error");
-        return;
-      }
-
-      const mailRes = await fetch(buildApiUrl("/mail/send-payment"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: selectedPersonal.correo,
-          nombre: selectedPersonal.nombre,
-          monto,
-          tipo: "mensual",
-        }),
-      });
-      const mailData = await mailRes.json();
-
-      if (!mailData.ok) {
-        showToast(mailData.error || "Pago registrado, pero no se pudo enviar el correo", "error");
-        return;
-      }
-
-      showToast("Pago individual registrado y correo enviado");
-      setMostrarModalPagoIndividual(false);
-      setMontoPagoModal("");
-      await fetchPersonal();
-    } catch {
-      showToast("Error al pagar individual", "error");
-    } finally {
-      setLoadingPagoIndividual(false);
-    }
-  };
-
-  const confirmarPagoTodos = async () => {
-    if (!validarMontoPagoModal()) return;
-
-    setLoadingPagoTodos(true);
-    try {
-      const monto = parseFloat(montoPagoModal);
-      const res = await fetch("/api/personal/pago-todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto,
-          fecha: new Date().toISOString().split("T")[0],
-        }),
-      });
-      const data = await res.json();
-
-      if (!data.success) {
-        showToast(data.message || "Error al registrar pago a todos", "error");
-        return;
-      }
-
-      const mailRes = await fetch(buildApiUrl("/mail/send-payment-all"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto,
-          tipo: "mensual",
-        }),
-      });
-      const mailData = await mailRes.json();
-
-      if (!mailData.ok) {
-        showToast(mailData.error || "Pago registrado, pero no se pudo enviar el correo a todos", "error");
-        return;
-      }
-
-      showToast(`Pago a todos registrado. Correos enviados: ${mailData.sent}`);
-      setMostrarModalPagoTodos(false);
-      setMontoPagoModal("");
-      await fetchPersonal();
-    } catch {
-      showToast("Error al pagar a todos", "error");
-    } finally {
-      setLoadingPagoTodos(false);
-    }
-  };
 
   const handleCrearPersonal = async () => {
     const errores = validarPersonal(nuevoPersonal);
@@ -504,21 +385,59 @@ const Personal = () => {
 
     setEnviandoCorreo(true);
     try {
-      const res = await fetch("http://localhost:5000/mail/send-payment", {
+      const res = await fetch("/mail/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: selectedPersonal.correo,
-          nombre: selectedPersonal.nombre,
-          monto: 0,
-          tipo: "mensual",
+          subject: "Notificación de pago de sueldo",
+          html: `
+            <!DOCTYPE html>
+            <html lang="es">
+            <body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+                <tr><td align="center">
+                  <table width="520" cellpadding="0" cellspacing="0"
+                    style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                    <tr>
+                      <td style="background:#4f46e5;padding:28px 36px;text-align:center;">
+                        <div style="font-size:32px;">💼</div>
+                        <h1 style="margin:8px 0 0;color:#fff;font-size:20px;font-weight:700;">¡Sueldo pagado!</h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:32px 36px;">
+                        <p style="margin:0 0 14px;color:#374151;font-size:15px;">
+                          Hola, <strong>${selectedPersonal.nombre}</strong> 👋
+                        </p>
+                        <p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;">
+                          Te informamos que tu <strong>remuneración ha sido pagada</strong> correctamente.
+                          Si tienes alguna duda, comunícate con el área de administración.
+                        </p>
+                        <p style="margin:0;color:#9ca3af;font-size:12px;">
+                          Este mensaje es generado automáticamente, por favor no respondas a este correo.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 36px;text-align:center;">
+                        <p style="margin:0;color:#9ca3af;font-size:11px;">© ${new Date().getFullYear()} Sistema de Gestión de Personal</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+            </body>
+            </html>
+          `,
+          text: `Hola ${selectedPersonal.nombre}, tu sueldo ha sido pagado correctamente. Fecha: ${new Date().toLocaleDateString("es-ES")}.`,
         }),
       });
       const data = await res.json();
-      if (data.ok || data.success) {
+      if (data.ok) {
         showToast(`Correo enviado a ${selectedPersonal.correo}`);
       } else {
-        showToast(data.error || data.message || "Error al enviar el correo", "error");
+        showToast(data.error || "Error al enviar el correo", "error");
       }
     } catch {
       showToast("Error al enviar el correo", "error");
@@ -549,6 +468,7 @@ const Personal = () => {
         showToast("Bono pagado y registrado correctamente");
         setMontoPagoBono("");
         setErroresMontoBono("");
+        // Envía correo de notificación si hay correo registrado
         await enviarNotificacionPago(montoPagoBono, "bono");
       } else {
         showToast(data.message || "Error al pagar bono", "error");
@@ -580,6 +500,7 @@ const Personal = () => {
         showToast("Pago mensual registrado correctamente");
         setMontoPagoMensual("");
         setErroresMontoMensual("");
+        // Envía correo de notificación si hay correo registrado
         await enviarNotificacionPago(montoPagoMensual, "mensual");
       } else {
         showToast(data.message || "Error al registrar pago mensual", "error");
@@ -640,27 +561,6 @@ const Personal = () => {
       </div>
     ) : null;
 
-  const modalOverlayStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    background: "rgba(0,0,0,0.35)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-  };
-
-  const modalContentStyle = {
-    width: windowWidth < 640 ? "92%" : 440,
-    background: COLORS.white,
-    borderRadius: 16,
-    padding: 24,
-    boxShadow: "0 16px 36px rgba(0,0,0,0.22)",
-  };
-
   // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
@@ -697,126 +597,6 @@ const Personal = () => {
         </div>
       )}
 
-      {mostrarModalPagoIndividual && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <h3 style={{ margin: 0, marginBottom: 14, fontFamily: FONTS.heading, color: COLORS.text }}>
-              Pagar a {selectedPersonal?.nombre || "personal"}
-            </h3>
-            <input
-              type="text"
-              placeholder="Monto a pagar"
-              value={montoPagoModal}
-              onChange={(e) => setMontoPagoModal(limpiarMonto(e.target.value))}
-              style={{
-                width: "100%",
-                padding: 12,
-                borderRadius: 10,
-                border: `1px solid ${COLORS.border}`,
-                fontFamily: FONTS.body,
-                color: COLORS.text,
-                marginBottom: 12,
-              }}
-            />
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                onClick={confirmarPagoIndividual}
-                disabled={loadingPagoIndividual}
-                style={{
-                  flex: 1,
-                  background: loadingPagoIndividual ? COLORS.textLight : COLORS.success,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: loadingPagoIndividual ? "not-allowed" : "pointer",
-                }}
-              >
-                {loadingPagoIndividual ? "Procesando..." : "Confirmar pago individual"}
-              </button>
-              <button
-                onClick={() => setMostrarModalPagoIndividual(false)}
-                style={{
-                  flex: 1,
-                  background: COLORS.textLight,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {mostrarModalPagoTodos && (
-        <div style={modalOverlayStyle}>
-          <div style={modalContentStyle}>
-            <h3 style={{ margin: 0, marginBottom: 14, fontFamily: FONTS.heading, color: COLORS.text }}>
-              Pagar a todo el personal
-            </h3>
-            <input
-              type="text"
-              placeholder="Monto total a pagar"
-              value={montoPagoModal}
-              onChange={(e) => setMontoPagoModal(limpiarMonto(e.target.value))}
-              style={{
-                width: "100%",
-                padding: 12,
-                borderRadius: 10,
-                border: `1px solid ${COLORS.border}`,
-                fontFamily: FONTS.body,
-                color: COLORS.text,
-                marginBottom: 12,
-              }}
-            />
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                onClick={confirmarPagoTodos}
-                disabled={loadingPagoTodos}
-                style={{
-                  flex: 1,
-                  background: loadingPagoTodos ? COLORS.textLight : COLORS.success,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: loadingPagoTodos ? "not-allowed" : "pointer",
-                }}
-              >
-                {loadingPagoTodos ? "Procesando..." : "Confirmar pago a todos"}
-              </button>
-              <button
-                onClick={() => setMostrarModalPagoTodos(false)}
-                style={{
-                  flex: 1,
-                  background: COLORS.textLight,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 10,
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: "pointer",
-                }}
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Tabla de personal ─────────────────────────────────────────────── */}
       <div>
         <div
@@ -840,7 +620,7 @@ const Personal = () => {
           >
             Personal de la Empresa
           </h3>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button
               onClick={() => setMostrarNuevoPersonal((v) => !v)}
               style={{
@@ -856,36 +636,7 @@ const Personal = () => {
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
             </button>
-            <button
-              onClick={abrirModalPagoIndividual}
-              style={{
-                background: COLORS.secondary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor: "pointer",
-              }}
-            >
-              Pagar elegido
-            </button>
-            <button
-              onClick={abrirModalPagoTodos}
-              style={{
-                background: COLORS.secondary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor: "pointer",
-              }}
-            >
-              Pagar a todos
-            </button>
+            {/* Botón Enviar correo — activo si hay personal seleccionado con correo */}
             <button
               onClick={handleEnviarCorreo}
               disabled={enviandoCorreo}
@@ -1080,12 +831,326 @@ const Personal = () => {
             </div>
           </div>
         )}
-        {/* ... resto del render sin cambios ... */}
+
+        {/* ── Tabla ────────────────────────────────────────────────────────── */}
+        <div
+          style={{
+            maxHeight: "600px",
+            overflowY: "auto",
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: 10,
+            boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+          }}
+        >
+          <table style={{ width: "100%", fontSize: "0.95rem", background: COLORS.white }}>
+            <thead style={{ position: "sticky", top: 0, background: COLORS.light }}>
+              <tr>
+                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "center", width: 56, fontFamily: FONTS.heading, color: COLORS.text }}>Check</th>
+                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Nombre</th>
+                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Código</th>
+                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Tipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {personalList.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", padding: 14, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                    Sin personal registrado
+                  </td>
+                </tr>
+              ) : (
+                personalList.map((p) => {
+                  const isSelected = selectedPersonal?.id_personal === p.id_personal;
+                  return (
+                    <tr
+                      key={p.id_personal}
+                      onClick={() => handleSelectPersonal(p)}
+                      style={{
+                        cursor: "pointer",
+                        background: isSelected ? COLORS.backgroundLight : COLORS.white,
+                        borderBottom: `1px solid ${COLORS.border}`,
+                      }}
+                    >
+                      <td
+                        style={{ padding: "10px", textAlign: "center" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPersonalIds.includes(p.id_personal)}
+                          disabled={!selectedBonoId}
+                          onChange={() => handleTogglePersonalCheck(p.id_personal)}
+                          style={{ cursor: selectedBonoId ? "pointer" : "not-allowed" }}
+                        />
+                      </td>
+                      <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {p.nombre || "Sin nombre"}
+                          {p.correo && (
+                            <span title={p.correo} style={{ fontSize: "0.75rem", color: COLORS.textLight }}>✉️</span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>{p.Codigo || "-"}</td>
+                      <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>{p.tipo_personal?.descripcion || "Sin tipo"}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-      {/* ... resto de tu componente ... */}
+
+      {/* ── Panel de detalles ──────────────────────────────────────────────── */}
+      <div
+        style={{
+          background: COLORS.backgroundLight,
+          padding: 18,
+          borderRadius: 12,
+          border: `1px solid ${COLORS.border}`,
+          boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
+        }}
+      >
+        {/* Asignar bono */}
+        <div style={{ marginBottom: 14, padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+          <h5 style={{ fontWeight: 800, marginBottom: 8, fontFamily: FONTS.heading, color: COLORS.text }}>Asignar Bono</h5>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+            <input
+              type="text"
+              placeholder="Nuevo bono"
+              value={nuevoBono}
+              onChange={(e) => setNuevoBono(e.target.value)}
+              style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+            />
+            <button onClick={handleCrearBono} style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer" }}>
+              Crear bono
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <select
+              value={selectedBonoId}
+              onChange={(e) => { setSelectedBonoId(e.target.value); setSelectedPersonalIds([]); }}
+              style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+            >
+              <option value="">-- Seleccionar bono --</option>
+              {allBonos.map((b) => (
+                <option key={b.id_bono} value={b.id_bono}>{b.descripcion}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleGuardarAsignacionBono}
+              disabled={!selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion}
+              style={{
+                background: !selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion ? COLORS.textLight : COLORS.primary,
+                color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
+                cursor: !selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion ? "not-allowed" : "pointer",
+              }}
+            >
+              {guardandoAsignacion ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
+            <select
+              value={bonoAEliminar}
+              onChange={(e) => setBonoAEliminar(e.target.value)}
+              style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+            >
+              <option value="">-- Seleccionar bono a eliminar --</option>
+              {allBonos.map((b) => (
+                <option key={`del-${b.id_bono}`} value={b.id_bono}>{b.descripcion}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleEliminarBono}
+              disabled={!bonoAEliminar}
+              style={{
+                background: !bonoAEliminar ? COLORS.textLight : COLORS.error,
+                color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
+                cursor: !bonoAEliminar ? "not-allowed" : "pointer",
+              }}
+            >
+              Eliminar bono
+            </button>
+          </div>
+          <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
+            Selecciona un bono y luego marca el check del personal para asignarlo.
+          </div>
+        </div>
+
+        {selectedPersonal ? (
+          <>
+            {/* Header detalle */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+              <h4 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>
+                Detalles de {selectedPersonal.nombre}
+              </h4>
+              <button
+                onClick={handleEliminarPersonal}
+                style={{
+                  background: COLORS.error, color: COLORS.white, border: "none", borderRadius: 8,
+                  padding: "8px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer",
+                  fontSize: "0.85rem", whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(239,68,68,0.25)",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.opacity = "0.85")}
+                onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+              >
+                🗑️ Eliminar
+              </button>
+            </div>
+
+            {/* Info */}
+            <div style={{ marginBottom: 12, padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, fontSize: "0.95rem" }}>
+                <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
+                  <strong>Código:</strong> {selectedPersonal.Codigo || "-"}
+                </div>
+                <div style={{ fontFamily: FONTS.body, color: COLORS.text, display: "flex", alignItems: "center", gap: 8 }}>
+                  <strong>CV:</strong>
+                  {selectedPersonal.cv ? (
+                    <a
+                      href={selectedPersonal.cv}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px",
+                        background: COLORS.error, color: COLORS.white, borderRadius: 6,
+                        textDecoration: "none", fontSize: "0.85rem", fontWeight: 600,
+                      }}
+                      onMouseOver={(e) => (e.currentTarget.style.opacity = "0.8")}
+                      onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
+                    >
+                      📄 Ver PDF
+                    </a>
+                  ) : (
+                    <span style={{ color: COLORS.textLight }}>Sin CV</span>
+                  )}
+                </div>
+                <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
+                  <strong>Fecha de nacimiento:</strong> {selectedPersonal.fecha_nacimiento || "-"}
+                </div>
+                <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
+                  <strong>Tipo:</strong> {selectedPersonal.tipo_personal?.descripcion || "Sin tipo"}
+                </div>
+                {/* ── Correo ── */}
+                <div style={{ fontFamily: FONTS.body, color: COLORS.text, gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 8 }}>
+                  <strong>Correo:</strong>
+                  {selectedPersonal.correo ? (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      background: "#eff6ff", color: "#3b82f6", borderRadius: 6,
+                      padding: "3px 10px", fontSize: "0.9rem", fontWeight: 600,
+                    }}>
+                      ✉️ {selectedPersonal.correo}
+                    </span>
+                  ) : (
+                    <span style={{ color: COLORS.textLight, fontSize: "0.9rem" }}>Sin correo registrado</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Bonos asignados */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
+                <h5 style={{ fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>Bonos Asignados</h5>
+                <div style={{ display: "flex", flexDirection: windowWidth < 640 ? "column" : "row", gap: 8, alignItems: "stretch", width: windowWidth < 640 ? "100%" : "auto" }}>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type="number"
+                      placeholder="Monto"
+                      value={montoPagoBono}
+                      onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoBono(l); if (l.trim()) setErroresMontoBono(""); }}
+                      onBlur={() => { if (montoPagoBono) setErroresMontoBono(validarMonto(montoPagoBono, "bono")); }}
+                      onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
+                      step="0.01" min="0"
+                      style={{ width: windowWidth < 640 ? "100%" : 130, padding: 10, borderRadius: 8, border: `1px solid ${erroresMontoBono ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+                    />
+                    {errorMsg(erroresMontoBono)}
+                  </div>
+                  <button
+                    onClick={handlePagarBono}
+                    disabled={!montoPagoBono || !!erroresMontoBono}
+                    style={{
+                      background: !montoPagoBono || erroresMontoBono ? COLORS.textLight : COLORS.success,
+                      color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 16px",
+                      fontWeight: 700, fontFamily: FONTS.heading,
+                      cursor: !montoPagoBono || erroresMontoBono ? "not-allowed" : "pointer", whiteSpace: "nowrap",
+                    }}
+                  >
+                    Pagar
+                  </button>
+                </div>
+              </div>
+              <div style={{ background: COLORS.white, padding: 12, borderRadius: 10, border: `1px solid ${COLORS.border}`, maxHeight: 200, overflowY: "auto" }}>
+                {personalBonos.length === 0 ? (
+                  <div style={{ color: COLORS.textLight, fontFamily: FONTS.body, fontSize: "0.95rem" }}>Sin bonos asignados</div>
+                ) : (
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                    {personalBonos.map((b) => (
+                      <li key={b.bono_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, fontFamily: FONTS.body, paddingBottom: 10, borderBottom: `1px solid ${COLORS.border}` }}>
+                        <span style={{ fontWeight: 600 }}>{b.bonos?.descripcion || b.bono_id}</span>
+                        <span style={{ color: COLORS.textLight, fontSize: "0.85rem" }}>Asignado</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            {/* Próximos pagos */}
+            <div style={{ marginBottom: 14, padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+              <h5 style={{ fontWeight: 800, marginBottom: 6, fontFamily: FONTS.heading, color: COLORS.text }}>Próximos pagos estimados</h5>
+              <div style={{ fontFamily: FONTS.body, color: COLORS.textLight }}>Próximo pago: {nextPayText}</div>
+            </div>
+
+            {/* Pago mensual */}
+            <div style={{ padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+              <h5 style={{ fontWeight: 800, marginBottom: 12, fontFamily: FONTS.heading, color: COLORS.text }}>Registrar Pago Mensual</h5>
+              <div style={{ display: "flex", gap: 12, flexDirection: windowWidth < 640 ? "column" : "row", alignItems: windowWidth < 640 ? "stretch" : "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <input
+                    type="number"
+                    placeholder="Monto mensual"
+                    value={montoPagoMensual}
+                    onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoMensual(l); if (l.trim()) setErroresMontoMensual(""); }}
+                    onBlur={() => { if (montoPagoMensual) setErroresMontoMensual(validarMonto(montoPagoMensual, "pago mensual")); }}
+                    onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
+                    step="0.01" min="0"
+                    style={{ width: "100%", padding: 12, borderRadius: 8, border: `1px solid ${erroresMontoMensual ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text, boxSizing: "border-box" }}
+                  />
+                  {errorMsg(erroresMontoMensual)}
+                </div>
+                <button
+                  onClick={handlePagarMensual}
+                  disabled={!montoPagoMensual || !!erroresMontoMensual}
+                  style={{
+                    background: !montoPagoMensual || erroresMontoMensual ? COLORS.textLight : COLORS.success,
+                    color: COLORS.white, border: "none", borderRadius: 10, padding: "12px 22px",
+                    fontWeight: 800, fontFamily: FONTS.heading,
+                    cursor: !montoPagoMensual || erroresMontoMensual ? "not-allowed" : "pointer",
+                    boxShadow: !montoPagoMensual || erroresMontoMensual ? "none" : "0 6px 16px rgba(16,185,129,0.25)",
+                    whiteSpace: "nowrap", minWidth: windowWidth < 640 ? "100%" : "auto",
+                  }}
+                >
+                  Pagar
+                </button>
+              </div>
+              {selectedPersonal.correo && (
+                <div style={{ marginTop: 10, fontSize: "0.8rem", color: COLORS.textLight, fontFamily: FONTS.body, display: "flex", alignItems: "center", gap: 4 }}>
+                  ✉️ Al pagar se enviará una notificación a <strong>{selectedPersonal.correo}</strong>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div style={{ padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.textLight }}>
+            Selecciona un personal para ver sus detalles y registrar pagos.
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default Personal;
-
