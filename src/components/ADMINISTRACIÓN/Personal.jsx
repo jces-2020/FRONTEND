@@ -644,6 +644,3 @@ const Personal = () => {
 };
 
 export default Personal;
-apps-fileview.texmex_20260603.06_p1
-correo.txt
-Mostrando correo.txt.
