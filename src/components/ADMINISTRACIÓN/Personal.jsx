@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { COLORS, FONTS } from "../../colors";
+import { buildApiUrl } from "../../config";
 
 const Personal = () => {
   const [personalList, setPersonalList] = useState([]);
@@ -66,14 +67,6 @@ const Personal = () => {
     }
     if (personal.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personal.correo)) {
       errores.correo = "Ingresa un correo electrónico válido";
-    }
-    if (personal.fecha_nacimiento) {
-      const fecha = new Date(personal.fecha_nacimiento);
-      const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0);
-      if (fecha < hoy) {
-        errores.fecha_nacimiento = "La fecha no puede ser en el pasado";
-      }
     }
     return errores;
   };
@@ -219,7 +212,7 @@ const Personal = () => {
         return;
       }
 
-      const mailRes = await fetch("/mail/send-payment", {
+      const mailRes = await fetch(buildApiUrl("/mail/send-payment"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -268,7 +261,7 @@ const Personal = () => {
         return;
       }
 
-      const mailRes = await fetch("/mail/send-payment-all", {
+      const mailRes = await fetch(buildApiUrl("/mail/send-payment-all"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -477,7 +470,7 @@ const Personal = () => {
     if (!selectedPersonal?.correo) return; // sin correo, silencioso
 
     try {
-      const res = await fetch("/mail/send-payment", {
+      const res = await fetch(buildApiUrl("/mail/send-payment"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -511,59 +504,21 @@ const Personal = () => {
 
     setEnviandoCorreo(true);
     try {
-      const res = await fetch("/mail/send", {
+      const res = await fetch(buildApiUrl("/mail/send-payment"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: selectedPersonal.correo,
-          subject: "Notificación de pago de sueldo",
-          html: `
-            <!DOCTYPE html>
-            <html lang="es">
-            <body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-                <tr><td align="center">
-                  <table width="520" cellpadding="0" cellspacing="0"
-                    style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-                    <tr>
-                      <td style="background:#4f46e5;padding:28px 36px;text-align:center;">
-                        <div style="font-size:32px;">💼</div>
-                        <h1 style="margin:8px 0 0;color:#fff;font-size:20px;font-weight:700;">¡Sueldo pagado!</h1>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:32px 36px;">
-                        <p style="margin:0 0 14px;color:#374151;font-size:15px;">
-                          Hola, <strong>${selectedPersonal.nombre}</strong> 👋
-                        </p>
-                        <p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;">
-                          Te informamos que tu <strong>remuneración ha sido pagada</strong> correctamente.
-                          Si tienes alguna duda, comunícate con el área de administración.
-                        </p>
-                        <p style="margin:0;color:#9ca3af;font-size:12px;">
-                          Este mensaje es generado automáticamente, por favor no respondas a este correo.
-                        </p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 36px;text-align:center;">
-                        <p style="margin:0;color:#9ca3af;font-size:11px;">© ${new Date().getFullYear()} Sistema de Gestión de Personal</p>
-                      </td>
-                    </tr>
-                  </table>
-                </td></tr>
-              </table>
-            </body>
-            </html>
-          `,
-          text: `Hola ${selectedPersonal.nombre}, tu sueldo ha sido pagado correctamente. Fecha: ${new Date().toLocaleDateString("es-ES")}.`,
+          nombre: selectedPersonal.nombre,
+          monto: 0,
+          tipo: "mensual",
         }),
       });
       const data = await res.json();
-      if (data.ok) {
+      if (data.ok || data.success) {
         showToast(`Correo enviado a ${selectedPersonal.correo}`);
       } else {
-        showToast(data.error || "Error al enviar el correo", "error");
+        showToast(data.error || data.message || "Error al enviar el correo", "error");
       }
     } catch {
       showToast("Error al enviar el correo", "error");
