@@ -23,12 +23,13 @@ function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Capturar token de confirmación de Supabase en el hash
+    // Capturar token de confirmación de Supabase solo si es de registro (type=signup)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
     const type = hashParams.get('type');
 
-    if (type === 'email_confirmation' && accessToken) {
+    // Solo aceptar tokens de signup (confirmación de email en registro)
+    if (type === 'signup' && accessToken) {
       localStorage.setItem('auth_token', accessToken);
       window.location.hash = '';
       navigate('/user');
