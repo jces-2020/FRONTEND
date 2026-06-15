@@ -35,6 +35,19 @@ const PanelCliente = ({ onLogout }) => {
   const pedidoDeleteTimersRef         = useRef({});
   const [chartFocused, setChartFocused] = useState(false);
 
+  // Capturar token de confirmación de Supabase cuando usuario confirma email
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+
+    if (type === 'email_confirmation' && accessToken) {
+      localStorage.setItem('auth_token', accessToken);
+      window.location.hash = '';
+      window.location.pathname = '/user';
+    }
+  }, []);
+
   const isPedidoEntregado = (estado) => {
     const s = String(estado || "").toLowerCase();
     return s.includes("entregado");
