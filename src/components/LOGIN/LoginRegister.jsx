@@ -38,8 +38,8 @@ const LbTooltip = ({ visible, text = "Completa este campo" }) => {
 const getNoticeType = (text) => {
   if (!text) return "info";
   const lower = text.toLowerCase();
-  if (lower.includes("exitoso") || lower.includes("verificado")) return "success";
-  if (lower.includes("consultando") || lower.includes("verificando")) return "info";
+  if (lower.includes("exitoso") || lower.includes("verificado") || lower.includes("mira tu gmail")) return "success";
+  if (lower.includes("consultando") || lower.includes("verificando") || lower.includes("validando") || lower.includes("creando")) return "info";
   return "error";
 };
 
@@ -288,7 +288,12 @@ const LoginRegister = ({
           style={{ marginTop: 2 }}
           disabled={loading}
         >
-          {loading ? "Registrando..." : "Crear Cuenta"}
+          {loading ? (
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <span style={{ display: "inline-block", width: 10, height: 10, border: "2px solid rgba(26,10,10,0.3)", borderTopColor: "#1a0a0a", borderRadius: "50%", animation: "lb-spin 0.8s linear infinite" }} />
+              Registrando...
+            </span>
+          ) : "Crear Cuenta"}
         </button>
 
         <div className="lb-divider" style={{ margin: "2px 0 0" }}>O regístrate con</div>

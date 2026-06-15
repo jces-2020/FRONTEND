@@ -375,8 +375,8 @@ export default function LoginInicioSesion() {
   const getNoticeType = (text) => {
     if (!text) return "info";
     const lower = text.toLowerCase();
-    if (lower.includes("exitoso") || lower.includes("verificado")) return "success";
-    if (lower.includes("verificando")) return "info";
+    if (lower.includes("exitoso") || lower.includes("verificado") || lower.includes("mira tu gmail")) return "success";
+    if (lower.includes("validando") || lower.includes("verificando") || lower.includes("creando")) return "info";
     return "error";
   };
 
@@ -490,57 +490,51 @@ export default function LoginInicioSesion() {
     if (!/^9\d{8}$/.test(numeroLimpio)) { setMensaje("El número debe iniciar con 9 y tener 9 dígitos."); return; }
 
     setLoading(true);
-    setMensaje("Validando Gmail...");
+    setMensaje("Validando correo...");
 
     try {
       // Paso 1: Validar email
       const validateRes = await fetch(`${API_BASE}/api/clientes/validar-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo: correoLimpio, contraseña: form.contraseña })
+        body: JSON.stringify({ correo: correoLimpio })
       });
-      const validateText = await validateRes.text();
-      let validateJson;
-      try { validateJson = JSON.parse(validateText); } catch { validateJson = { success: false, email_valido: false, message: validateText }; }
+      const validateJson = await validateRes.json();
 
       if (!validateJson.email_valido) {
-        setMensaje(validateJson.message || "Gmail inválido. Verifica que sea correcto.");
+        setMensaje(validateJson.message || "Correo inválido o ya registrado.");
         setLoading(false);
         return;
       }
 
-      const authId = validateJson.auth_id;
-
       // Paso 2: Registrar con datos completos
-      setMensaje("Guardando datos...");
+      setMensaje("Creando cuenta...");
       const res = await fetch(`${API_BASE}/api/clientes/registrar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          auth_id: authId,
           nombre: nombreLimpio,
           correo: correoLimpio,
           numero: numeroLimpio,
           documento: form.documento,
+          contraseña: form.contraseña,
           tipo_cliente_id: form.tipo_cliente_id,
           tipo_documento: form.tipo_documento
         })
       });
-      const text = await res.text();
-      let json;
-      try { json = JSON.parse(text); } catch { json = { success: false, message: text }; }
+      const json = await res.json();
 
       if (json.success) {
-        setMensaje("✓ Cuenta creada. Verifica tu correo y luego inicia sesión.");
+        setMensaje("✓ Registro exitoso. Mira tu Gmail.");
         setLoading(false);
         setTimeout(() => {
           setIsLogin(true);
           setForm({ nombre: "", correo: "", contraseña: "", numero: "", documento: "", tipo_documento: "", tipo_cliente_id: "" });
           setMensaje("");
-        }, 2000);
+        }, 3000);
         return;
       } else {
-        setMensaje(json.error?.message || json.error || json.message || "No se pudo registrar");
+        setMensaje(json.message || "No se pudo registrar");
       }
       setLoading(false);
     } catch {
