@@ -1623,3 +1623,4 @@ const PanelCliente = ({ onLogout }) => {
 };
 
 export default PanelCliente;
+
