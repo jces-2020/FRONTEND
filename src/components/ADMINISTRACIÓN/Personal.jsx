@@ -2,10 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { COLORS, FONTS } from "../../colors";
 import { buildApiUrl } from "../../config";
 
-const API_BASE = "https://api.vidriobras.com";
-const safeBuildApiUrl = (path) =>
-  typeof buildApiUrl === "function" ? buildApiUrl(path) : `${API_BASE}${path}`;
-
 const Personal = () => {
   const [personalList, setPersonalList] = useState([]);
   const [tipoPersonalList, setTipoPersonalList] = useState([]);
@@ -39,11 +35,19 @@ const Personal = () => {
     typeof window !== "undefined" ? window.innerWidth : 1024
   );
 
+  const [mostrarModalPagoIndividual, setMostrarModalPagoIndividual] = useState(false);
+  const [mostrarModalPagoTodos, setMostrarModalPagoTodos] = useState(false);
+  const [montoPagoModal, setMontoPagoModal] = useState("");
+  const [loadingPagoIndividual, setLoadingPagoIndividual] = useState(false);
+  const [loadingPagoTodos, setLoadingPagoTodos] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // ─── Validaciones ────────────────────────────────────────────────────────────
 
   const validarPersonal = (personal) => {
     const errores = {};
@@ -76,10 +80,30 @@ const Personal = () => {
     return "";
   };
 
+  const validarMontoPagoModal = () => {
+    const error = validarMonto(montoPagoModal, "pago");
+    if (error) {
+      showToast(error, "error");
+      return false;
+    }
+    return true;
+  };
+
+  const limpiarMonto = (valor) => {
+    const limpio = valor.replace(/[^0-9.]/g, "");
+    const partes = limpio.split(".");
+    if (partes.length > 2) return partes[0] + "." + partes.slice(1).join("");
+    return limpio;
+  };
+
+  // ─── Toast ───────────────────────────────────────────────────────────────────
+
   const showToast = useCallback((mensaje, tipo = "success") => {
     setToast({ mensaje, tipo });
     setTimeout(() => setToast(null), 3500);
   }, []);
+
+  // ─── Fetches ─────────────────────────────────────────────────────────────────
 
   const fetchPersonal = async () => {
     try {
@@ -150,6 +174,119 @@ const Personal = () => {
     fetchAllBonos();
   }, []);
 
+  // ─── Handlers ────────────────────────────────────────────────────────────────
+
+  const abrirModalPagoIndividual = () => {
+    if (!selectedPersonal) {
+      showToast("Selecciona un personal primero", "error");
+      return;
+    }
+    setMontoPagoModal("");
+    setMostrarModalPagoIndividual(true);
+  };
+
+  const abrirModalPagoTodos = () => {
+    setMontoPagoModal("");
+    setMostrarModalPagoTodos(true);
+  };
+
+  const confirmarPagoIndividual = async () => {
+    if (!validarMontoPagoModal()) return;
+    if (!selectedPersonal) return;
+
+    setLoadingPagoIndividual(true);
+    try {
+      const monto = parseFloat(montoPagoModal);
+      const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          monto,
+          fecha: new Date().toISOString().split("T")[0],
+        }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        showToast(data.message || "Error al registrar pago individual", "error");
+        return;
+      }
+
+      const mailRes = await fetch(buildApiUrl("/mail/send-payment"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: selectedPersonal.correo,
+          nombre: selectedPersonal.nombre,
+          monto,
+          tipo: "mensual",
+        }),
+      });
+      const mailData = await mailRes.json();
+
+      if (!mailData.ok) {
+        showToast(mailData.error || "Pago registrado, pero no se pudo enviar el correo", "error");
+        return;
+      }
+
+      showToast("Pago individual registrado y correo enviado");
+      setMostrarModalPagoIndividual(false);
+      setMontoPagoModal("");
+      await fetchPersonal();
+    } catch {
+      showToast("Error al pagar individual", "error");
+    } finally {
+      setLoadingPagoIndividual(false);
+    }
+  };
+
+  const confirmarPagoTodos = async () => {
+    if (!validarMontoPagoModal()) return;
+
+    setLoadingPagoTodos(true);
+    try {
+      const monto = parseFloat(montoPagoModal);
+      const res = await fetch("/api/personal/pago-todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          monto,
+          fecha: new Date().toISOString().split("T")[0],
+        }),
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        showToast(data.message || "Error al registrar pago a todos", "error");
+        return;
+      }
+
+      const mailRes = await fetch(buildApiUrl("/mail/send-payment-all"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          monto,
+          tipo: "mensual",
+        }),
+      });
+      const mailData = await mailRes.json();
+
+      if (!mailData.ok) {
+        showToast(mailData.error || "Pago registrado, pero no se pudo enviar el correo a todos", "error");
+        return;
+      }
+
+      showToast(`Pago a todos registrado. Correos enviados: ${mailData.sent}`);
+      setMostrarModalPagoTodos(false);
+      setMontoPagoModal("");
+      await fetchPersonal();
+    } catch {
+      showToast("Error al pagar a todos", "error");
+    } finally {
+      setLoadingPagoTodos(false);
+    }
+  };
+
   const handleCrearPersonal = async () => {
     const errores = validarPersonal(nuevoPersonal);
     setErroresPersonal(errores);
@@ -216,15 +353,14 @@ const Personal = () => {
   const handleTogglePersonalCheck = (personalId) => {
     if (!selectedBonoId) return;
     setSelectedPersonalIds((prev) =>
-      prev.includes(personalId) ? prev.filter((id) => id !== personalId) : [...prev, personalId]
+      prev.includes(personalId)
+        ? prev.filter((id) => id !== personalId)
+        : [...prev, personalId]
     );
   };
 
   const handleGuardarAsignacionBono = async () => {
-    if (!selectedBonoId) {
-      showToast("Selecciona un bono", "error");
-      return;
-    }
+    if (!selectedBonoId) { showToast("Selecciona un bono", "error"); return; }
     if (selectedPersonalIds.length === 0) {
       showToast("Selecciona al menos un personal", "error");
       return;
@@ -262,10 +398,7 @@ const Personal = () => {
 
   const handleCrearBono = async () => {
     const descripcion = nuevoBono.trim();
-    if (!descripcion) {
-      showToast("Ingresa el nombre del bono", "error");
-      return;
-    }
+    if (!descripcion) { showToast("Ingresa el nombre del bono", "error"); return; }
     try {
       const res = await fetch("/api/bonos", {
         method: "POST",
@@ -286,10 +419,7 @@ const Personal = () => {
   };
 
   const handleEliminarBono = async () => {
-    if (!bonoAEliminar) {
-      showToast("Selecciona un bono para eliminar", "error");
-      return;
-    }
+    if (!bonoAEliminar) { showToast("Selecciona un bono para eliminar", "error"); return; }
     try {
       const res = await fetch(`/api/bonos/${bonoAEliminar}`, { method: "DELETE" });
       const data = await res.json();
@@ -330,10 +460,17 @@ const Personal = () => {
     }
   };
 
+  // ─── Envío de correo ─────────────────────────────────────────────────────────
+
+  /**
+   * Envía una notificación de pago por correo usando el endpoint /mail/send-payment.
+   * tipo: "mensual" | "bono"
+   */
   const enviarNotificacionPago = async (monto, tipo = "mensual") => {
-    if (!selectedPersonal?.correo) return;
+    if (!selectedPersonal?.correo) return; // sin correo, silencioso
+
     try {
-      const res = await fetch(safeBuildApiUrl("/mail/send-payment"), {
+      const res = await fetch("/mail/send-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -352,6 +489,9 @@ const Personal = () => {
     }
   };
 
+  /**
+   * Botón "Enviar correo" manual: envía un correo genérico al personal seleccionado.
+   */
   const handleEnviarCorreo = async () => {
     if (!selectedPersonal) {
       showToast("Selecciona un personal primero", "error");
@@ -364,14 +504,14 @@ const Personal = () => {
 
     setEnviandoCorreo(true);
     try {
-      const res = await fetch(safeBuildApiUrl("/mail/send"), {
+      const res = await fetch("http://localhost:5000/mail/send-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: selectedPersonal.correo,
-          subject: `Notificación - ${selectedPersonal.nombre}`,
-          text: `Hola ${selectedPersonal.nombre},\n\nTe enviamos esta notificación desde el sistema.`,
-          html: `<p>Hola <strong>${selectedPersonal.nombre}</strong>,</p><p>Te enviamos esta notificación desde el sistema.</p>`,
+          nombre: selectedPersonal.nombre,
+          monto: 0,
+          tipo: "mensual",
         }),
       });
       const data = await res.json();
@@ -380,25 +520,20 @@ const Personal = () => {
       } else {
         showToast(data.error || data.message || "Error al enviar el correo", "error");
       }
-    } catch (e) {
+    } catch {
       showToast("Error al enviar el correo", "error");
-      console.warn("Error enviar correo:", e);
     } finally {
       setEnviandoCorreo(false);
     }
   };
 
+  // ─── Pago de bono ─────────────────────────────────────────────────────────────
+
   const handlePagarBono = async () => {
     const error = validarMonto(montoPagoBono, "bono");
     setErroresMontoBono(error);
-    if (error) {
-      showToast(error, "error");
-      return;
-    }
-    if (!selectedPersonal) {
-      showToast("Selecciona un personal", "error");
-      return;
-    }
+    if (error) { showToast(error, "error"); return; }
+    if (!selectedPersonal) { showToast("Selecciona un personal", "error"); return; }
 
     try {
       const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago-bono`, {
@@ -423,17 +558,13 @@ const Personal = () => {
     }
   };
 
+  // ─── Pago mensual ─────────────────────────────────────────────────────────────
+
   const handlePagarMensual = async () => {
     const error = validarMonto(montoPagoMensual, "pago mensual");
     setErroresMontoMensual(error);
-    if (error) {
-      showToast(error, "error");
-      return;
-    }
-    if (!selectedPersonal) {
-      showToast("Selecciona un personal", "error");
-      return;
-    }
+    if (error) { showToast(error, "error"); return; }
+    if (!selectedPersonal) { showToast("Selecciona un personal", "error"); return; }
 
     try {
       const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago`, {
@@ -458,6 +589,8 @@ const Personal = () => {
     }
   };
 
+  // ─── Próximo pago ─────────────────────────────────────────────────────────────
+
   const nextPayText = (() => {
     const today = new Date();
     const day = today.getDate();
@@ -467,6 +600,8 @@ const Personal = () => {
     const nextPayDate = new Date(today.getFullYear(), nextPayMonth, nextPayDay);
     return nextPayDate.toLocaleDateString("es-ES");
   })();
+
+  // ─── Tipos de personal ────────────────────────────────────────────────────────
 
   const tiposPersonalDisponibles = useMemo(() => {
     const mapa = new Map();
@@ -484,6 +619,8 @@ const Personal = () => {
       a.descripcion.localeCompare(b.descripcion, "es")
     );
   }, [tipoPersonalList, personalList]);
+
+  // ─── Estilos de campo ─────────────────────────────────────────────────────────
 
   const fieldStyle = (hasError) => ({
     width: "100%",
@@ -524,6 +661,8 @@ const Personal = () => {
     boxShadow: "0 16px 36px rgba(0,0,0,0.22)",
   };
 
+  // ─── Render ───────────────────────────────────────────────────────────────────
+
   return (
     <div
       style={{
@@ -532,6 +671,7 @@ const Personal = () => {
         gap: 20,
       }}
     >
+      {/* Toast */}
       {toast && (
         <div
           style={{
@@ -557,6 +697,127 @@ const Personal = () => {
         </div>
       )}
 
+      {mostrarModalPagoIndividual && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ margin: 0, marginBottom: 14, fontFamily: FONTS.heading, color: COLORS.text }}>
+              Pagar a {selectedPersonal?.nombre || "personal"}
+            </h3>
+            <input
+              type="text"
+              placeholder="Monto a pagar"
+              value={montoPagoModal}
+              onChange={(e) => setMontoPagoModal(limpiarMonto(e.target.value))}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 10,
+                border: `1px solid ${COLORS.border}`,
+                fontFamily: FONTS.body,
+                color: COLORS.text,
+                marginBottom: 12,
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={confirmarPagoIndividual}
+                disabled={loadingPagoIndividual}
+                style={{
+                  flex: 1,
+                  background: loadingPagoIndividual ? COLORS.textLight : COLORS.success,
+                  color: COLORS.white,
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  fontWeight: 700,
+                  fontFamily: FONTS.heading,
+                  cursor: loadingPagoIndividual ? "not-allowed" : "pointer",
+                }}
+              >
+                {loadingPagoIndividual ? "Procesando..." : "Confirmar pago individual"}
+              </button>
+              <button
+                onClick={() => setMostrarModalPagoIndividual(false)}
+                style={{
+                  flex: 1,
+                  background: COLORS.textLight,
+                  color: COLORS.white,
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  fontWeight: 700,
+                  fontFamily: FONTS.heading,
+                  cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarModalPagoTodos && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h3 style={{ margin: 0, marginBottom: 14, fontFamily: FONTS.heading, color: COLORS.text }}>
+              Pagar a todo el personal
+            </h3>
+            <input
+              type="text"
+              placeholder="Monto total a pagar"
+              value={montoPagoModal}
+              onChange={(e) => setMontoPagoModal(limpiarMonto(e.target.value))}
+              style={{
+                width: "100%",
+                padding: 12,
+                borderRadius: 10,
+                border: `1px solid ${COLORS.border}`,
+                fontFamily: FONTS.body,
+                color: COLORS.text,
+                marginBottom: 12,
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={confirmarPagoTodos}
+                disabled={loadingPagoTodos}
+                style={{
+                  flex: 1,
+                  background: loadingPagoTodos ? COLORS.textLight : COLORS.success,
+                  color: COLORS.white,
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  fontWeight: 700,
+                  fontFamily: FONTS.heading,
+                  cursor: loadingPagoTodos ? "not-allowed" : "pointer",
+                }}
+              >
+                {loadingPagoTodos ? "Procesando..." : "Confirmar pago a todos"}
+              </button>
+              <button
+                onClick={() => setMostrarModalPagoTodos(false)}
+                style={{
+                  flex: 1,
+                  background: COLORS.textLight,
+                  color: COLORS.white,
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "12px 16px",
+                  fontWeight: 700,
+                  fontFamily: FONTS.heading,
+                  cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Tabla de personal ─────────────────────────────────────────────── */}
       <div>
         <div
           style={{
@@ -595,7 +856,36 @@ const Personal = () => {
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
             </button>
-
+            <button
+              onClick={abrirModalPagoIndividual}
+              style={{
+                background: COLORS.secondary,
+                color: COLORS.white,
+                border: "none",
+                borderRadius: 8,
+                padding: "8px 14px",
+                fontWeight: 700,
+                fontFamily: FONTS.heading,
+                cursor: "pointer",
+              }}
+            >
+              Pagar elegido
+            </button>
+            <button
+              onClick={abrirModalPagoTodos}
+              style={{
+                background: COLORS.secondary,
+                color: COLORS.white,
+                border: "none",
+                borderRadius: 8,
+                padding: "8px 14px",
+                fontWeight: 700,
+                fontFamily: FONTS.heading,
+                cursor: "pointer",
+              }}
+            >
+              Pagar a todos
+            </button>
             <button
               onClick={handleEnviarCorreo}
               disabled={enviandoCorreo}
@@ -608,14 +898,19 @@ const Personal = () => {
               }
               style={{
                 background:
-                  enviandoCorreo || !selectedPersonal?.correo ? COLORS.textLight : COLORS.secondary,
+                  enviandoCorreo || !selectedPersonal?.correo
+                    ? COLORS.textLight
+                    : COLORS.secondary,
                 color: COLORS.white,
                 border: "none",
                 borderRadius: 8,
                 padding: "8px 14px",
                 fontWeight: 700,
                 fontFamily: FONTS.heading,
-                cursor: enviandoCorreo || !selectedPersonal?.correo ? "not-allowed" : "pointer",
+                cursor:
+                  enviandoCorreo || !selectedPersonal?.correo
+                    ? "not-allowed"
+                    : "pointer",
                 opacity: !selectedPersonal?.correo ? 0.6 : 1,
               }}
             >
@@ -624,6 +919,7 @@ const Personal = () => {
           </div>
         </div>
 
+        {/* ── Formulario nuevo personal ────────────────────────────────────── */}
         {mostrarNuevoPersonal && (
           <div
             style={{
@@ -635,10 +931,158 @@ const Personal = () => {
               boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
             }}
           >
-            {/* Formulario nuevo personal (sin cambios) */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  windowWidth < 640 ? "1fr" : "repeat(2, minmax(0, 1fr))",
+                gap: 12,
+              }}
+            >
+              {/* Nombre */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="Nombre (mín. 3 caracteres)"
+                  value={nuevoPersonal.nombre}
+                  onChange={(e) => {
+                    setNuevoPersonal((prev) => ({ ...prev, nombre: e.target.value }));
+                    if (e.target.value.trim())
+                      setErroresPersonal((prev) => { const n = { ...prev }; delete n.nombre; return n; });
+                  }}
+                  style={fieldStyle(erroresPersonal.nombre)}
+                />
+                {errorMsg(erroresPersonal.nombre)}
+              </div>
+
+              {/* Código */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="Código (letras, números, -, _)"
+                  value={nuevoPersonal.codigo}
+                  onChange={(e) => {
+                    setNuevoPersonal((prev) => ({ ...prev, codigo: e.target.value }));
+                    if (e.target.value.trim())
+                      setErroresPersonal((prev) => { const n = { ...prev }; delete n.codigo; return n; });
+                  }}
+                  style={fieldStyle(erroresPersonal.codigo)}
+                />
+                {errorMsg(erroresPersonal.codigo)}
+              </div>
+
+              {/* Tipo personal */}
+              <div>
+                <select
+                  value={nuevoPersonal.tipo_personal_id}
+                  onChange={(e) => {
+                    setNuevoPersonal((prev) => ({ ...prev, tipo_personal_id: e.target.value }));
+                    if (e.target.value)
+                      setErroresPersonal((prev) => { const n = { ...prev }; delete n.tipo_personal_id; return n; });
+                  }}
+                  style={fieldStyle(erroresPersonal.tipo_personal_id)}
+                >
+                  <option value="">-- Tipo de personal --</option>
+                  {tiposPersonalDisponibles.map((t) => (
+                    <option key={t.id_tipo} value={t.id_tipo}>
+                      {t.descripcion}
+                    </option>
+                  ))}
+                </select>
+                {errorMsg(erroresPersonal.tipo_personal_id)}
+              </div>
+
+              {/* Correo electrónico */}
+              <div>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={nuevoPersonal.correo}
+                  onChange={(e) => {
+                    setNuevoPersonal((prev) => ({ ...prev, correo: e.target.value }));
+                    if (e.target.value.trim())
+                      setErroresPersonal((prev) => { const n = { ...prev }; delete n.correo; return n; });
+                  }}
+                  style={fieldStyle(erroresPersonal.correo)}
+                />
+                {errorMsg(erroresPersonal.correo)}
+              </div>
+
+              {/* CV */}
+              <div>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setCvFile(e.target.files?.[0] || null)}
+                  style={fieldStyle(false)}
+                />
+                <div
+                  style={{
+                    fontSize: "0.75rem",
+                    color: COLORS.textLight,
+                    marginTop: 4,
+                    fontFamily: FONTS.body,
+                  }}
+                >
+                  Máx 5MB, formato PDF
+                </div>
+              </div>
+
+              {/* Fecha nacimiento */}
+              <div>
+                <input
+                  type="date"
+                  value={nuevoPersonal.fecha_nacimiento}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => {
+                    setNuevoPersonal((prev) => ({ ...prev, fecha_nacimiento: e.target.value }));
+                    if (e.target.value)
+                      setErroresPersonal((prev) => { const n = { ...prev }; delete n.fecha_nacimiento; return n; });
+                  }}
+                  style={fieldStyle(erroresPersonal.fecha_nacimiento)}
+                />
+                {errorMsg(erroresPersonal.fecha_nacimiento)}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14, gap: 10 }}>
+              <button
+                onClick={() => { setMostrarNuevoPersonal(false); setErroresPersonal({}); }}
+                style={{
+                  background: COLORS.textLight,
+                  color: COLORS.white,
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  fontWeight: 700,
+                  fontFamily: FONTS.heading,
+                  cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCrearPersonal}
+                disabled={subiendoCv}
+                style={{
+                  background: subiendoCv ? COLORS.textLight : COLORS.success,
+                  color: COLORS.white,
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  fontWeight: 700,
+                  fontFamily: FONTS.heading,
+                  cursor: subiendoCv ? "not-allowed" : "pointer",
+                }}
+              >
+                {subiendoCv ? "Subiendo CV..." : "Guardar personal"}
+              </button>
+            </div>
           </div>
         )}
+        {/* ... resto del render sin cambios ... */}
       </div>
+      {/* ... resto de tu componente ... */}
     </div>
   );
 };
