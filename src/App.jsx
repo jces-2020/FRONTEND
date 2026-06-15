@@ -6,7 +6,7 @@ import Proyectos from './components/Proyectos';
 import Productos from './components/Productos';
 import LoginInicioSesion from './components/LOGIN/LoginInicioSesion';
 import LoginPersonal from './components/LoginPersonal';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import Carrito from './components/Carrito';
 import Almacen from './components/ALMACÉN/AlmacenBody';
@@ -20,6 +20,21 @@ import { useEffect } from 'react';
 
 function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Capturar token de confirmación de Supabase en el hash
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const type = hashParams.get('type');
+
+    if (type === 'email_confirmation' && accessToken) {
+      localStorage.setItem('auth_token', accessToken);
+      window.location.hash = '';
+      navigate('/user');
+      return;
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const legacySensitiveKeys = ['cliente_correo', 'cliente_nombre', 'cliente_numero', 'cliente_documento'];
