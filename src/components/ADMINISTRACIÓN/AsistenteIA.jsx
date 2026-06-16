@@ -8,32 +8,13 @@ const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
 
-const panelStyles = {
-  display: 'grid',
-  gap: '18px',
-};
-
-const topGridStyles = {
-  display: 'grid',
-  gap: '14px',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-};
-
-const cardStyles = {
-  background: 'linear-gradient(160deg, rgba(255,255,255,0.96) 0%, rgba(226,244,252,0.78) 100%)',
-  border: '1px solid rgba(70,165,220,0.22)',
-  borderRadius: '18px',
-  boxShadow: '0 10px 24px rgba(70,155,210,0.10)',
-  padding: '18px',
-};
-
 const statusBadge = (online) => ({
   display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
-  padding: '8px 12px',
+  padding: '6px 10px',
   borderRadius: '999px',
-  fontSize: '0.82rem',
+  fontSize: '0.74rem',
   fontWeight: 700,
   color: online ? '#0f766e' : '#991b1b',
   background: online ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
@@ -57,6 +38,7 @@ const messageBubble = (role) => ({
 });
 
 function AsistenteIA({ onToast }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(true);
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
@@ -86,15 +68,16 @@ function AsistenteIA({ onToast }) {
         setHealth(null);
         onToast?.(error.message || 'No se pudo conectar con la API de IA.', 'error');
       } finally {
-        if (active) {
-          setHealthLoading(false);
-        }
+        if (active) setHealthLoading(false);
       }
     }
 
     loadHealth();
+    const intervalId = setInterval(loadHealth, 25000);
+
     return () => {
       active = false;
+      clearInterval(intervalId);
     };
   }, [onToast]);
 
@@ -135,142 +118,151 @@ function AsistenteIA({ onToast }) {
   }
 
   return (
-    <section style={panelStyles}>
-      <div style={topGridStyles}>
-        <article style={cardStyles}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontFamily: FONTS.heading, fontSize: '1.2rem', color: '#0c4f7a', marginBottom: '8px' }}>
-                Asistente administrativo
-              </div>
-              <div style={{ color: '#50748f', fontSize: '0.92rem', lineHeight: 1.5 }}>
-                Este panel consume la API de IA desplegada en el VPS y usa Ollama como motor local.
-              </div>
-            </div>
-            <div style={statusBadge(Boolean(health?.available))}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '999px', background: health?.available ? COLORS.success : COLORS.error }} />
-              {healthLoading ? 'Verificando...' : health?.available ? 'Conectado' : 'Sin conexión'}
-            </div>
-          </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-label="Abrir chat de IA"
+        style={{
+          position: 'fixed',
+          right: '18px',
+          bottom: '18px',
+          width: '62px',
+          height: '62px',
+          borderRadius: '999px',
+          border: 'none',
+          background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryLight} 100%)`,
+          color: COLORS.white,
+          fontSize: '1.6rem',
+          boxShadow: '0 12px 28px rgba(148, 25, 24, 0.35)',
+          cursor: 'pointer',
+          zIndex: 1600,
+        }}
+      >
+        {isOpen ? '×' : '🤖'}
+      </button>
 
-          <div style={{ marginTop: '16px', display: 'grid', gap: '10px' }}>
-            <div>
-              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.4px', color: '#5b8aa8', marginBottom: '4px' }}>
-                Endpoint
-              </div>
-              <div style={{ color: '#12344d', fontWeight: 700 }}>{API_IA_BASE_URL}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.4px', color: '#5b8aa8', marginBottom: '4px' }}>
-                Modelo disponible
-              </div>
-              <div style={{ color: '#12344d' }}>{healthLoading ? 'Cargando...' : modelNames}</div>
-            </div>
-          </div>
-        </article>
-
-        <article style={cardStyles}>
-          <div style={{ fontFamily: FONTS.heading, fontSize: '1rem', color: '#0c4f7a', marginBottom: '10px' }}>
-            Instrucción del sistema
-          </div>
-          <textarea
-            value={systemPrompt}
-            onChange={(event) => setSystemPrompt(event.target.value)}
-            rows={7}
-            style={{
-              width: '100%',
-              borderRadius: '14px',
-              border: '1px solid rgba(70,165,220,0.24)',
-              background: 'rgba(255,255,255,0.94)',
-              padding: '12px 14px',
-              color: '#12344d',
-              fontFamily: FONTS.body,
-              resize: 'vertical',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-        </article>
-      </div>
-
-      <article style={{ ...cardStyles, padding: '0', overflow: 'hidden' }}>
-        <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid rgba(70,165,220,0.16)' }}>
-          <div style={{ fontFamily: FONTS.heading, fontSize: '1.05rem', color: '#0c4f7a' }}>
-            Chat del administrador
-          </div>
-          <div style={{ marginTop: '6px', color: '#5a7f97', fontSize: '0.9rem' }}>
-            Haz preguntas operativas, pide resúmenes o define luego tareas específicas para el asistente.
-          </div>
-        </div>
-
-        <div
-          ref={scrollRef}
+      {isOpen && (
+        <section
           style={{
-            minHeight: '360px',
-            maxHeight: '58vh',
-            overflowY: 'auto',
-            padding: '18px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-            background: 'radial-gradient(circle at top, rgba(208,237,250,0.45), rgba(255,255,255,0.94) 45%)',
+            position: 'fixed',
+            right: '18px',
+            bottom: '92px',
+            width: 'min(410px, calc(100vw - 24px))',
+            maxHeight: '78vh',
+            background: 'linear-gradient(160deg, rgba(255,255,255,0.98) 0%, rgba(228,245,252,0.95) 100%)',
+            border: '1px solid rgba(70,165,220,0.24)',
+            borderRadius: '18px',
+            boxShadow: '0 16px 40px rgba(15, 23, 42, 0.25)',
+            overflow: 'hidden',
+            zIndex: 1600,
+            display: 'grid',
+            gridTemplateRows: 'auto auto 1fr auto',
           }}
         >
-          {messages.map((message, index) => (
-            <div key={`${message.role}-${index}`} style={messageBubble(message.role)}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '6px' }}>
-                {message.role === 'user' ? 'Tú' : 'IA'}
+          <header style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(70,165,220,0.16)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
+              <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
+              <div style={statusBadge(Boolean(health?.available))}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '999px', background: health?.available ? COLORS.success : COLORS.error }} />
+                {healthLoading ? 'Verificando...' : health?.available ? 'Conectado' : 'Sin conexión'}
               </div>
-              {message.content}
             </div>
-          ))}
-          {sending && (
-            <div style={messageBubble('assistant')}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '6px' }}>
-                IA
-              </div>
-              Pensando...
+            <div style={{ color: '#527d99', fontSize: '0.74rem', marginTop: '6px' }}>
+              {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelNames}
             </div>
-          )}
-        </div>
+          </header>
 
-        <form onSubmit={handleSubmit} style={{ padding: '16px 18px 18px', borderTop: '1px solid rgba(70,165,220,0.16)', display: 'grid', gap: '12px' }}>
-          <textarea
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Escribe una consulta para el asistente..."
-            rows={4}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                handleSubmit(event);
-              }
-            }}
-            style={{
-              width: '100%',
-              borderRadius: '16px',
-              border: '1px solid rgba(70,165,220,0.24)',
-              background: 'rgba(255,255,255,0.98)',
-              padding: '14px 16px',
-              color: '#12344d',
-              fontFamily: FONTS.body,
-              resize: 'vertical',
-              outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <div style={{ color: '#5a7f97', fontSize: '0.84rem' }}>
-              Enter envía. Shift + Enter agrega salto de línea.
-            </div>
-            <BrandButton type="submit" variant="primary" disabled={sending || !draft.trim()}>
-              {sending ? 'Consultando...' : 'Enviar al asistente'}
-            </BrandButton>
+          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(70,165,220,0.14)' }}>
+            <textarea
+              value={systemPrompt}
+              onChange={(event) => setSystemPrompt(event.target.value)}
+              rows={2}
+              placeholder="Instrucción del sistema"
+              style={{
+                width: '100%',
+                borderRadius: '10px',
+                border: '1px solid rgba(70,165,220,0.2)',
+                background: 'rgba(255,255,255,0.95)',
+                padding: '8px 10px',
+                color: '#12344d',
+                fontFamily: FONTS.body,
+                resize: 'vertical',
+                outline: 'none',
+                boxSizing: 'border-box',
+                fontSize: '0.84rem',
+              }}
+            />
           </div>
-        </form>
-      </article>
-    </section>
+
+          <div
+            ref={scrollRef}
+            style={{
+              minHeight: '220px',
+              maxHeight: '44vh',
+              overflowY: 'auto',
+              padding: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              background: 'radial-gradient(circle at top, rgba(208,237,250,0.45), rgba(255,255,255,0.94) 45%)',
+            }}
+          >
+            {messages.map((message, index) => (
+              <div key={`${message.role}-${index}`} style={messageBubble(message.role)}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
+                  {message.role === 'user' ? 'Tú' : 'IA'}
+                </div>
+                {message.content}
+              </div>
+            ))}
+            {sending && (
+              <div style={messageBubble('assistant')}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
+                  IA
+                </div>
+                Pensando...
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ padding: '10px 12px 12px', borderTop: '1px solid rgba(70,165,220,0.14)', display: 'grid', gap: '8px' }}>
+            <textarea
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Escribe tu consulta..."
+              rows={3}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault();
+                  handleSubmit(event);
+                }
+              }}
+              style={{
+                width: '100%',
+                borderRadius: '12px',
+                border: '1px solid rgba(70,165,220,0.22)',
+                background: 'rgba(255,255,255,0.98)',
+                padding: '10px 12px',
+                color: '#12344d',
+                fontFamily: FONTS.body,
+                resize: 'vertical',
+                outline: 'none',
+                boxSizing: 'border-box',
+                fontSize: '0.9rem',
+              }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
+              <div style={{ color: '#5a7f97', fontSize: '0.74rem' }}>Enter envía · Shift+Enter salto</div>
+              <BrandButton type="submit" variant="primary" size="sm" disabled={sending || !draft.trim()}>
+                {sending ? 'Consultando...' : 'Enviar'}
+              </BrandButton>
+            </div>
+          </form>
+        </section>
+      )}
+    </>
   );
 }
 

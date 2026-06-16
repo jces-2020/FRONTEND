@@ -384,7 +384,6 @@ const TABS = [
   { key: 'clientes',  label: 'Clientes'   },
   { key: 'proyecto',  label: 'Proyecto'   },
   { key: 'dashboard', label: '📊 Dashboard' },
-  { key: 'ia',        label: '🤖 Asistente IA' },
 ];
 
 /* ─── Component ───────────────────────────────────────────── */
@@ -513,9 +512,10 @@ const Administracion = () => {
           {activeTab === 'cuadre'    && <Cuadre onToast={showToast} />}
           {activeTab === 'clientes'  && <Cliente onToast={showToast} />}
           {activeTab === 'dashboard' && <DashboardETL />}
-          {activeTab === 'ia'        && <AsistenteIA onToast={showToast} />}
         </div>
       </div>
+
+      <AsistenteIA onToast={showToast} />
     </div>
   );
 };
