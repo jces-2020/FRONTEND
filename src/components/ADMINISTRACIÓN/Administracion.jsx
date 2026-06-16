@@ -8,7 +8,7 @@ import Cliente from './Cliente';
 import Personal from './Personal';
 import Proyecto from './Proyecto';
 import DashboardETL from './DashboardETL';
-import BrandButton from '../UI/BrandButton';
+import AsistenteIA from './AsistenteIA';
 import BrandToast from '../UI/BrandToast';
 
 /* ─── Estilos ─────────────────────────────────────────────── */
@@ -384,6 +384,7 @@ const TABS = [
   { key: 'clientes',  label: 'Clientes'   },
   { key: 'proyecto',  label: 'Proyecto'   },
   { key: 'dashboard', label: '📊 Dashboard' },
+  { key: 'ia',        label: '🤖 Asistente IA' },
 ];
 
 /* ─── Component ───────────────────────────────────────────── */
@@ -506,12 +507,13 @@ const Administracion = () => {
             </>
           )}
 
-          {activeTab === 'proyecto'  && <Proyecto  onToast={showToast} />}
-          {activeTab === 'personal'  && <Personal  />}
-          {activeTab === 'gastos'    && <Gastos    onToast={showToast} />}
-          {activeTab === 'cuadre'    && <Cuadre    onToast={showToast} />}
-          {activeTab === 'clientes'  && <Cliente   onToast={showToast} />}
+          {activeTab === 'proyecto'  && <Proyecto onToast={showToast} />}
+          {activeTab === 'personal'  && <Personal />}
+          {activeTab === 'gastos'    && <Gastos onToast={showToast} />}
+          {activeTab === 'cuadre'    && <Cuadre onToast={showToast} />}
+          {activeTab === 'clientes'  && <Cliente onToast={showToast} />}
           {activeTab === 'dashboard' && <DashboardETL />}
+          {activeTab === 'ia'        && <AsistenteIA onToast={showToast} />}
         </div>
       </div>
     </div>
