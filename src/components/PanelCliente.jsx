@@ -358,11 +358,11 @@ const PanelCliente = ({ onLogout }) => {
             eliminarPedidoEntregado(id, clienteId, authToken).finally(() => {
               if (pedidoDeleteTimersRef.current[id]) delete pedidoDeleteTimersRef.current[id];
             });
-          }, []);
+          }, 50);
         }
         return;
       }
-            if (authCallbackInFlight) return;
+
       if (!timers[id]) {
         timers[id] = setTimeout(() => {
           eliminarPedidoEntregado(id, clienteId, authToken).finally(() => {
@@ -473,7 +473,7 @@ const PanelCliente = ({ onLogout }) => {
 
   useEffect(() => {
     const authToken = localStorage.getItem("auth_token");
-    if (authCallbackInFlightRef.current) return;
+    if (authCallbackInFlight) return;
     if (!authToken) { navigate("/login"); return; }
     setToken(authToken);
     window.dispatchEvent(new CustomEvent("tokenUpdated", { detail: { token: authToken } }));
