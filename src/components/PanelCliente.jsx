@@ -33,19 +33,46 @@ const PanelCliente = ({ onLogout }) => {
   const chartOverlayTimeoutRef        = useRef(null);
   const pedidoEntregadoAtRef          = useRef({});
   const pedidoDeleteTimersRef         = useRef({});
+  const authCallbackInFlightRef       = useRef(false);
   const [chartFocused, setChartFocused] = useState(false);
 
   // Capturar token de confirmación de Supabase cuando usuario confirma email
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
+    let cancelled = false;
 
-    if (type === 'email_confirmation' && accessToken) {
-      localStorage.setItem('auth_token', accessToken);
-      window.location.hash = '';
-      window.location.pathname = '/user';
-    }
+    const parseAuthCallback = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const searchParams = new URLSearchParams(window.location.search);
+      const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+      const authCode = hashParams.get('code') || searchParams.get('code');
+
+      if (!accessToken && !authCode) return;
+
+      authCallbackInFlightRef.current = true;
+      try {
+        const res = await fetch('/api/clientes/confirmar-supabase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: accessToken, auth_code: authCode }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (res.ok && json?.success && json?.token) {
+          localStorage.setItem('auth_token', json.token);
+          if (json?.cliente?.id_cliente) localStorage.setItem('cliente_id', json.cliente.id_cliente);
+          window.location.hash = '';
+        }
+      } catch (error) {
+        console.warn('[PanelCliente] No se pudo completar la confirmación Supabase:', error);
+      } finally {
+        authCallbackInFlightRef.current = false;
+      }
+    };
+
+    parseAuthCallback();
+
+    return () => { cancelled = true; };
   }, []);
 
   const isPedidoEntregado = (estado) => {
@@ -432,6 +459,7 @@ const PanelCliente = ({ onLogout }) => {
 
   useEffect(() => {
     const authToken = localStorage.getItem("auth_token");
+    if (authCallbackInFlightRef.current) return;
     if (!authToken) { navigate("/login"); return; }
     setToken(authToken);
     window.dispatchEvent(new CustomEvent("tokenUpdated", { detail: { token: authToken } }));
@@ -1623,4 +1651,3 @@ const PanelCliente = ({ onLogout }) => {
 };
 
 export default PanelCliente;
-

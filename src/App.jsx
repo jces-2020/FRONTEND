@@ -23,18 +23,39 @@ function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Capturar token de confirmación de Supabase cuando llega desde registro o verificación de email
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
-    const type = hashParams.get('type');
+    let cancelled = false;
 
-    // Redirigir al panel del cliente para cualquier confirmación válida que entregue un access_token
-    if (accessToken && (type === 'signup' || type === 'email_confirmation')) {
-      localStorage.setItem('auth_token', accessToken);
-      window.location.hash = '';
-      navigate('/user');
-      return;
-    }
+    const parseAuthCallback = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const searchParams = new URLSearchParams(window.location.search);
+      const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+      const authCode = hashParams.get('code') || searchParams.get('code');
+
+      if (!accessToken && !authCode) return;
+
+      try {
+        const res = await fetch('/api/clientes/confirmar-supabase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: accessToken, auth_code: authCode }),
+        });
+        const json = await res.json().catch(() => ({}));
+        if (cancelled) return;
+
+        if (res.ok && json?.success && json?.token) {
+          localStorage.setItem('auth_token', json.token);
+          if (json?.cliente?.id_cliente) localStorage.setItem('cliente_id', json.cliente.id_cliente);
+          window.location.hash = '';
+          navigate('/user', { replace: true });
+        }
+      } catch (error) {
+        console.warn('[App] No se pudo completar la confirmación Supabase:', error);
+      }
+    };
+
+    parseAuthCallback();
+
+    return () => { cancelled = true; };
   }, [navigate]);
 
   useEffect(() => {
@@ -78,4 +99,3 @@ function App() {
 }
 
 export default App;
-
