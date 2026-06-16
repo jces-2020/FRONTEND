@@ -7,6 +7,7 @@ import { API_BASE_URL } from '../../config';
 const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
+const MAX_CONTEXT_MESSAGES = 8;
 
 const statusBadge = (online) => ({
   display: 'inline-flex',
@@ -97,8 +98,9 @@ function AsistenteIA({ onToast }) {
     setSending(true);
 
     try {
+      const contextMessages = nextMessages.slice(-MAX_CONTEXT_MESSAGES);
       const result = await sendAiChat({
-        messages: nextMessages,
+        messages: contextMessages,
         systemPrompt,
       });
 
