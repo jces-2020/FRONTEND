@@ -19,6 +19,17 @@ const CARD = {
 
 const PanelCliente = ({ onLogout }) => {
   const PEDIDO_DELETE_DELIVERED_MS = 60 * 1000;
+  const hasAuthCallbackParams = (() => {
+    if (typeof window === "undefined") return false;
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const searchParams = new URLSearchParams(window.location.search);
+    return Boolean(
+      hashParams.get("access_token") ||
+      hashParams.get("code") ||
+      searchParams.get("access_token") ||
+      searchParams.get("code")
+    );
+  })();
   const [progresoPedido, setProgresoPedido]     = useState({ estado: null, progreso: 0, mostrar: false });
   const [progresoServicio, setProgresoServicio] = useState({ estado: null, progreso: 0, mostrar: false });
   const [progresoPedidoLista, setProgresoPedidoLista] = useState([]);
@@ -33,7 +44,7 @@ const PanelCliente = ({ onLogout }) => {
   const chartOverlayTimeoutRef        = useRef(null);
   const pedidoEntregadoAtRef          = useRef({});
   const pedidoDeleteTimersRef         = useRef({});
-  const authCallbackInFlightRef       = useRef(false);
+  const [authCallbackInFlight, setAuthCallbackInFlight] = useState(hasAuthCallbackParams);
   const [chartFocused, setChartFocused] = useState(false);
 
   // Capturar token de confirmación de Supabase cuando usuario confirma email
@@ -46,9 +57,12 @@ const PanelCliente = ({ onLogout }) => {
       const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
       const authCode = hashParams.get('code') || searchParams.get('code');
 
-      if (!accessToken && !authCode) return;
+      if (!accessToken && !authCode) {
+        setAuthCallbackInFlight(false);
+        return;
+      }
 
-      authCallbackInFlightRef.current = true;
+      setAuthCallbackInFlight(true);
       try {
         const res = await fetch('/api/clientes/confirmar-supabase', {
           method: 'POST',
@@ -66,7 +80,7 @@ const PanelCliente = ({ onLogout }) => {
       } catch (error) {
         console.warn('[PanelCliente] No se pudo completar la confirmación Supabase:', error);
       } finally {
-        authCallbackInFlightRef.current = false;
+        if (!cancelled) setAuthCallbackInFlight(false);
       }
     };
 
@@ -344,11 +358,11 @@ const PanelCliente = ({ onLogout }) => {
             eliminarPedidoEntregado(id, clienteId, authToken).finally(() => {
               if (pedidoDeleteTimersRef.current[id]) delete pedidoDeleteTimersRef.current[id];
             });
-          }, 50);
+          }, []);
         }
         return;
       }
-
+            if (authCallbackInFlight) return;
       if (!timers[id]) {
         timers[id] = setTimeout(() => {
           eliminarPedidoEntregado(id, clienteId, authToken).finally(() => {
@@ -500,7 +514,7 @@ const PanelCliente = ({ onLogout }) => {
         setFaltantes(jDatos?.faltantes || []);
       } catch (_) {}
     })();
-  }, [navigate]);
+  }, [navigate, authCallbackInFlight]);
 
   useEffect(() => {
     const handleServicioFinalizado = (event) => {
