@@ -42,3 +42,4 @@ export async function sendAiChat({ message, messages, systemPrompt, model, tempe
   const data = await parseJsonResponse(response);
   return data.data;
 }
+
