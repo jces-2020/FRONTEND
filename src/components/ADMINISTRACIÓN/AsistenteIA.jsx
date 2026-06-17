@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
-import { getAiHealth, sendAiChat } from '../../services/adminAiService';
+import { getAiHealth, sendAiChat, startAiSession, stopAiSession } from '../../services/adminAiService';
 import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
@@ -56,6 +56,11 @@ function AsistenteIA({ onToast }) {
   const modelNames = useMemo(() => health?.models?.join(', ') || 'Sin modelos detectados', [health?.models]);
 
   useEffect(() => {
+    if (!isOpen) {
+      setHealthLoading(false);
+      return undefined;
+    }
+
     let active = true;
 
     async function loadHealth() {
@@ -73,14 +78,24 @@ function AsistenteIA({ onToast }) {
       }
     }
 
-    loadHealth();
-    const intervalId = setInterval(loadHealth, 25000);
+    async function openSession() {
+      try {
+        await startAiSession('30m');
+      } catch (error) {
+        onToast?.(error.message || 'No se pudo iniciar sesión de IA.', 'error');
+      }
+      await loadHealth();
+    }
+
+    openSession();
+    const intervalId = setInterval(loadHealth, 20000);
 
     return () => {
       active = false;
       clearInterval(intervalId);
+      stopAiSession().catch(() => null);
     };
-  }, [onToast]);
+  }, [isOpen, onToast]);
 
   useEffect(() => {
     if (!scrollRef.current) return;
