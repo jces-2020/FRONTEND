@@ -13,6 +13,8 @@ import {
 const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
+const COMPACT_HEAD_RATIO = 0.65;
+const ELLIPSIS = '…';
 
 function compactMessageContent(content) {
   const normalized = String(content || '').replace(/\s+/g, ' ').trim();
@@ -20,9 +22,13 @@ function compactMessageContent(content) {
     return normalized;
   }
 
-  const headLength = Math.max(1, Math.floor(AI_MAX_CONTEXT_CHARS * 0.65));
-  const tailLength = Math.max(0, AI_MAX_CONTEXT_CHARS - headLength - 1);
-  return `${normalized.slice(0, headLength)}…${tailLength > 0 ? normalized.slice(-tailLength) : ''}`;
+  const headLength = Math.max(1, Math.floor(AI_MAX_CONTEXT_CHARS * COMPACT_HEAD_RATIO));
+  const tailLength = Math.max(0, AI_MAX_CONTEXT_CHARS - headLength - ELLIPSIS.length);
+  if (tailLength === 0) {
+    return normalized.slice(0, AI_MAX_CONTEXT_CHARS);
+  }
+
+  return `${normalized.slice(0, headLength)}${ELLIPSIS}${normalized.slice(-tailLength)}`;
 }
 
 function buildContextMessages(chatMessages) {
