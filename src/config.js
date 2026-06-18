@@ -1,4 +1,14 @@
+const parseEnvNumber = (value, fallback) => {
+  const parsed = Number.parseInt(value ?? "", 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 export const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://api.vidriobras.com").replace(/\/$/, "");
+export const AI_CHAT_TIMEOUT_MS = parseEnvNumber(import.meta.env.VITE_AI_CHAT_TIMEOUT, 45000);
+export const AI_HEALTH_TIMEOUT_MS = parseEnvNumber(import.meta.env.VITE_AI_HEALTH_TIMEOUT, 6000);
+export const AI_SESSION_TIMEOUT_MS = parseEnvNumber(import.meta.env.VITE_AI_SESSION_TIMEOUT, 8000);
+export const AI_HEALTH_POLL_MS = parseEnvNumber(import.meta.env.VITE_AI_HEALTH_POLL_MS, 5000);
+export const AI_SESSION_KEEP_ALIVE = import.meta.env.VITE_AI_KEEP_ALIVE || "30m";
 
 export const buildApiUrl = (path = "") => {
   const safePath = path.startsWith("/") ? path : `/${path}`;

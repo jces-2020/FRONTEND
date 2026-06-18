@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
 import { getAiHealth, sendAiChat, startAiSession, stopAiSession } from '../../services/adminAiService';
-import { API_BASE_URL } from '../../config';
+import { AI_HEALTH_POLL_MS, AI_SESSION_KEEP_ALIVE, API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
@@ -63,7 +63,7 @@ function AsistenteIA({ onToast }) {
 
     let active = true;
 
-    async function loadHealth() {
+    async function loadHealth(notifyOnError = true) {
       setHealthLoading(true);
       try {
         const data = await getAiHealth();
@@ -72,21 +72,27 @@ function AsistenteIA({ onToast }) {
       } catch (error) {
         if (!active) return;
         setHealth(null);
-        onToast?.(error.message || 'No se pudo conectar con la API de IA.', 'error');
+        if (notifyOnError) {
+          onToast?.(error.message || 'No se pudo conectar con la API de IA.', 'error');
+        } else {
+          console.warn('[AsistenteIA] Falló la verificación de salud de la IA:', error);
+        }
       } finally {
         if (active) setHealthLoading(false);
       }
     }
 
     async function openSession() {
-      startAiSession('30m').catch((error) => {
+      startAiSession(AI_SESSION_KEEP_ALIVE).catch((error) => {
         onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
       });
-      await loadHealth();
+      await loadHealth(true);
     }
 
     openSession();
-    const intervalId = setInterval(loadHealth, 20000);
+    const intervalId = setInterval(() => {
+      loadHealth(false).catch(() => null);
+    }, AI_HEALTH_POLL_MS);
 
     return () => {
       active = false;
