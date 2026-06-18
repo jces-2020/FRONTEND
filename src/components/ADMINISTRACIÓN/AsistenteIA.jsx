@@ -13,17 +13,22 @@ import {
 const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
-const COMPACT_HEAD_RATIO = 0.65;
 const ELLIPSIS = '…';
 
 function compactMessageContent(content) {
-  const normalized = String(content || '').replace(/\s+/g, ' ').trim();
+  const normalized = String(content || '')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
   if (normalized.length <= AI_MAX_CONTEXT_CHARS) {
     return normalized;
   }
 
-  const headLength = Math.max(1, Math.floor(AI_MAX_CONTEXT_CHARS * COMPACT_HEAD_RATIO));
-  const tailLength = Math.max(0, AI_MAX_CONTEXT_CHARS - headLength - ELLIPSIS.length);
+  const availableChars = Math.max(1, AI_MAX_CONTEXT_CHARS - ELLIPSIS.length);
+  const headLength = Math.max(1, Math.ceil(availableChars / 2));
+  const tailLength = Math.max(0, Math.floor(availableChars / 2));
   if (tailLength === 0) {
     return normalized.slice(0, AI_MAX_CONTEXT_CHARS);
   }
@@ -33,12 +38,12 @@ function compactMessageContent(content) {
 
 function buildContextMessages(chatMessages) {
   return chatMessages
-    .slice(-AI_MAX_CONTEXT_MESSAGES)
     .map((message) => ({
       role: message.role,
       content: compactMessageContent(message.content),
     }))
-    .filter((message) => message.content);
+    .filter((message) => message.content.trim())
+    .slice(-AI_MAX_CONTEXT_MESSAGES);
 }
 
 const statusBadge = (online) => ({
