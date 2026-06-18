@@ -7,8 +7,10 @@ export const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://api.vidrio
 export const AI_CHAT_TIMEOUT_MS = parseEnvNumber(import.meta.env.VITE_AI_CHAT_TIMEOUT, 45000);
 export const AI_HEALTH_TIMEOUT_MS = parseEnvNumber(import.meta.env.VITE_AI_HEALTH_TIMEOUT, 6000);
 export const AI_SESSION_TIMEOUT_MS = parseEnvNumber(import.meta.env.VITE_AI_SESSION_TIMEOUT, 8000);
-export const AI_HEALTH_POLL_MS = parseEnvNumber(import.meta.env.VITE_AI_HEALTH_POLL_MS, 5000);
-export const AI_SESSION_KEEP_ALIVE = import.meta.env.VITE_AI_KEEP_ALIVE || "30m";
+export const AI_HEALTH_POLL_MS = parseEnvNumber(import.meta.env.VITE_AI_HEALTH_POLL_MS, 15000);
+export const AI_MAX_CONTEXT_MESSAGES = parseEnvNumber(import.meta.env.VITE_AI_MAX_CONTEXT_MESSAGES, 4);
+export const AI_MAX_CONTEXT_CHARS = parseEnvNumber(import.meta.env.VITE_AI_MAX_CONTEXT_CHARS, 700);
+export const AI_SESSION_KEEP_ALIVE = import.meta.env.VITE_AI_KEEP_ALIVE || "10m";
 
 export const buildApiUrl = (path = "") => {
   const safePath = path.startsWith("/") ? path : `/${path}`;

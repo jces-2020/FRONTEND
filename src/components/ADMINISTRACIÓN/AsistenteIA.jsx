@@ -2,12 +2,38 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
 import { getAiHealth, sendAiChat, startAiSession, stopAiSession } from '../../services/adminAiService';
-import { AI_HEALTH_POLL_MS, AI_SESSION_KEEP_ALIVE, API_BASE_URL } from '../../config';
+import {
+  AI_HEALTH_POLL_MS,
+  AI_MAX_CONTEXT_CHARS,
+  AI_MAX_CONTEXT_MESSAGES,
+  AI_SESSION_KEEP_ALIVE,
+  API_BASE_URL,
+} from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
-const MAX_CONTEXT_MESSAGES = 8;
+
+function compactMessageContent(content) {
+  const normalized = String(content || '').replace(/\s+/g, ' ').trim();
+  if (normalized.length <= AI_MAX_CONTEXT_CHARS) {
+    return normalized;
+  }
+
+  const headLength = Math.max(1, Math.floor(AI_MAX_CONTEXT_CHARS * 0.65));
+  const tailLength = Math.max(0, AI_MAX_CONTEXT_CHARS - headLength - 1);
+  return `${normalized.slice(0, headLength)}…${tailLength > 0 ? normalized.slice(-tailLength) : ''}`;
+}
+
+function buildContextMessages(chatMessages) {
+  return chatMessages
+    .slice(-AI_MAX_CONTEXT_MESSAGES)
+    .map((message) => ({
+      role: message.role,
+      content: compactMessageContent(message.content),
+    }))
+    .filter((message) => message.content);
+}
 
 const statusBadge = (online) => ({
   display: 'inline-flex',
@@ -117,7 +143,7 @@ function AsistenteIA({ onToast }) {
     setSending(true);
 
     try {
-      const contextMessages = nextMessages.slice(-MAX_CONTEXT_MESSAGES);
+      const contextMessages = buildContextMessages(nextMessages);
       const result = await sendAiChat({
         messages: contextMessages,
         systemPrompt,
