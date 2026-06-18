@@ -3,9 +3,6 @@ import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
 import {
   API_IA_BASE_URL,
-  DEFAULT_KEEP_ALIVE,
-  DEFAULT_MODEL,
-  DEFAULT_TEMPERATURE,
   getAiHealth,
   sendAiChat,
   startAiSession,
@@ -87,7 +84,7 @@ function AsistenteIA({ onToast }) {
     }
 
     async function openSession() {
-      startAiSession(DEFAULT_KEEP_ALIVE).catch((error) => {
+      startAiSession().catch((error) => {
         onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
       });
       await loadHealth();
@@ -123,9 +120,6 @@ function AsistenteIA({ onToast }) {
       const result = await sendAiChat({
         messages: contextMessages,
         systemPrompt,
-        model: DEFAULT_MODEL || undefined,
-        temperature: DEFAULT_TEMPERATURE,
-        keepAlive: DEFAULT_KEEP_ALIVE,
       });
 
       setMessages((current) => [...current, {

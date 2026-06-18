@@ -5,7 +5,12 @@ const readNumberEnv = (value, fallback, { min = Number.NEGATIVE_INFINITY } = {})
   return Number.isFinite(parsed) && parsed >= min ? parsed : fallback;
 };
 
-const DEFAULT_KEEP_ALIVE = import.meta.env.VITE_AI_KEEP_ALIVE || '30m';
+const readKeepAliveEnv = (value, fallback) => {
+  const normalized = String(value || '').trim();
+  return /^-?\d+(\.\d+)?(ns|us|µs|ms|s|m|h)?$/i.test(normalized) ? normalized : fallback;
+};
+
+const DEFAULT_KEEP_ALIVE = readKeepAliveEnv(import.meta.env.VITE_AI_KEEP_ALIVE, '30m');
 const DEFAULT_CHAT_TIMEOUT_MS = readNumberEnv(import.meta.env.VITE_AI_CHAT_TIMEOUT_MS, 300000, { min: 1 });
 const DEFAULT_SESSION_TIMEOUT_MS = readNumberEnv(import.meta.env.VITE_AI_SESSION_TIMEOUT_MS, 15000, { min: 1 });
 const DEFAULT_STOP_TIMEOUT_MS = readNumberEnv(import.meta.env.VITE_AI_STOP_TIMEOUT_MS, 10000, { min: 1 });
