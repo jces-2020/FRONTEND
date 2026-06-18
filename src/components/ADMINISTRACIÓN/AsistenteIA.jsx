@@ -26,10 +26,14 @@ function compactMessageContent(content) {
     return normalized;
   }
 
-  const availableChars = Math.max(1, AI_MAX_CONTEXT_CHARS - ELLIPSIS.length);
+  if (AI_MAX_CONTEXT_CHARS <= ELLIPSIS.length) {
+    return normalized.slice(0, AI_MAX_CONTEXT_CHARS);
+  }
+
+  const availableChars = AI_MAX_CONTEXT_CHARS - ELLIPSIS.length;
   const headLength = Math.max(1, Math.ceil(availableChars / 2));
   const tailLength = Math.max(0, Math.floor(availableChars / 2));
-  if (tailLength === 0) {
+  if (tailLength === 0 || normalized.length <= headLength + tailLength) {
     return normalized.slice(0, AI_MAX_CONTEXT_CHARS);
   }
 
