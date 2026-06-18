@@ -1,4 +1,4 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://api.vidriobras.com").replace(/\/$/, "");
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || "/api/ia").replace(/\/$/, "");
 
 export const buildApiUrl = (path = "") => {
   const safePath = path.startsWith("/") ? path : `/${path}`;
