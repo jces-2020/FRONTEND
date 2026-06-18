@@ -79,11 +79,9 @@ function AsistenteIA({ onToast }) {
     }
 
     async function openSession() {
-      try {
-        await startAiSession('30m');
-      } catch (error) {
-        onToast?.(error.message || 'No se pudo iniciar sesión de IA.', 'error');
-      }
+      startAiSession('30m').catch((error) => {
+        onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
+      });
       await loadHealth();
     }
 
