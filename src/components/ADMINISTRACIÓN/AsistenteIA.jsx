@@ -2,12 +2,53 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
 import { getAiHealth, sendAiChat, startAiSession, stopAiSession } from '../../services/adminAiService';
-import { API_BASE_URL } from '../../config';
+import {
+  AI_HEALTH_POLL_MS,
+  AI_MAX_CONTEXT_CHARS,
+  AI_MAX_CONTEXT_MESSAGES,
+  AI_SESSION_KEEP_ALIVE,
+  API_BASE_URL,
+} from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
-const MAX_CONTEXT_MESSAGES = 8;
+const ELLIPSIS = '…';
+
+function compactMessageContent(content) {
+  const normalized = String(content || '')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  if (normalized.length <= AI_MAX_CONTEXT_CHARS) {
+    return normalized;
+  }
+
+  if (AI_MAX_CONTEXT_CHARS <= ELLIPSIS.length) {
+    return normalized.slice(0, AI_MAX_CONTEXT_CHARS);
+  }
+
+  const availableChars = AI_MAX_CONTEXT_CHARS - ELLIPSIS.length;
+  const headLength = Math.max(1, Math.ceil(availableChars / 2));
+  const tailLength = Math.max(0, Math.floor(availableChars / 2));
+  if (tailLength === 0 || normalized.length <= headLength + tailLength) {
+    return normalized.slice(0, AI_MAX_CONTEXT_CHARS);
+  }
+
+  return `${normalized.slice(0, headLength)}${ELLIPSIS}${normalized.slice(-tailLength)}`;
+}
+
+function buildContextMessages(chatMessages) {
+  return chatMessages
+    .map((message) => ({
+      role: message.role,
+      content: compactMessageContent(message.content),
+    }))
+    .filter((message) => message.content.trim())
+    .slice(-AI_MAX_CONTEXT_MESSAGES);
+}
 
 const statusBadge = (online) => ({
   display: 'inline-flex',
@@ -63,7 +104,7 @@ function AsistenteIA({ onToast }) {
 
     let active = true;
 
-    async function loadHealth() {
+    async function loadHealth(notifyOnError = true) {
       setHealthLoading(true);
       try {
         const data = await getAiHealth();
@@ -72,21 +113,27 @@ function AsistenteIA({ onToast }) {
       } catch (error) {
         if (!active) return;
         setHealth(null);
-        onToast?.(error.message || 'No se pudo conectar con la API de IA.', 'error');
+        if (notifyOnError) {
+          onToast?.(error.message || 'No se pudo conectar con la API de IA.', 'error');
+        } else {
+          console.warn('[AsistenteIA] Falló la verificación de salud de la IA:', error);
+        }
       } finally {
         if (active) setHealthLoading(false);
       }
     }
 
     async function openSession() {
-      startAiSession('30m').catch((error) => {
-        onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
+      startAiSession(AI_SESSION_KEEP_ALIVE).catch((error) => {
+        onToast?.(error.message || 'No se pudo iniciar sesión de IA.', 'error');
       });
-      await loadHealth();
+      await loadHealth(true);
     }
 
     openSession();
-    const intervalId = setInterval(loadHealth, 20000);
+    const intervalId = setInterval(() => {
+      loadHealth(false).catch(() => null);
+    }, AI_HEALTH_POLL_MS);
 
     return () => {
       active = false;
@@ -111,7 +158,7 @@ function AsistenteIA({ onToast }) {
     setSending(true);
 
     try {
-      const contextMessages = nextMessages.slice(-MAX_CONTEXT_MESSAGES);
+      const contextMessages = buildContextMessages(nextMessages);
       const result = await sendAiChat({
         messages: contextMessages,
         systemPrompt,
