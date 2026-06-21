@@ -11,6 +11,11 @@ async function fetchWithTimeout(url, init = {}, timeoutMs = 15000) {
       ...init,
       signal: controller.signal,
     });
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error('La solicitud tardó demasiado y fue cancelada por timeout.');
+    }
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }
@@ -26,19 +31,31 @@ async function parseJsonResponse(response) {
 }
 
 export async function getAiHealth() {
-  const response = await fetch(`${API_IA_BASE_URL}/api/ia/health`, {
+  const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/health`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
-  });
+  }, 180000);
 
   const data = await parseJsonResponse(response);
   return data.data;
 }
 
-export async function sendAiChat({ message, messages, systemPrompt, model, temperature = 0.2 }) {
-  const response = await fetch(`${API_IA_BASE_URL}/api/ia/chat`, {
+export async function sendAiChat({
+  message,
+  messages,
+  systemPrompt,
+  model,
+  temperature,
+  numPredict,
+  numCtx,
+  topP,
+  repeatPenalty,
+  keepAlive = '45m',
+  timeoutMs = 180000,
+}) {
+  const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -49,10 +66,14 @@ export async function sendAiChat({ message, messages, systemPrompt, model, tempe
       messages,
       model,
       temperature,
+      num_predict: numPredict,
+      num_ctx: numCtx,
+      top_p: topP,
+      repeat_penalty: repeatPenalty,
       system_prompt: systemPrompt,
-      keep_alive: '30m',
+      keep_alive: keepAlive,
     }),
-  });
+  }, timeoutMs);
 
   const data = await parseJsonResponse(response);
   return data.data;
