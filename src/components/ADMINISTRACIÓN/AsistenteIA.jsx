@@ -53,7 +53,6 @@ function AsistenteIA({ onToast }) {
     },
   ]);
   const scrollRef = useRef(null);
-  const healthErrorShownRef = useRef(false);
 
   const modelNames = useMemo(() => health?.models?.join(', ') || 'Sin modelos detectados', [health?.models]);
 
@@ -65,22 +64,21 @@ function AsistenteIA({ onToast }) {
 
     let active = true;
 
-    async function loadHealth({ silent = false } = {}) {
-      if (!silent) {
-        setHealthLoading(true);
-      }
+    // Health check UNA VEZ al abrir (no pings periódicos)
+    async function checkHealth() {
+      setHealthLoading(true);
       try {
         const data = await getAiHealth();
-        if (!active) return;
-        setHealth(data); // data puede ser null, eso es OK
-        healthErrorShownRef.current = false;
+        if (active) {
+          setHealth(data); // data puede ser null, eso es OK
+        }
       } catch (error) {
-        // getAiHealth() ahora NO lanza errores, siempre devuelve data o null
-        // Este catch nunca debería ejecutarse
-        if (!active) return;
-        setHealth(null);
+        // getAiHealth() NO lanza errores, devuelve null
+        if (active) {
+          setHealth(null);
+        }
       } finally {
-        if (active && !silent) setHealthLoading(false);
+        if (active) setHealthLoading(false);
       }
     }
 
@@ -88,17 +86,13 @@ function AsistenteIA({ onToast }) {
       startAiSession(CHAT_KEEP_ALIVE).catch((error) => {
         onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
       });
-      await loadHealth({ silent: false });
+      await checkHealth(); // Solo UNA vez
     }
 
     openSession();
-    const intervalId = setInterval(() => {
-      loadHealth({ silent: true });
-    }, 20000);
 
     return () => {
       active = false;
-      clearInterval(intervalId);
     };
   }, [isOpen, onToast]);
 

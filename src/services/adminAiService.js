@@ -31,8 +31,8 @@ async function parseJsonResponse(response) {
 }
 
 export async function getAiHealth() {
-  // Health check debe ser RÁPIDO y SILENCIOSO
-  // Si falla, devuelve null sin lanzar error (para no bloquear UI)
+  // Health check: 10s timeout (ejecuta solo UNA vez al abrir)
+  // Si falla, devuelve null silenciosamente
   try {
     const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/health`, {
       method: 'GET',
@@ -126,4 +126,3 @@ export async function stopAiSession() {
   const data = await parseJsonResponse(response);
   return data.data;
 }
-
