@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconLogout } from '@tabler/icons-react';
 import { COLORS, FONTS } from '../../colors';
+import { startAiSession, stopAiSession } from '../../services/adminAiService';
 import Gastos from './Gastos';
 import Cuadre from './Cuadre';
 import Cliente from './Cliente';
@@ -403,6 +404,18 @@ const Administracion = () => {
     }
   }, [navigate]);
 
+  // IA: Iniciar sesión al entrar a administración
+  useEffect(() => {
+    startAiSession('30m').catch(error => {
+      console.warn('No se pudo iniciar sesión de IA:', error.message);
+    });
+
+    // Cleanup: detener sesión al salir
+    return () => {
+      stopAiSession().catch(() => null);
+    };
+  }, []);
+
   const showToast = useCallback((mensaje, tipo = 'success') => {
     setToast({ mensaje, tipo });
     setTimeout(() => setToast(null), 3500);
@@ -425,6 +438,10 @@ const Administracion = () => {
   }, [activeTab]);
 
   const handleLogout = useCallback(() => {
+    // Detener sesión de IA
+    stopAiSession().catch(() => null);
+
+    // Limpiar localStorage
     ['personalToken', 'auth_token', 'cliente_id', 'cliente_correo'].forEach(k =>
       localStorage.removeItem(k)
     );

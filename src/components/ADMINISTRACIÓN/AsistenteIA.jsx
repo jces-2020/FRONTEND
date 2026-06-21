@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
-import { getAiHealth, sendAiChat, startAiSession, stopAiSession } from '../../services/adminAiService';
+import { getAiHealth, sendAiChat } from '../../services/adminAiService';
 import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
 const MAX_CONTEXT_MESSAGES = 8;
-const CHAT_KEEP_ALIVE = '45m';
 
 const statusBadge = (online) => ({
   display: 'inline-flex',
@@ -64,16 +63,15 @@ function AsistenteIA({ onToast }) {
 
     let active = true;
 
-    // Health check UNA VEZ al abrir (no pings periódicos)
+    // Health check UNA VEZ al abrir (la sesión es manejada por el padre)
     async function checkHealth() {
       setHealthLoading(true);
       try {
         const data = await getAiHealth();
         if (active) {
-          setHealth(data); // data puede ser null, eso es OK
+          setHealth(data);
         }
       } catch (error) {
-        // getAiHealth() NO lanza errores, devuelve null
         if (active) {
           setHealth(null);
         }
@@ -82,25 +80,12 @@ function AsistenteIA({ onToast }) {
       }
     }
 
-    async function openSession() {
-      startAiSession(CHAT_KEEP_ALIVE).catch((error) => {
-        onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
-      });
-      await checkHealth(); // Solo UNA vez
-    }
-
-    openSession();
+    checkHealth();
 
     return () => {
       active = false;
     };
   }, [isOpen]);
-
-  useEffect(() => {
-    return () => {
-      stopAiSession().catch(() => null);
-    };
-  }, []);
 
   useEffect(() => {
     if (!scrollRef.current) return;
