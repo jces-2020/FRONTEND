@@ -126,3 +126,4 @@ export async function stopAiSession() {
   const data = await parseJsonResponse(response);
   return data.data;
 }
+
