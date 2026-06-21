@@ -94,7 +94,7 @@ function AsistenteIA({ onToast }) {
     return () => {
       active = false;
     };
-  }, [isOpen, onToast]);
+  }, [isOpen]);
 
   useEffect(() => {
     return () => {
