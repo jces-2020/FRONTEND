@@ -406,7 +406,7 @@ const Administracion = () => {
 
   // IA: Iniciar sesión al entrar a administración
   useEffect(() => {
-    startAiSession('30m').catch(error => {
+    startAiSession('10m').catch(error => {
       console.warn('No se pudo iniciar sesión de IA:', error.message);
     });
 
