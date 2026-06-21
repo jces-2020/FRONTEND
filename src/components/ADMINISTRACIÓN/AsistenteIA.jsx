@@ -193,8 +193,8 @@ function AsistenteIA({ onToast }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
               <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
               <div style={statusBadge(Boolean(health?.available))}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '999px', background: health?.available ? COLORS.success : COLORS.error }} />
-                {healthLoading ? 'Verificando...' : health?.available ? 'Conectado' : 'Sin conexión'}
+                <span style={{ width: '8px', height: '8px', borderRadius: '999px', background: health?.available !== false ? COLORS.success : COLORS.error }} />
+                {healthLoading ? 'Verificando...' : (!health || health.available) ? 'Conectado' : 'Sin conexión'}
               </div>
             </div>
             <div style={{ color: '#527d99', fontSize: '0.74rem', marginTop: '6px' }}>
