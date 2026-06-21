@@ -31,12 +31,14 @@ async function parseJsonResponse(response) {
 }
 
 export async function getAiHealth() {
+  // Health check debe ser RÁPIDO (10s timeout) para no bloquear UI
+  // Si falla, el usuario simplemente verá "Desconectado" pero la IA sigue disponible
   const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/health`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
     },
-  }, 180000);
+  }, 10000);
 
   const data = await parseJsonResponse(response);
   return data.data;
