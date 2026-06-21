@@ -107,7 +107,6 @@ function AsistenteIA({ onToast }) {
       const result = await sendAiChat({
         messages: contextMessages,
         systemPrompt,
-        keepAlive: CHAT_KEEP_ALIVE,
         timeoutMs: 180000,
       });
 
