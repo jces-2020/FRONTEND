@@ -8,6 +8,7 @@ const API_IA_BASE_URL = API_BASE_URL;
 
 const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
 const MAX_CONTEXT_MESSAGES = 8;
+const CHAT_KEEP_ALIVE = '45m';
 
 const statusBadge = (online) => ({
   display: 'inline-flex',
@@ -52,6 +53,7 @@ function AsistenteIA({ onToast }) {
     },
   ]);
   const scrollRef = useRef(null);
+  const healthErrorShownRef = useRef(false);
 
   const modelNames = useMemo(() => health?.models?.join(', ') || 'Sin modelos detectados', [health?.models]);
 
@@ -63,37 +65,48 @@ function AsistenteIA({ onToast }) {
 
     let active = true;
 
-    async function loadHealth() {
-      setHealthLoading(true);
+    async function loadHealth({ silent = false } = {}) {
+      if (!silent) {
+        setHealthLoading(true);
+      }
       try {
         const data = await getAiHealth();
         if (!active) return;
-        setHealth(data);
+        setHealth(data); // data puede ser null, eso es OK
+        healthErrorShownRef.current = false;
       } catch (error) {
+        // getAiHealth() ahora NO lanza errores, siempre devuelve data o null
+        // Este catch nunca debería ejecutarse
         if (!active) return;
         setHealth(null);
-        onToast?.(error.message || 'No se pudo conectar con la API de IA.', 'error');
       } finally {
-        if (active) setHealthLoading(false);
+        if (active && !silent) setHealthLoading(false);
       }
     }
 
     async function openSession() {
-      startAiSession('30m').catch((error) => {
+      startAiSession(CHAT_KEEP_ALIVE).catch((error) => {
         onToast?.(error.message || 'No se pudo iniciar sesion de IA.', 'error');
       });
-      await loadHealth();
+      await loadHealth({ silent: false });
     }
 
     openSession();
-    const intervalId = setInterval(loadHealth, 20000);
+    const intervalId = setInterval(() => {
+      loadHealth({ silent: true });
+    }, 20000);
 
     return () => {
       active = false;
       clearInterval(intervalId);
-      stopAiSession().catch(() => null);
     };
   }, [isOpen, onToast]);
+
+  useEffect(() => {
+    return () => {
+      stopAiSession().catch(() => null);
+    };
+  }, []);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -115,7 +128,14 @@ function AsistenteIA({ onToast }) {
       const result = await sendAiChat({
         messages: contextMessages,
         systemPrompt,
+        keepAlive: CHAT_KEEP_ALIVE,
+        timeoutMs: 180000,
       });
+
+      const elapsed = result?.diagnostics?.elapsed_ms;
+      if (typeof elapsed === 'number' && elapsed > 12000) {
+        onToast?.(`La IA tardó ${(elapsed / 1000).toFixed(1)}s. Revisa num_predict/modelo si necesitas más velocidad.`, 'warning');
+      }
 
       setMessages((current) => [...current, {
         role: 'assistant',

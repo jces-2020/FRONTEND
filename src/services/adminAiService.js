@@ -31,17 +31,33 @@ async function parseJsonResponse(response) {
 }
 
 export async function getAiHealth() {
-  // Health check debe ser RÁPIDO (10s timeout) para no bloquear UI
-  // Si falla, el usuario simplemente verá "Desconectado" pero la IA sigue disponible
-  const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/health`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  }, 10000);
+  // Health check debe ser RÁPIDO y SILENCIOSO
+  // Si falla, devuelve null sin lanzar error (para no bloquear UI)
+  try {
+    const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/health`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }, 10000);
 
-  const data = await parseJsonResponse(response);
-  return data.data;
+    if (!response.ok) {
+      console.warn(`Health check failed with status ${response.status}`);
+      return null; // Sin lanzar error
+    }
+
+    const data = await response.json().catch(() => null);
+    if (data?.success === false) {
+      console.warn('Health check returned success=false:', data?.error);
+      return null; // Sin lanzar error
+    }
+
+    return data?.data || null;
+  } catch (error) {
+    // Timeout o error de red: devuelve null silenciosamente
+    console.warn('Health check error (silenced):', error.message);
+    return null;
+  }
 }
 
 export async function sendAiChat({
