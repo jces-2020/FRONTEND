@@ -31,7 +31,7 @@ async function parseJsonResponse(response) {
 }
 
 export async function getAiHealth() {
-  // Health check: 10s timeout (ejecuta solo UNA vez al abrir)
+  // Health check: 40s timeout (ejecuta solo UNA vez al abrir)
   // Si falla, devuelve null silenciosamente
   try {
     const response = await fetchWithTimeout(`${API_IA_BASE_URL}/api/ia/health`, {
@@ -39,7 +39,7 @@ export async function getAiHealth() {
       headers: {
         Accept: 'application/json',
       },
-    }, 10000);
+    }, 40000);
 
     if (!response.ok) {
       console.warn(`Health check failed with status ${response.status}`);
@@ -107,7 +107,7 @@ export async function startAiSession(keepAlive = '30m') {
     body: JSON.stringify({
       keep_alive: keepAlive,
     }),
-  }, 8000);
+  }, 40000);
 
   const data = await parseJsonResponse(response);
   return data.data;
