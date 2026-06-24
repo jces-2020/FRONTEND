@@ -1,12 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
 import { COLORS, FONTS } from '../../colors';
-import { getAiHealth, sendAiChat } from '../../services/adminAiService';
+import { getAiHealth, streamAiChat } from '../../services/aiStreamService';
 import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
-const DEFAULT_SYSTEM_PROMPT = 'Eres el asistente interno de VidrioBras. Responde en español, de forma clara, breve y útil para el equipo administrativo.';
+const DEFAULT_SYSTEM_PROMPT = `Eres el Asistente IA de VidrioBras, una empresa dedicada a la comercialización de productos de vidrio y accesorios para construcción.
+
+CONTEXTO DE LA EMPRESA:
+- Nombre: VidrioBras
+- Rubro: Comercialización de vidrio y accesorios
+- Equipo: Área administrativa que maneja operaciones, reportes y gestión
+- Productos: Vidrios diversos, accesorios constructivos
+
+INSTRUCCIONES:
+1. Responde SIEMPRE en español
+2. Sé claro, breve y directo (máximo 3-4 párrafos)
+3. Ayuda con: operaciones, reportes, análisis administrativos, procesos
+4. Si no sabes, di "No tengo esa información"
+5. Sé profesional pero amable`;
 const MAX_CONTEXT_MESSAGES = 8;
 
 const statusBadge = (online) => ({
@@ -48,9 +61,10 @@ function AsistenteIA({ onToast }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Asistente IA listo. Puedes consultarme sobre operaciones, reportes y tareas administrativas.',
+      content: 'Asistente IA de VidrioBras listo. Puedo ayudarte con operaciones, reportes y tareas administrativas. ¿En qué puedo asistirte?',
     },
   ]);
+  const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef(null);
 
   const modelNames = useMemo(() => health?.models?.join(', ') || 'Sin modelos detectados', [health?.models]);
@@ -100,31 +114,45 @@ function AsistenteIA({ onToast }) {
     const nextMessages = [...messages, { role: 'user', content: trimmed }];
     setMessages(nextMessages);
     setDraft('');
+    setStreamingMessage('');
     setSending(true);
 
     try {
       const contextMessages = nextMessages.slice(-MAX_CONTEXT_MESSAGES);
-      const result = await sendAiChat({
+      
+      await streamAiChat({
+        message: trimmed,
         messages: contextMessages,
-        systemPrompt,
-        timeoutMs: 180000,
+        system_prompt: systemPrompt,
+        model: 'tinyllama:1.1b',
+        temperature: 0.1,
+        keep_alive: '10m',
+        onToken: (token) => {
+          setStreamingMessage((prev) => prev + token);
+        },
+        onDone: (fullResponse) => {
+          setMessages((current) => [...current, {
+            role: 'assistant',
+            content: fullResponse,
+          }]);
+          setStreamingMessage('');
+        },
+        onError: (error) => {
+          onToast?.(error || 'Error en streaming de IA.', 'error');
+          setMessages((current) => [...current, {
+            role: 'assistant',
+            content: 'Error en la conexión. Intenta nuevamente.',
+          }]);
+          setStreamingMessage('');
+        },
       });
-
-      const elapsed = result?.diagnostics?.elapsed_ms;
-      if (typeof elapsed === 'number' && elapsed > 12000) {
-        onToast?.(`La IA tardó ${(elapsed / 1000).toFixed(1)}s. Revisa num_predict/modelo si necesitas más velocidad.`, 'warning');
-      }
-
-      setMessages((current) => [...current, {
-        role: 'assistant',
-        content: result.response,
-      }]);
     } catch (error) {
       onToast?.(error.message || 'No se pudo obtener respuesta de la IA.', 'error');
       setMessages((current) => [...current, {
         role: 'assistant',
         content: 'No pude responder en este momento. Revisa la conexión con api-ia e inténtalo otra vez.',
       }]);
+      setStreamingMessage('');
     } finally {
       setSending(false);
     }
@@ -221,6 +249,15 @@ function AsistenteIA({ onToast }) {
               background: 'radial-gradient(circle at top, rgba(208,237,250,0.45), rgba(255,255,255,0.94) 45%)',
             }}
           >
+            {streamingMessage && (
+              <div style={messageBubble('assistant')}>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
+                  IA
+                </div>
+                {streamingMessage}
+                <span style={{ animation: 'blink 1s infinite', marginLeft: '2px' }}>|</span>
+              </div>
+            )}
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} style={messageBubble(message.role)}>
                 <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
