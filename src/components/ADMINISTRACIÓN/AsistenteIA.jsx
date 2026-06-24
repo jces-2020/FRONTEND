@@ -118,7 +118,7 @@ function AsistenteIA({ onToast }) {
         messages: contextMessages,
         system_prompt: systemPrompt,
         model: 'tinyllama:1.1b',
-        temperature: 0.1,
+        temperature: 0.3,
         keep_alive: '10m',
         onToken: (token) => {
           setStreamingMessage((prev) => prev + token);
