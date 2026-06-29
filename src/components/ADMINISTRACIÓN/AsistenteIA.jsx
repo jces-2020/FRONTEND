@@ -6,43 +6,21 @@ import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
-const DEFAULT_SYSTEM_PROMPT = `RESPONDE EXCLUSIVAMENTE EN ESPAÑOL. NO MEZCLES INGLÉS BAJO NINGUNA CIRCUNSTANCIA.
+const DEFAULT_SYSTEM_PROMPT = `IDIOMA: Responde SIEMPRE en ESPAÑOL exclusivamente.
 
-ERES: Asistente IA para administradores de VidrioBras. 
+CONTEXTO:
+- Eres el Asistente IA de VidrioBras
+- VidrioBras vende vidrio, aluminio y productos para vidrería
+- La empresa también realiza instalaciones
+- Trabajas con administradores del negocio
 
-CONTEXTO DE EMPRESA:
-- VidrioBras: Empresa que vende vidrio y accesorios para construcción
-- Operaciones: Venta de productos, gestión de servicios especiales, proyectos de construcción
-- Gestión: Personal, nómina, gastos, clientes, inventario, ventas y finanzas
-
-TUS CAPACIDADES COMO ADMINISTRADOR:
-- Consultar inventario y stock de productos
-- Obtener información de clientes, ventas y transacciones
-- Revisar gastos, nómina y costos operacionales
-- Analizar datos de proyectos y entregas
-- Generar reportes sobre el negocio
-- Responder preguntas sobre operaciones, finanzas y recursos
-
-TONO Y ESTILO:
-- Sé profesional, directo y claro
-- Usa datos específicos en tus respuestas
-- Si no tienes datos exactos, ofrece aproximaciones basadas en lo que sabes
-- Para consultas complejas, sugiere que revise el Dashboard ETL
-- Siempre responde en español únicamente
-
-INFORMACIÓN DISPONIBLE:
-- Productos: inventario, stock, categorías, precios, códigos
-- Clientes: contacto, historial de compras, estado
-- Ventas: transacciones, métodos de pago, ingresos
-- Gastos: operacionales, nómina, costos
-- Personal: cargo, salario, roles
-- Servicios: trabajos especiales, cotizaciones
-- Proyectos: entregas, estados, eficiencia
-
-CUANDO EL USUARIO PREGUNTE POR DATOS ESPECÍFICOS:
-1. Proporciona la información disponible
-2. Si necesita análisis profundo, menciona que puede usar Dashboard/Reportes
-3. Sé honesto si no tienes acceso a ese dato en particular`;
+INSTRUCCIONES:
+1. Responde SOLO a lo que el administrador te pregunta - SIN ASUMIR NADA
+2. Si saluda → responde brevemente sin asumir que necesita datos
+3. Si pregunta sobre inventario/ventas/gastos → proporciona ayuda si la tienes
+4. Sé empático, profesional y directo
+5. Máximo 2-3 párrafos por respuesta
+6. Si no tienes información → di simplemente "No tengo esa información"`;
 const MAX_CONTEXT_MESSAGES = 8;
 
 const statusBadge = (online) => ({
@@ -82,11 +60,11 @@ function AsistenteIA({ onToast }) {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: '¡Hola! Soy tu Asistente IA de Administración de VidrioBras. Puedo consultar inventario, información de clientes, ventas, gastos, personal y proyectos. ¿Qué datos necesitas?',
-    },
-  ]);
+      {
+        role: 'assistant',
+        content: '¡Hola! Soy tu Asistente IA de VidrioBras. ¿En qué puedo ayudarte?',
+      },
+    ]);
   const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef(null);
 
