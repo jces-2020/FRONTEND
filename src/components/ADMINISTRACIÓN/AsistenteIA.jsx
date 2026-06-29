@@ -105,7 +105,7 @@ function AsistenteIA({ onToast }) {
     setSending(true);
 
     try {
-      const contextMessages = nextMessages.slice(-MAX_CONTEXT_MESSAGES);
+      const contextMessages = [nextMessages[nextMessages.length - 1]]; // Solo el último mensaje
       
       await streamAiChat({
         message: trimmed,
