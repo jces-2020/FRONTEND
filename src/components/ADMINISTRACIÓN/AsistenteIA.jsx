@@ -59,12 +59,12 @@ function AsistenteIA({ onToast }) {
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
-  const [messages, setMessages] = useState([
-      {
-        role: 'assistant',
-        content: '¡Hola! Soy tu Asistente IA de VidrioBras. ¿En qué puedo ayudarte?',
-      },
-    ]);
+const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content: '¡Hola! Soy tu Asistente IA de VidrioBras. ¿En qué puedo ayudarte?',
+    },
+  ]);
   const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef(null);
 
