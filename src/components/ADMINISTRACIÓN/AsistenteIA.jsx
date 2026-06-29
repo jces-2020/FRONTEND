@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
-const DEFAULT_SYSTEM_PROMPT = `Eres el Asistente IA de VidrioBras. Venden vidrio, aluminio y productos para vidrería, e instalaciones. Responde solo lo que preguntan, sé empático y breve.`;
+const DEFAULT_SYSTEM_PROMPT = `Eres el asistente de VidrioBras. Venden vidrio, aluminio, productos para vidrería e instalaciones. Responde breve.`;
 const MAX_CONTEXT_MESSAGES = 8;
 
 const statusBadge = (online) => ({
@@ -112,7 +112,7 @@ function AsistenteIA({ onToast }) {
         messages: contextMessages,
         system_prompt: systemPrompt,
         model: 'tinyllama:1.1b',
-        temperature: 0.3,
+        temperature: 0.05,
         keep_alive: '10m',
         onToken: (token) => {
           setStreamingMessage((prev) => prev + token);
