@@ -54,7 +54,7 @@ function AsistenteIA({ onToast }) {
   const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef(null);
 
-  const modelNames = useMemo(() => health?.models?.join(', ') || 'Sin modelos detectados', [health?.models]);
+  const modelName = useMemo(() => health?.default_model || 'Sin modelo detectado', [health?.default_model]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -197,7 +197,7 @@ function AsistenteIA({ onToast }) {
               </div>
             </div>
             <div style={{ color: '#527d99', fontSize: '0.74rem', marginTop: '6px' }}>
-              {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelNames}
+              {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelName}
             </div>
           </header>
 
