@@ -5,8 +5,6 @@ import { getAiHealth, streamAiChat } from '../../services/aiStreamService';
 import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
-
-const DEFAULT_SYSTEM_PROMPT = `Eres el asistente de VidrioBras. Venden vidrio, aluminio, productos para vidrería e realiza instalaciones. Responde segun el mensaje.`;
 const MAX_CONTEXT_MESSAGES = 8;
 
 const statusBadge = (online) => ({
@@ -42,7 +40,6 @@ function AsistenteIA({ onToast }) {
   const [isOpen, setIsOpen] = useState(false);
   const [health, setHealth] = useState(null);
   const [healthLoading, setHealthLoading] = useState(true);
-  const [systemPrompt, setSystemPrompt] = useState(DEFAULT_SYSTEM_PROMPT);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [messages, setMessages] = useState([
@@ -54,7 +51,10 @@ function AsistenteIA({ onToast }) {
   const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef(null);
 
-  const modelName = useMemo(() => health?.default_model || 'Sin modelo detectado', [health?.default_model]);
+  const modelName = useMemo(
+    () => health?.default_model || 'Sin modelo detectado',
+    [health?.default_model],
+  );
 
   useEffect(() => {
     if (!isOpen) {
@@ -64,7 +64,6 @@ function AsistenteIA({ onToast }) {
 
     let active = true;
 
-    // Health check UNA VEZ al abrir (la sesión es manejada por el padre)
     async function checkHealth() {
       setHealthLoading(true);
       try {
@@ -91,7 +90,7 @@ function AsistenteIA({ onToast }) {
   useEffect(() => {
     if (!scrollRef.current) return;
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, sending]);
+  }, [messages, sending, streamingMessage]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -105,12 +104,11 @@ function AsistenteIA({ onToast }) {
     setSending(true);
 
     try {
-      const contextMessages = [nextMessages[nextMessages.length - 1]]; // Solo el último mensaje
-      
+      const contextMessages = [nextMessages[nextMessages.length - 1]];
+
       await streamAiChat({
         message: trimmed,
         messages: contextMessages,
-        system_prompt: systemPrompt,
         model: 'tinyllama:1.1b',
         temperature: 0.05,
         keep_alive: '10m',
@@ -118,27 +116,36 @@ function AsistenteIA({ onToast }) {
           setStreamingMessage((prev) => prev + token);
         },
         onDone: (fullResponse) => {
-          setMessages((current) => [...current, {
-            role: 'assistant',
-            content: fullResponse,
-          }]);
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content: fullResponse,
+            },
+          ]);
           setStreamingMessage('');
         },
         onError: (error) => {
           onToast?.(error || 'Error en streaming de IA.', 'error');
-          setMessages((current) => [...current, {
-            role: 'assistant',
-            content: 'Error en la conexión. Intenta nuevamente.',
-          }]);
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content: 'Error en la conexión. Intenta nuevamente.',
+            },
+          ]);
           setStreamingMessage('');
         },
       });
     } catch (error) {
       onToast?.(error.message || 'No se pudo obtener respuesta de la IA.', 'error');
-      setMessages((current) => [...current, {
-        role: 'assistant',
-        content: 'No pude responder en este momento. Revisa la conexión con api-ia e inténtalo otra vez.',
-      }]);
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: 'No pude responder en este momento. Revisa la conexión con api-ia e inténtalo otra vez.',
+        },
+      ]);
       setStreamingMessage('');
     } finally {
       setSending(false);
@@ -185,14 +192,21 @@ function AsistenteIA({ onToast }) {
             overflow: 'hidden',
             zIndex: 1600,
             display: 'grid',
-            gridTemplateRows: 'auto auto 1fr auto',
+            gridTemplateRows: 'auto 1fr auto',
           }}
         >
           <header style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(70,165,220,0.16)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
               <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
               <div style={statusBadge(Boolean(health?.available))}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '999px', background: health?.available !== false ? COLORS.success : COLORS.error }} />
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '999px',
+                    background: health?.available !== false ? COLORS.success : COLORS.error,
+                  }}
+                />
                 {healthLoading ? 'Verificando...' : (!health || health.available) ? 'Conectado' : 'Sin conexión'}
               </div>
             </div>
@@ -200,28 +214,6 @@ function AsistenteIA({ onToast }) {
               {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelName}
             </div>
           </header>
-
-          <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(70,165,220,0.14)' }}>
-            <textarea
-              value={systemPrompt}
-              onChange={(event) => setSystemPrompt(event.target.value)}
-              rows={2}
-              placeholder="Instrucción del sistema"
-              style={{
-                width: '100%',
-                borderRadius: '10px',
-                border: '1px solid rgba(70,165,220,0.2)',
-                background: 'rgba(255,255,255,0.95)',
-                padding: '8px 10px',
-                color: '#12344d',
-                fontFamily: FONTS.body,
-                resize: 'vertical',
-                outline: 'none',
-                boxSizing: 'border-box',
-                fontSize: '0.84rem',
-              }}
-            />
-          </div>
 
           <div
             ref={scrollRef}
@@ -238,24 +230,53 @@ function AsistenteIA({ onToast }) {
           >
             {streamingMessage && (
               <div style={messageBubble('assistant')}>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.4px',
+                    textTransform: 'uppercase',
+                    opacity: 0.8,
+                    marginBottom: '4px',
+                  }}
+                >
                   IA
                 </div>
                 {streamingMessage}
                 <span style={{ animation: 'blink 1s infinite', marginLeft: '2px' }}>|</span>
               </div>
             )}
+
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} style={messageBubble(message.role)}>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.4px',
+                    textTransform: 'uppercase',
+                    opacity: 0.8,
+                    marginBottom: '4px',
+                  }}
+                >
                   {message.role === 'user' ? 'Tú' : 'IA'}
                 </div>
                 {message.content}
               </div>
             ))}
+
             {sending && (
               <div style={messageBubble('assistant')}>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.4px', textTransform: 'uppercase', opacity: 0.8, marginBottom: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.4px',
+                    textTransform: 'uppercase',
+                    opacity: 0.8,
+                    marginBottom: '4px',
+                  }}
+                >
                   IA
                 </div>
                 Pensando...
@@ -263,7 +284,15 @@ function AsistenteIA({ onToast }) {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} style={{ padding: '10px 12px 12px', borderTop: '1px solid rgba(70,165,220,0.14)', display: 'grid', gap: '8px' }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              padding: '10px 12px 12px',
+              borderTop: '1px solid rgba(70,165,220,0.14)',
+              display: 'grid',
+              gap: '8px',
+            }}
+          >
             <textarea
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -304,4 +333,3 @@ function AsistenteIA({ onToast }) {
 }
 
 export default AsistenteIA;
-
