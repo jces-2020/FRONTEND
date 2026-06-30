@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../../config';
 
 const API_IA_BASE_URL = API_BASE_URL;
 
-const DEFAULT_SYSTEM_PROMPT = `Eres el asistente de VidrioBras. Venden vidrio, aluminio, productos para vidrería e instalaciones. Responde breve.`;
+const DEFAULT_SYSTEM_PROMPT = `Eres el asistente de VidrioBras. Venden vidrio, aluminio, productos para vidrería e instalaciones. Responde segun el mensaje.`;
 const MAX_CONTEXT_MESSAGES = 8;
 
 const statusBadge = (online) => ({
