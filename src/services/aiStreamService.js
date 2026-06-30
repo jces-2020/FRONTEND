@@ -6,6 +6,7 @@ export const API_IA_BASE_URL = API_BASE_URL;
  * Chat con Streaming - Respuesta en tiempo real, palabra por palabra
  * @param {string} message - Mensaje del usuario
  * @param {Array} messages - Historial de mensajes
+ * @param {boolean} use_cloud - Si true usa Ollama Cloud en backend
  * @param {Function} onToken - Callback cada token recibido: (token) => {}
  * @param {Function} onDone - Callback al finalizar: (fullResponse) => {}
  * @param {Function} onError - Callback en error: (error) => {}
@@ -16,6 +17,7 @@ export async function streamAiChat({
   model = 'tinyllama:1.1b',
   temperature = 0.1,
   keep_alive = '10m',
+  use_cloud = false,
   onToken = () => {},
   onDone = () => {},
   onError = () => {},
@@ -33,6 +35,7 @@ export async function streamAiChat({
         model,
         temperature,
         keep_alive,
+        use_cloud,
       }),
     });
 
@@ -104,7 +107,7 @@ export async function streamAiChat({
  * @param {Object} params - Parámetros del chat
  */
 export async function sendAiChat(params) {
-  const { message, messages = [], system_prompt, ...rest } = params || {};
+  const { message, messages = [], system_prompt, use_cloud = false, ...rest } = params || {};
 
   if (!message && (!messages || messages.length === 0)) {
     throw new Error('Se requiere message o messages');
@@ -114,6 +117,7 @@ export async function sendAiChat(params) {
     ...rest,
     message,
     messages,
+    use_cloud,
   };
 
   const response = await fetch(`${API_IA_BASE_URL}/api/ia/chat`, {

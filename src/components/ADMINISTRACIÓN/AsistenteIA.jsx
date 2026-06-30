@@ -42,12 +42,15 @@ function AsistenteIA({ onToast }) {
   const [healthLoading, setHealthLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [useCloud, setUseCloud] = useState(false);
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
       content: '¡Hola! Soy tu Asistente IA de VidrioBras. ¿En qué puedo ayudarte?',
     },
   ]);
+
   const [streamingMessage, setStreamingMessage] = useState('');
   const scrollRef = useRef(null);
 
@@ -104,7 +107,7 @@ function AsistenteIA({ onToast }) {
     setSending(true);
 
     try {
-      const contextMessages = [nextMessages[nextMessages.length - 1]];
+      const contextMessages = nextMessages.slice(-MAX_CONTEXT_MESSAGES);
 
       await streamAiChat({
         message: trimmed,
@@ -112,6 +115,7 @@ function AsistenteIA({ onToast }) {
         model: 'tinyllama:1.1b',
         temperature: 0.05,
         keep_alive: '10m',
+        use_cloud: useCloud,
         onToken: (token) => {
           setStreamingMessage((prev) => prev + token);
         },
@@ -198,20 +202,45 @@ function AsistenteIA({ onToast }) {
           <header style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(70,165,220,0.16)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
               <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
-              <div style={statusBadge(Boolean(health?.available))}>
-                <span
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setUseCloud((prev) => !prev)}
+                  title="Cambiar entre Ollama Local y Nube"
                   style={{
-                    width: '8px',
-                    height: '8px',
+                    border: '1px solid rgba(70,165,220,0.24)',
+                    background: useCloud ? 'rgba(16,185,129,0.14)' : 'rgba(255,255,255,0.9)',
+                    color: useCloud ? '#065f46' : '#16425b',
                     borderRadius: '999px',
-                    background: health?.available !== false ? COLORS.success : COLORS.error,
+                    padding: '6px 10px',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
                   }}
-                />
-                {healthLoading ? 'Verificando...' : (!health || health.available) ? 'Conectado' : 'Sin conexión'}
+                >
+                  {useCloud ? 'Nube ON' : 'Local ON'}
+                </button>
+
+                <div style={statusBadge(Boolean(health?.available))}>
+                  <span
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '999px',
+                      background: health?.available !== false ? COLORS.success : COLORS.error,
+                    }}
+                  />
+                  {healthLoading ? 'Verificando...' : (!health || health.available) ? 'Conectado' : 'Sin conexión'}
+                </div>
               </div>
             </div>
+
             <div style={{ color: '#527d99', fontSize: '0.74rem', marginTop: '6px' }}>
               {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelName}
+            </div>
+            <div style={{ color: '#527d99', fontSize: '0.72rem', marginTop: '4px' }}>
+              Modo activo: {useCloud ? 'Ollama Cloud' : 'Ollama Local'}
             </div>
           </header>
 
@@ -228,6 +257,24 @@ function AsistenteIA({ onToast }) {
               background: 'radial-gradient(circle at top, rgba(208,237,250,0.45), rgba(255,255,255,0.94) 45%)',
             }}
           >
+            {messages.map((message, index) => (
+              <div key={`${message.role}-${index}`} style={messageBubble(message.role)}>
+                <div
+                  style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.4px',
+                    textTransform: 'uppercase',
+                    opacity: 0.8,
+                    marginBottom: '4px',
+                  }}
+                >
+                  {message.role === 'user' ? 'Tú' : 'IA'}
+                </div>
+                {message.content}
+              </div>
+            ))}
+
             {streamingMessage && (
               <div style={messageBubble('assistant')}>
                 <div
@@ -247,25 +294,7 @@ function AsistenteIA({ onToast }) {
               </div>
             )}
 
-            {messages.map((message, index) => (
-              <div key={`${message.role}-${index}`} style={messageBubble(message.role)}>
-                <div
-                  style={{
-                    fontSize: '0.68rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.4px',
-                    textTransform: 'uppercase',
-                    opacity: 0.8,
-                    marginBottom: '4px',
-                  }}
-                >
-                  {message.role === 'user' ? 'Tú' : 'IA'}
-                </div>
-                {message.content}
-              </div>
-            ))}
-
-            {sending && (
+            {sending && !streamingMessage && (
               <div style={messageBubble('assistant')}>
                 <div
                   style={{
@@ -320,7 +349,9 @@ function AsistenteIA({ onToast }) {
             />
 
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
-              <div style={{ color: '#5a7f97', fontSize: '0.74rem' }}>Enter envía · Shift+Enter salto</div>
+              <div style={{ color: '#5a7f97', fontSize: '0.74rem' }}>
+                Enter envía · Shift+Enter salto
+              </div>
               <BrandButton type="submit" variant="primary" size="sm" disabled={sending || !draft.trim()}>
                 {sending ? 'Consultando...' : 'Enviar'}
               </BrandButton>
