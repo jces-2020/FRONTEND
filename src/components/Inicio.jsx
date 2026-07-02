@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconStarFilled } from '@tabler/icons-react';
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -109,6 +110,150 @@ const MisionVision = () => (
     </div>
   </div>
 );
+
+const offerData = [
+  {
+    titulo: 'Instalación Profesional',
+    descripcion: 'Equipo técnico especializado en vidrio templado, mamparas, fachadas y estructuras de aluminio.',
+    icono: IconRulerMeasure,
+    color: '#941918',
+  },
+  {
+    titulo: 'Materiales Certificados',
+    descripcion: 'Trabajamos con insumos de alta calidad para asegurar seguridad, acabado premium y larga vida útil.',
+    icono: IconShieldCheck,
+    color: '#0c4a6e',
+  },
+  {
+    titulo: 'Entrega y Soporte',
+    descripcion: 'Cumplimos tiempos acordados y te acompañamos en cada etapa: cotización, ejecución y postventa.',
+    icono: IconTruckDelivery,
+    color: '#5a8ba8',
+  },
+  {
+    titulo: 'Diseño Personalizado',
+    descripcion: 'Adaptamos cada proyecto a tu espacio para lograr equilibrio entre funcionalidad, estética y presupuesto.',
+    icono: IconSparkles,
+    color: '#ad7d00',
+  },
+];
+
+const testimonialData = [
+  { nombre: 'María Rojas', ciudad: 'Lima', rating: 5, comentario: 'Me ayudaron con la mampara del baño y quedó impecable. Puntuales y muy ordenados.' },
+  { nombre: 'Jorge Meza', ciudad: 'Callao', rating: 5, comentario: 'Excelente asesoría para mi fachada de vidrio. El acabado final superó lo que esperaba.' },
+  { nombre: 'Ana Torres', ciudad: 'San Miguel', rating: 5, comentario: 'La instalación fue rápida y segura. El equipo fue amable y explicó todo el proceso.' },
+  { nombre: 'Luis Gamarra', ciudad: 'Miraflores', rating: 5, comentario: 'Buena comunicación y cumplimiento en plazos. Los recomendaría para proyectos de oficina.' },
+  { nombre: 'Carmen Díaz', ciudad: 'Surco', rating: 5, comentario: 'Nos orientaron desde la cotización. Muy buena relación calidad-precio en todo el servicio.' },
+];
+
+const OfferCard = ({ item }) => {
+  const Icono = item.icono;
+  return (
+    <article
+      className="vb-surface vb-card"
+      style={{
+        minHeight: 200,
+        borderColor: `${item.color}33`,
+        display: 'grid',
+        gap: 12,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 12,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: `${item.color}1a`,
+            border: `1px solid ${item.color}4d`,
+            color: item.color,
+          }}
+        >
+          <Icono size={20} stroke={2.1} />
+        </span>
+        <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#1f2937', fontWeight: 800 }}>{item.titulo}</h3>
+      </div>
+      <p style={{ margin: 0, color: '#4b5563', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.descripcion}</p>
+    </article>
+  );
+};
+
+const TestimonialCard = ({ testimonial }) => (
+  <article
+    className="vb-surface"
+    style={{
+      width: 320,
+      minHeight: 180,
+      padding: 18,
+      display: 'grid',
+      gridTemplateRows: 'auto 1fr auto',
+      gap: 10,
+      flexShrink: 0,
+      borderColor: 'rgba(128,194,220,0.35)',
+    }}
+  >
+    <div style={{ display: 'flex', gap: 3, color: '#f59e0b' }}>
+      {Array.from({ length: testimonial.rating }).map((_, idx) => (
+        <IconStarFilled key={`${testimonial.nombre}-${idx}`} size={16} />
+      ))}
+    </div>
+    <p style={{ margin: 0, color: '#374151', lineHeight: 1.65, fontSize: '0.92rem' }}>
+      "{testimonial.comentario}"
+    </p>
+    <div>
+      <strong style={{ color: '#111827', fontSize: '0.92rem' }}>{testimonial.nombre}</strong>
+      <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: '0.8rem' }}>{testimonial.ciudad}</p>
+    </div>
+  </article>
+);
+
+const TestimonialFlow = () => {
+  const flowItems = [...testimonialData, ...testimonialData];
+
+  return (
+    <section
+      className="w-full"
+      style={{
+        background: 'linear-gradient(180deg, #f8fbff 0%, #eef6fb 100%)',
+        padding: '72px 0',
+        overflow: 'hidden',
+      }}
+    >
+      <style>{`
+        @keyframes vbTestimonialsFlow {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
+
+      <div className="px-4 sm:px-6 lg:px-12" style={{ textAlign: 'center', marginBottom: 30 }}>
+        <p style={{ margin: 0, color: '#5a8ba8', fontWeight: 700, letterSpacing: '0.12em', fontSize: '0.75rem' }}>TESTIMONIOS</p>
+        <h2 style={{ margin: '10px 0 0', color: '#941918', fontSize: 'clamp(1.6rem, 2.6vw, 2.2rem)', fontWeight: 900 }}>
+          Clientes que ya transformaron sus espacios
+        </h2>
+      </div>
+
+      <div style={{ position: 'relative' }}>
+        <div
+          style={{
+            display: 'flex',
+            width: 'max-content',
+            gap: 14,
+            padding: '0 16px',
+            animation: 'vbTestimonialsFlow 34s linear infinite',
+          }}
+        >
+          {flowItems.map((testimonial, idx) => (
+            <TestimonialCard key={`${testimonial.nombre}-${idx}`} testimonial={testimonial} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
 
 // ─── Carrusel Equipo ─────────────────────────────────────────────────────────
 const teamData = [
@@ -428,6 +573,58 @@ function Inicio() {
         </div>
       </div>
 
+      {/* QUÉ OFRECEMOS */}
+      <section className="w-full px-4 sm:px-6 lg:px-12 py-16" style={{ background: '#ffffff' }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 24 }}>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ margin: 0, color: '#5a8ba8', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.75rem' }}>¿QUÉ OFRECEMOS?</p>
+            <h2 style={{ margin: '8px 0 10px', color: '#941918', fontSize: 'clamp(1.7rem, 2.6vw, 2.35rem)', fontWeight: 900 }}>
+              Soluciones en vidrio y aluminio para hogar y negocio
+            </h2>
+            <p style={{ margin: '0 auto', maxWidth: 840, color: '#4b5563', lineHeight: 1.75, fontSize: '0.97rem' }}>
+              Diseñamos, fabricamos e instalamos con enfoque técnico y estético. Desde divisiones interiores hasta fachadas,
+              te acompañamos con una atención clara, tiempos ordenados y resultados que elevan tu espacio.
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: windowWidth < 768 ? '1fr' : windowWidth < 1100 ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))',
+              gap: 14,
+            }}
+          >
+            {offerData.map((item) => (
+              <OfferCard key={item.titulo} item={item} />
+            ))}
+          </div>
+
+          <div
+            className="vb-surface-strong"
+            style={{
+              padding: windowWidth < 768 ? 16 : 22,
+              display: 'grid',
+              gridTemplateColumns: windowWidth < 768 ? '1fr' : '1.3fr 1fr',
+              gap: 16,
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem', fontWeight: 800 }}>Cómo trabajamos contigo</h3>
+              <p style={{ margin: '8px 0 0', color: '#475569', lineHeight: 1.7 }}>
+                1) Evaluamos tu necesidad. 2) Te enviamos cotización detallada. 3) Ejecutamos con control de calidad.
+                4) Entregamos con validación final y soporte postventa.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <span className="vb-button vb-button--ghost vb-button--sm" style={{ justifyContent: 'flex-start' }}>Atención personalizada</span>
+              <span className="vb-button vb-button--ghost vb-button--sm" style={{ justifyContent: 'flex-start' }}>Garantía por instalación</span>
+              <span className="vb-button vb-button--ghost vb-button--sm" style={{ justifyContent: 'flex-start' }}>Seguimiento de proyecto</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* MISIÓN Y VISIÓN */}
       <MisionVision />
 
@@ -452,6 +649,9 @@ function Inicio() {
 
       {/* CARRUSEL EQUIPO */}
       <TeamCarousel />
+
+      {/* COMENTARIOS FLUIDOS */}
+      <TestimonialFlow />
 
 
 
