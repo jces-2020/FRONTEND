@@ -120,6 +120,7 @@ function Navbar() {
             <BrandIconButton
               size="sm"
               tone="accent"
+              shape="square"
               onClick={() => setMenuOpen((prev) => !prev)}
               ariaLabel={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
