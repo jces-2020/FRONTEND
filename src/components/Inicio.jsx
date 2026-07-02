@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconStarFilled } from '@tabler/icons-react';
+import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles } from '@tabler/icons-react';
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -138,14 +138,6 @@ const offerData = [
   },
 ];
 
-const testimonialData = [
-  { nombre: 'María Rojas', ciudad: 'Lima', rating: 5, comentario: 'Me ayudaron con la mampara del baño y quedó impecable. Puntuales y muy ordenados.' },
-  { nombre: 'Jorge Meza', ciudad: 'Callao', rating: 5, comentario: 'Excelente asesoría para mi fachada de vidrio. El acabado final superó lo que esperaba.' },
-  { nombre: 'Ana Torres', ciudad: 'San Miguel', rating: 5, comentario: 'La instalación fue rápida y segura. El equipo fue amable y explicó todo el proceso.' },
-  { nombre: 'Luis Gamarra', ciudad: 'Miraflores', rating: 5, comentario: 'Buena comunicación y cumplimiento en plazos. Los recomendaría para proyectos de oficina.' },
-  { nombre: 'Carmen Díaz', ciudad: 'Surco', rating: 5, comentario: 'Nos orientaron desde la cotización. Muy buena relación calidad-precio en todo el servicio.' },
-];
-
 const OfferCard = ({ item }) => {
   const Icono = item.icono;
   return (
@@ -180,79 +172,6 @@ const OfferCard = ({ item }) => {
       </div>
       <p style={{ margin: 0, color: '#4b5563', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.descripcion}</p>
     </article>
-  );
-};
-
-const TestimonialCard = ({ testimonial }) => (
-  <article
-    className="vb-surface"
-    style={{
-      width: 320,
-      minHeight: 180,
-      padding: 18,
-      display: 'grid',
-      gridTemplateRows: 'auto 1fr auto',
-      gap: 10,
-      flexShrink: 0,
-      borderColor: 'rgba(128,194,220,0.35)',
-      background: 'linear-gradient(170deg, rgba(255,255,255,0.90) 0%, rgba(236,246,252,0.92) 100%)',
-      boxShadow: '0 14px 30px rgba(15,23,42,0.12)',
-    }}
-  >
-    <div style={{ display: 'flex', gap: 3, color: '#f59e0b' }}>
-      {Array.from({ length: testimonial.rating }).map((_, idx) => (
-        <IconStarFilled key={`${testimonial.nombre}-${idx}`} size={16} />
-      ))}
-    </div>
-    <p style={{ margin: 0, color: '#374151', lineHeight: 1.65, fontSize: '0.92rem' }}>
-      "{testimonial.comentario}"
-    </p>
-    <div>
-      <strong style={{ color: '#111827', fontSize: '0.92rem' }}>{testimonial.nombre}</strong>
-      <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: '0.8rem' }}>{testimonial.ciudad}</p>
-    </div>
-  </article>
-);
-
-const TestimonialFlow = () => {
-  const flowItems = [...testimonialData, ...testimonialData];
-
-  return (
-    <section
-      className="w-full"
-      style={{
-        background: 'linear-gradient(160deg, #0f1730 0%, #162949 45%, #4b1414 100%)',
-        padding: '72px 0',
-        overflow: 'hidden',
-      }}
-    >
-      <style>{`
-        @keyframes vbTestimonialsFlow {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-      `}</style>
-
-      <div className="px-4 sm:px-6 lg:px-12" style={{ textAlign: 'center', marginBottom: 20 }}>
-        <p style={{ margin: 0, color: '#b9dff0', fontWeight: 700, letterSpacing: '0.12em', fontSize: '0.75rem' }}>RESEÑAS RECIENTES</p>
-      </div>
-
-      <div style={{ position: 'relative' }}>
-        <div
-          style={{
-            display: 'flex',
-            width: 'max-content',
-            gap: 14,
-            padding: '0 16px',
-            animation: 'vbTestimonialsFlow 34s linear infinite',
-          }}
-        >
-          {flowItems.map((testimonial, idx) => (
-            <TestimonialCard key={`${testimonial.nombre}-${idx}`} testimonial={testimonial} />
-          ))}
-        </div>
-      </div>
-    </section>
   );
 };
 
@@ -650,9 +569,6 @@ function Inicio() {
 
       {/* CARRUSEL EQUIPO */}
       <TeamCarousel />
-
-      {/* COMENTARIOS FLUIDOS */}
-      <TestimonialFlow />
 
 
 
