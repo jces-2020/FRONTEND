@@ -137,7 +137,7 @@ function BreadcrumbNavigation() {
         {breadcrumbs.map((crumb, idx) => (
           <li key={crumb.path}>
             <button
-              className={`text-white font-body text-base px-2 py-1 rounded hover:bg-white/10 transition ${idx === breadcrumbs.length - 1 ? 'font-bold' : ''}`}
+              className={`vb-breadcrumb-button font-body text-base ${idx === breadcrumbs.length - 1 ? 'font-bold opacity-100' : 'opacity-90'}`}
               onClick={() => {
                 if (crumb.path === '/login' && isAuthTokenValid()) {
                   navigate('/user');

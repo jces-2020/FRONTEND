@@ -1,6 +1,3 @@
-// frontend/Reac/mi-proyecto/src/services/aiStreamService.js
-// Servicio para chat con streaming en tiempo real
-
 import { API_BASE_URL } from '../config';
 
 export const API_IA_BASE_URL = API_BASE_URL;
@@ -9,6 +6,7 @@ export const API_IA_BASE_URL = API_BASE_URL;
  * Chat con Streaming - Respuesta en tiempo real, palabra por palabra
  * @param {string} message - Mensaje del usuario
  * @param {Array} messages - Historial de mensajes
+ * @param {boolean} use_cloud - Si true usa Ollama Cloud en backend
  * @param {Function} onToken - Callback cada token recibido: (token) => {}
  * @param {Function} onDone - Callback al finalizar: (fullResponse) => {}
  * @param {Function} onError - Callback en error: (error) => {}
@@ -18,8 +16,8 @@ export async function streamAiChat({
   messages = [],
   model = 'tinyllama:1.1b',
   temperature = 0.1,
-  system_prompt = 'Eres un asistente útil',
   keep_alive = '10m',
+  use_cloud = false,
   onToken = () => {},
   onDone = () => {},
   onError = () => {},
@@ -36,8 +34,8 @@ export async function streamAiChat({
         messages: messages.length > 0 ? messages : [{ role: 'user', content: message }],
         model,
         temperature,
-        system_prompt,
         keep_alive,
+        use_cloud,
       }),
     });
 
@@ -45,44 +43,61 @@ export async function streamAiChat({
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
+    if (!response.body) {
+      throw new Error('La respuesta no contiene body de streaming.');
+    }
+
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
     let fullResponse = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          try {
-            const data = JSON.parse(line.slice(6));
-            
-            if (data.error) {
-              onError(data.error);
-              break;
-            }
+      const chunks = buffer.split('\n\n');
+      buffer = chunks.pop() || '';
 
-            if (data.token) {
-              fullResponse += data.token;
-              onToken(data.token);
-            }
+      for (const chunk of chunks) {
+        const line = chunk.trim();
+        if (!line.startsWith('data:')) continue;
 
-            if (data.done) {
-              onDone(fullResponse || data.full_response);
-              return fullResponse || data.full_response;
-            }
-          } catch (e) {
-            console.error('Error parsing SSE:', e);
+        const raw = line.replace(/^data:\s*/, '');
+
+        try {
+          const data = JSON.parse(raw);
+
+          if (data.error) {
+            onError(data.error);
+            return;
           }
+
+          if (data.token) {
+            fullResponse += data.token;
+            onToken(data.token);
+          }
+
+          if (data.full_response && !fullResponse) {
+            fullResponse = data.full_response;
+          }
+
+          if (data.done) {
+            onDone(fullResponse || data.full_response || '');
+            return fullResponse || data.full_response || '';
+          }
+        } catch (error) {
+          console.error('Error parsing SSE:', error);
         }
       }
     }
+
+    onDone(fullResponse);
+    return fullResponse;
   } catch (error) {
-    onError(error.message);
+    onError(error.message || 'Error en el streaming.');
     throw error;
   }
 }
@@ -92,11 +107,18 @@ export async function streamAiChat({
  * @param {Object} params - Parámetros del chat
  */
 export async function sendAiChat(params) {
-  const { message, messages = [] } = params;
+  const { message, messages = [], system_prompt, use_cloud = false, ...rest } = params || {};
 
   if (!message && (!messages || messages.length === 0)) {
     throw new Error('Se requiere message o messages');
   }
+
+  const payload = {
+    ...rest,
+    message,
+    messages,
+    use_cloud,
+  };
 
   const response = await fetch(`${API_IA_BASE_URL}/api/ia/chat`, {
     method: 'POST',
@@ -104,7 +126,7 @@ export async function sendAiChat(params) {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify(params),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -164,4 +186,3 @@ export async function stopAiSession() {
   if (!data.success) throw new Error(data.error);
   return data.data;
 }
-

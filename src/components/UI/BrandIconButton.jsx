@@ -21,24 +21,27 @@ function BrandIconButton({
   onClick, 
   ariaLabel, 
   size = 'md',
+  tone = 'light',
   className = '',
   disabled = false,
   ...props 
 }) {
-  // Tamaños de padding según el tamaño del botón
-  const sizeStyles = {
-    sm: 'p-2',
-    md: 'p-2.5',
-    lg: 'p-3'
+  const sizeClasses = {
+    sm: 'vb-icon-button--sm',
+    md: 'vb-icon-button--md',
+    lg: 'vb-icon-button--lg'
+  };
+
+  const toneClasses = {
+    light: 'vb-icon-button--light',
+    primary: 'vb-icon-button--primary',
+    secondary: 'vb-icon-button--secondary',
+    accent: 'vb-icon-button--accent'
   };
 
   return (
     <button
-      className={`rounded-full transition hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed ${sizeStyles[size]} ${className}`}
-      style={{ 
-        color: COLORS.dark, 
-        background: COLORS.light 
-      }}
+      className={`vb-icon-button ${sizeClasses[size] || sizeClasses.md} ${toneClasses[tone] || toneClasses.light} ${className}`}
       onClick={onClick}
       aria-label={ariaLabel}
       disabled={disabled}

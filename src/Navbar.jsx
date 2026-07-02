@@ -5,6 +5,7 @@ import { IconUser, IconShoppingCart, IconList, IconSearch, IconX } from '@tabler
 import MenuDesplegable from './MenuDesplegable';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
 import { useCartStore } from './stores/cartStore';
+import BrandIconButton from './components/UI/BrandIconButton';
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,9 +44,9 @@ function Navbar() {
           {/* Iconos y buscador */}
           <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4 flex-shrink-0">
             {/* Botón Usuario */}
-            <button
-              className="rounded-full p-1.5 sm:p-2 lg:p-2.5 transition hover:brightness-110"
-              style={{ color: COLORS.primary, background: COLORS.light }}
+            <BrandIconButton
+              size="sm"
+              tone="light"
               onClick={() => {
                 try {
                   const t = localStorage.getItem('auth_token');
@@ -53,12 +54,13 @@ function Navbar() {
                     const parts = t.split('.');
                     if (parts.length === 3) {
                       const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-                      if (!payload.exp || (payload.exp * 1000) > Date.now()) {
+            </BrandIconButton>
                         navigate('/user');
                         return;
-                      }
-                    }
-                  }
+            <BrandIconButton
+              size="sm"
+              tone="light"
+              className="relative"
                 } catch {}
                 navigate('/login');
               }}
@@ -87,15 +89,14 @@ function Navbar() {
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
-            </button>
+            </BrandIconButton>
 
             {/* Buscador DESKTOP - visible solo en sm en adelante */}
             <div className="relative hidden sm:block">
               <input
                 type="text"
                 placeholder="Buscar..."
-                className="font-body w-48 md:w-56 lg:w-72 px-4 py-2 lg:py-2.5 rounded-full focus:outline-none text-sm transition"
-                style={{ background: COLORS.light, color: COLORS.text }}
+                className="vb-input font-body w-48 md:w-56 lg:w-72 px-4 py-2 lg:py-2.5 text-sm"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: COLORS.secondary }}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 lg:h-5 lg:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,9 +106,10 @@ function Navbar() {
             </div>
 
             {/* Botón Buscar MÓVIL - solo visible en xs */}
-            <button
-              className="sm:hidden rounded-full p-1.5 transition hover:brightness-110"
-              style={{ color: COLORS.primary, background: COLORS.light }}
+            <BrandIconButton
+              size="sm"
+              tone="light"
+              className="sm:hidden"
               onClick={() => setSearchOpen((prev) => !prev)}
               aria-label="Buscar"
             >
@@ -115,17 +117,17 @@ function Navbar() {
                 ? <IconX stroke={2.5} size={18} />
                 : <IconSearch stroke={2.5} size={18} />
               }
-            </button>
+            </BrandIconButton>
 
             {/* Botón Menú Desplegable */}
-            <button
-              className="rounded-lg p-1.5 sm:p-2 lg:p-2.5 transition hover:brightness-110"
-              style={{ background: COLORS.accent, color: COLORS.primary }}
+            <BrandIconButton
+              size="sm"
+              tone="accent"
               onClick={() => setMenuOpen((prev) => !prev)}
               aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
             >
               <IconList stroke={2} size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-            </button>
+            </BrandIconButton>
           </div>
         </div>
 
@@ -137,8 +139,7 @@ function Navbar() {
                 type="text"
                 placeholder="Buscar..."
                 autoFocus
-                className="font-body w-full px-4 py-2 rounded-full focus:outline-none text-sm"
-                style={{ background: COLORS.light, color: COLORS.text }}
+                className="vb-input font-body w-full px-4 py-2 text-sm"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: COLORS.secondary }}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
