@@ -18,7 +18,7 @@ function Navbar() {
     <>
       <nav
         className="w-full fixed top-0 left-0 z-50 shadow overflow-x-hidden"
-        style={{ background: COLORS.primary }}
+        style={{ background: 'transparent' }}
       >
         <div className="flex items-center justify-between px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
           <div className="flex items-center flex-shrink-0">
