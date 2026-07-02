@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { COLORS, FONTS } from './colors';
+import { COLORS } from './colors';
 
 function Footer() {
   const [showFooter, setShowFooter] = useState(false);
@@ -30,7 +30,7 @@ function Footer() {
         zIndex: 100
       }}
     >
-      <span className="font-body text-xs sm:text-sm font-semibold text-center w-full" style={{ fontFamily: FONTS.body }}>
+      <span className="font-body text-xs sm:text-sm font-semibold text-center w-full">
         © 2026--- VIDRIOBRAS. Todos los derechos reservados.
       </span>
     </footer>
