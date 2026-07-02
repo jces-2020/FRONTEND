@@ -103,7 +103,7 @@ const InfoCard = ({ titulo, texto, color, delay, rotate }) => {
 };
 
 const MisionVision = () => (
-  <div className="w-full px-8 py-20" style={{ background: '#f9f9f9' }}>
+  <div className="w-full px-8 py-20" style={{ background: 'linear-gradient(180deg, #f5fbff 0%, #eef6fb 45%, #f7f2f2 100%)' }}>
     <div style={{ display: 'flex', gap: 28, justifyContent: 'center', flexWrap: 'wrap' }}>
       <InfoCard titulo="Visión de Empresa" texto="Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente." color="#941918" delay={0} rotate="-1.5deg" />
       <InfoCard titulo="Misión de Empresa" texto="Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos." color="#80C2DC" delay={150} rotate="1.5deg" />
@@ -156,6 +156,8 @@ const OfferCard = ({ item }) => {
         borderColor: `${item.color}33`,
         display: 'grid',
         gap: 12,
+        background: `linear-gradient(160deg, ${item.color}12 0%, rgba(255,255,255,0.94) 55%, ${item.color}08 100%)`,
+        boxShadow: `0 14px 28px ${item.color}22`,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -193,6 +195,8 @@ const TestimonialCard = ({ testimonial }) => (
       gap: 10,
       flexShrink: 0,
       borderColor: 'rgba(128,194,220,0.35)',
+      background: 'linear-gradient(170deg, rgba(255,255,255,0.90) 0%, rgba(236,246,252,0.92) 100%)',
+      boxShadow: '0 14px 30px rgba(15,23,42,0.12)',
     }}
   >
     <div style={{ display: 'flex', gap: 3, color: '#f59e0b' }}>
@@ -217,7 +221,7 @@ const TestimonialFlow = () => {
     <section
       className="w-full"
       style={{
-        background: 'linear-gradient(180deg, #f8fbff 0%, #eef6fb 100%)',
+        background: 'linear-gradient(160deg, #0f1730 0%, #162949 45%, #4b1414 100%)',
         padding: '72px 0',
         overflow: 'hidden',
       }}
@@ -229,11 +233,8 @@ const TestimonialFlow = () => {
         }
       `}</style>
 
-      <div className="px-4 sm:px-6 lg:px-12" style={{ textAlign: 'center', marginBottom: 30 }}>
-        <p style={{ margin: 0, color: '#5a8ba8', fontWeight: 700, letterSpacing: '0.12em', fontSize: '0.75rem' }}>TESTIMONIOS</p>
-        <h2 style={{ margin: '10px 0 0', color: '#941918', fontSize: 'clamp(1.6rem, 2.6vw, 2.2rem)', fontWeight: 900 }}>
-          Clientes que ya transformaron sus espacios
-        </h2>
+      <div className="px-4 sm:px-6 lg:px-12" style={{ textAlign: 'center', marginBottom: 20 }}>
+        <p style={{ margin: 0, color: '#b9dff0', fontWeight: 700, letterSpacing: '0.12em', fontSize: '0.75rem' }}>RESEÑAS RECIENTES</p>
       </div>
 
       <div style={{ position: 'relative' }}>
@@ -574,7 +575,7 @@ function Inicio() {
       </div>
 
       {/* QUÉ OFRECEMOS */}
-      <section className="w-full px-4 sm:px-6 lg:px-12 py-16" style={{ background: '#ffffff' }}>
+      <section className="w-full px-4 sm:px-6 lg:px-12 py-16" style={{ background: 'linear-gradient(180deg, #f9fcff 0%, #f0f7fc 56%, #f4ecec 100%)' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 24 }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ margin: 0, color: '#5a8ba8', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.75rem' }}>¿QUÉ OFRECEMOS?</p>
@@ -629,7 +630,7 @@ function Inicio() {
       <MisionVision />
 
       {/* NUESTROS PROYECTOS */}
-      <div className="w-full px-8 py-20 bg-white text-center">
+      <div className="w-full px-8 py-20 text-center" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
         <h2 className="text-3xl md:text-4xl font-bold mb-12 text-[#941918]">Nuestros Proyectos</h2>
         <div style={{ display: 'grid', gridTemplateColumns: gridColumns, gap: '16px', maxWidth: '900px', margin: '0 auto', alignItems: 'stretch' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
