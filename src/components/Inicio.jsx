@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles } from '@tabler/icons-react';
+import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -62,6 +62,32 @@ const NeonButton = ({ onClick, children }) => {
     </div>
   );
 };
+
+// ─── Eyebrow reutilizable (mismo patrón visual en todas las secciones) ──────
+const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
+  <div style={{ textAlign: align, maxWidth: 840, margin: align === 'center' ? '0 auto' : 0 }}>
+    <p style={{
+      margin: 0,
+      color: dark ? '#80C2DC' : '#5a8ba8',
+      fontWeight: 700,
+      letterSpacing: '0.14em',
+      fontSize: '0.75rem',
+      textTransform: 'uppercase',
+    }}>{label}</p>
+    <h2 style={{
+      margin: '8px 0 10px',
+      color: dark ? '#fff' : '#941918',
+      fontSize: 'clamp(1.7rem, 2.6vw, 2.35rem)',
+      fontWeight: 900,
+      lineHeight: 1.15,
+    }}>{title}</h2>
+    {subtitle && (
+      <p style={{ margin: 0, color: dark ? 'rgba(255,255,255,0.75)' : '#4b5563', lineHeight: 1.75, fontSize: '0.97rem' }}>
+        {subtitle}
+      </p>
+    )}
+  </div>
+);
 
 // ─── Tarjeta Misión / Visión ────────────────────────────────────────────────
 const InfoCard = ({ titulo, texto, color, delay, rotate }) => {
@@ -172,6 +198,211 @@ const OfferCard = ({ item }) => {
       </div>
       <p style={{ margin: 0, color: '#4b5563', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.descripcion}</p>
     </article>
+  );
+};
+
+// ─── Zona de Cobertura — mapa estilizado de zonas de envío/servicio ─────────
+const coverageCities = [
+  { nombre: 'Jauja',     x: 300, y: 78,  principal: false },
+  { nombre: 'El Tambo',  x: 352, y: 235, principal: false },
+  { nombre: 'Huancayo',  x: 316, y: 270, principal: true  },
+  { nombre: 'Chupaca',   x: 268, y: 336, principal: false },
+];
+
+const CoverageMap = () => {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section
+      className="w-full px-4 sm:px-6 lg:px-12 py-20"
+      style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f4f9fc 55%, #f9fcff 100%)' }}
+    >
+      <style>{`
+        @keyframes vbPing {
+          0%   { transform: scale(0.9); opacity: 0.55; }
+          70%  { transform: scale(2.6); opacity: 0; }
+          100% { transform: scale(2.6); opacity: 0; }
+        }
+        @keyframes vbFadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .vb-cov-fade { animation: vbFadeUp 0.7s ease both; }
+        .vb-cov-pin { transition: transform 0.25s ease; }
+        .vb-cov-pin:hover { transform: translateY(-3px); }
+      `}</style>
+
+      <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40, gridTemplateColumns: 'minmax(0,1fr)', }}>
+        <SectionEyebrow
+          label="ZONA DE COBERTURA"
+          title="Llevamos nuestro servicio hasta la puerta de tu proyecto"
+          subtitle="Instalamos, entregamos y damos soporte técnico en Huancayo, El Tambo, Chupaca y Jauja. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca."
+        />
+
+        <div
+          ref={ref}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: window.innerWidth < 900 ? '1fr' : '1.1fr 0.9fr',
+            gap: 28,
+            alignItems: 'center',
+          }}
+        >
+          {/* Mapa estilizado */}
+          <div
+            className={visible ? 'vb-cov-fade' : ''}
+            style={{
+              position: 'relative',
+              borderRadius: 28,
+              overflow: 'hidden',
+              background:
+                'linear-gradient(160deg, #f7fbfd 0%, #eef6fb 100%), repeating-linear-gradient(0deg, rgba(90,139,168,0.08) 0 1px, transparent 1px 40px), repeating-linear-gradient(90deg, rgba(90,139,168,0.08) 0 1px, transparent 1px 40px)',
+              backgroundBlendMode: 'normal',
+              border: '1px solid rgba(90,139,168,0.18)',
+              boxShadow: '0 24px 60px rgba(15,23,42,0.10)',
+              padding: '28px 20px 20px',
+            }}
+          >
+            {/* Insignia de cobertura */}
+            <div style={{
+              position: 'absolute', top: 20, left: 20, zIndex: 4,
+              background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
+              borderRadius: 16, padding: '10px 16px',
+              boxShadow: '0 8px 22px rgba(15,23,42,0.12)',
+              border: '1px solid rgba(148,25,24,0.12)',
+            }}>
+              <p style={{ margin: 0, fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.12em', color: '#941918' }}>COBERTURA</p>
+              <p style={{ margin: '2px 0 0', fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>4 zonas</p>
+              <p style={{ margin: '2px 0 0', fontSize: '0.68rem', color: '#64748b' }}>Valle del Mantaro</p>
+            </div>
+
+            <svg viewBox="0 0 600 460" style={{ width: '100%', height: 'auto', display: 'block' }}>
+              <defs>
+                <radialGradient id="vbZone" cx="50%" cy="45%" r="65%">
+                  <stop offset="0%" stopColor="#80C2DC" stopOpacity="0.38" />
+                  <stop offset="100%" stopColor="#80C2DC" stopOpacity="0.14" />
+                </radialGradient>
+              </defs>
+
+              {/* Zona de cobertura (blob orgánico) */}
+              <path
+                d="M300,40 C400,40 452,120 440,200 C470,270 440,360 360,410 C300,444 220,440 170,400 C100,360 78,280 96,210 C70,140 110,60 210,44 C240,38 270,36 300,40 Z"
+                fill="url(#vbZone)"
+                stroke="#5a8ba8"
+                strokeWidth="2"
+                strokeDasharray="2 6"
+                opacity={visible ? 1 : 0}
+                style={{ transition: 'opacity 1s ease 0.15s' }}
+              />
+
+              {/* Radio de servicio activo (punteado rojo, como el "hub" de reparto) */}
+              <circle
+                cx={coverageCities.find(c => c.principal).x}
+                cy={coverageCities.find(c => c.principal).y}
+                r="96"
+                fill="none"
+                stroke="#941918"
+                strokeWidth="1.6"
+                strokeDasharray="6 6"
+                opacity={visible ? 0.85 : 0}
+                style={{ transition: 'opacity 1s ease 0.4s' }}
+              />
+
+              {/* Pines de ciudades */}
+              {coverageCities.map((c, i) => (
+                <g
+                  key={c.nombre}
+                  className="vb-cov-pin"
+                  style={{
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateY(0px)' : 'translateY(10px)',
+                    transition: `opacity 0.5s ease ${0.5 + i * 0.12}s, transform 0.5s ease ${0.5 + i * 0.12}s`,
+                  }}
+                >
+                  {c.principal && (
+                    <circle cx={c.x} cy={c.y} r="14" fill="#941918" opacity="0.35" style={{ transformOrigin: `${c.x}px ${c.y}px`, animation: 'vbPing 2.2s ease-out infinite' }} />
+                  )}
+                  <circle
+                    cx={c.x} cy={c.y}
+                    r={c.principal ? 11 : 8}
+                    fill={c.principal ? '#941918' : '#80C2DC'}
+                    stroke="#fff"
+                    strokeWidth={c.principal ? 3 : 2.5}
+                  />
+                  <text
+                    x={c.x + (c.principal ? 18 : 14)}
+                    y={c.y + 5}
+                    fontSize={c.principal ? 16 : 13.5}
+                    fontWeight={c.principal ? 800 : 700}
+                    fill={c.principal ? '#941918' : '#1f2937'}
+                  >
+                    {c.nombre}
+                  </text>
+                </g>
+              ))}
+            </svg>
+
+            {/* Leyenda */}
+            <div style={{ display: 'flex', gap: 22, justifyContent: 'center', paddingTop: 4 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#941918', display: 'inline-block' }} />
+                Ciudad principal
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
+                <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#80C2DC', display: 'inline-block' }} />
+                Zona de cobertura
+              </span>
+            </div>
+          </div>
+
+          {/* Lista de zonas con detalle */}
+          <div style={{ display: 'grid', gap: 14 }}>
+            {[
+              { nombre: 'Huancayo', desc: 'Sede principal, taller y despacho de pedidos.', destacado: true },
+              { nombre: 'El Tambo', desc: 'Instalación y entrega en 24–48h según proyecto.' },
+              { nombre: 'Chupaca', desc: 'Cobertura completa para obras residenciales y comerciales.' },
+              { nombre: 'Jauja', desc: 'Visitas técnicas y envío coordinado de materiales.' },
+            ].map((z) => (
+              <div
+                key={z.nombre}
+                className="vb-surface"
+                style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 12,
+                  padding: '16px 18px',
+                  borderColor: z.destacado ? 'rgba(148,25,24,0.25)' : 'rgba(128,194,220,0.35)',
+                  background: z.destacado ? 'linear-gradient(160deg, rgba(148,25,24,0.06) 0%, rgba(255,255,255,0.95) 60%)' : '#fff',
+                }}
+              >
+                <span style={{
+                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: z.destacado ? 'rgba(148,25,24,0.12)' : 'rgba(128,194,220,0.18)',
+                  color: z.destacado ? '#941918' : '#3b6f8c',
+                }}>
+                  <IconMapPin size={18} stroke={2.1} />
+                </span>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
+                    {z.nombre} {z.destacado && <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#941918', letterSpacing: '0.08em', marginLeft: 6 }}>PRINCIPAL</span>}
+                  </h4>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.86rem', color: '#4b5563', lineHeight: 1.6 }}>{z.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -317,22 +548,7 @@ const TeamCarousel = () => {
     return () => clearInterval(id);
   }, [total]);
 
-  // Calcula el translateX para que el activo quede centrado en el viewport
-  // Posición X de inicio de cada tarjeta (izq, centro tiene ancho distinto)
-  // Todos los índices son tratados como SIDE_W excepto el activo (CENTER_W)
-  // Para simplificar: todos los cards en el track tienen siempre su ancho real
-  // Track: ...SIDE SIDE CENTER SIDE SIDE...  según posición relativa al activo
-
-  // Construimos el orden circular: activo en índice 2 (el del medio de 5 visibles)
-  // Mostramos: [active-2, active-1, active, active+1, active+2]
   const getIdx = (offset) => (active + offset + total) % total;
-
-  // Posición X del centro del viewport donde queremos el card activo
-  // viewport = VIEWPORT_W, centro = VIEWPORT_W / 2
-  // El track tiene: SIDE + GAP + SIDE + GAP + CENTER + GAP + SIDE + GAP + SIDE
-  // El activo (CENTER) empieza en: SIDE + GAP + SIDE + GAP = 2*(SIDE_W + GAP)
-  // Centro del activo = 2*(SIDE_W+GAP) + CENTER_W/2
-  // Para centrarlo en el viewport: translateX = VIEWPORT_W/2 - (2*(SIDE_W+GAP) + CENTER_W/2)
   const offsetX = windowWidth < 1024 ? 0 : (VIEWPORT_W / 2) - (2 * (SIDE_W + GAP) + CENTER_W / 2);
 
   return (
@@ -344,8 +560,16 @@ const TeamCarousel = () => {
         background: 'rgba(15,15,30,0.92)',
       }}
     >
-
       <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto 48px', padding: '0 24px' }}>
+          <SectionEyebrow
+            label="NUESTRO EQUIPO"
+            title="Las manos detrás de cada instalación"
+            subtitle="Un equipo estable, capacitado y presente en cada etapa del proyecto: desde almacén hasta la entrega final."
+            dark
+          />
+        </div>
+
         {/* Viewport centrado */}
         <div style={{
           width: VIEWPORT_W,
@@ -423,26 +647,6 @@ function Inicio() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const areas = [
-    { nombre: 'Área de Almacén', desc: 'Gestiona la recepción, almacenamiento y control del inventario de materiales para garantizar disponibilidad en cada proyecto.' },
-    { nombre: 'Área de Ventas',  desc: 'Encargada de la atención al cliente, facturación, cotizaciones y registro de productos y servicios.' },
-  ];
-
-  const [areasVisible, setAreasVisible] = useState(false);
-  const areasRef = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (areasRef.current) {
-        const rect = areasRef.current.getBoundingClientRect();
-        setAreasVisible(rect.top < window.innerHeight - 100);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   const CardContent = ({ serv }) => (
     <>
       <img
@@ -496,16 +700,11 @@ function Inicio() {
       {/* QUÉ OFRECEMOS */}
       <section className="w-full px-4 sm:px-6 lg:px-12 py-16" style={{ background: 'linear-gradient(180deg, #f9fcff 0%, #f0f7fc 56%, #f4ecec 100%)' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 24 }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ margin: 0, color: '#5a8ba8', fontWeight: 700, letterSpacing: '0.1em', fontSize: '0.75rem' }}>¿QUÉ OFRECEMOS?</p>
-            <h2 style={{ margin: '8px 0 10px', color: '#941918', fontSize: 'clamp(1.7rem, 2.6vw, 2.35rem)', fontWeight: 900 }}>
-              Soluciones en vidrio y aluminio para hogar y negocio
-            </h2>
-            <p style={{ margin: '0 auto', maxWidth: 840, color: '#4b5563', lineHeight: 1.75, fontSize: '0.97rem' }}>
-              Diseñamos, fabricamos e instalamos con enfoque técnico y estético. Desde divisiones interiores hasta fachadas,
-              te acompañamos con una atención clara, tiempos ordenados y resultados que elevan tu espacio.
-            </p>
-          </div>
+          <SectionEyebrow
+            label="¿QUÉ OFRECEMOS?"
+            title="Soluciones en vidrio y aluminio para hogar y negocio"
+            subtitle="Diseñamos, fabricamos e instalamos con enfoque técnico y estético. Desde divisiones interiores hasta fachadas, te acompañamos con una atención clara, tiempos ordenados y resultados que elevan tu espacio."
+          />
 
           <div
             style={{
@@ -545,13 +744,18 @@ function Inicio() {
         </div>
       </section>
 
+      {/* ZONA DE COBERTURA */}
+      <CoverageMap />
+
       {/* MISIÓN Y VISIÓN */}
       <MisionVision />
 
       {/* NUESTROS PROYECTOS */}
       <div className="w-full px-8 py-20 text-center" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
-        <h2 className="text-3xl md:text-4xl font-bold mb-12 text-[#941918]">Nuestros Proyectos</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: gridColumns, gap: '16px', maxWidth: '900px', margin: '0 auto', alignItems: 'stretch' }}>
+        <div style={{ marginBottom: 12 }}>
+          <SectionEyebrow label="PORTAFOLIO" title="Nuestros Proyectos" />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: gridColumns, gap: '16px', maxWidth: '900px', margin: '32px auto 0', alignItems: 'stretch' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <Card serv={s[0]} rotate="-2deg"  height={cardHeight} />
             <Card serv={s[3]} rotate="1.5deg" height={cardHeight} />
@@ -569,8 +773,6 @@ function Inicio() {
 
       {/* CARRUSEL EQUIPO */}
       <TeamCarousel />
-
-
 
     </section>
   );
