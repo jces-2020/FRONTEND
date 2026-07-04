@@ -686,9 +686,64 @@ function Inicio() {
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
 
       {/* HERO */}
-      <div className="w-full flex relative items-center justify-start" style={{ minHeight: '100vh', height: '100vh', background: 'linear-gradient(135deg, #80C2DC 0%, #FFFFFF 40%, #FFFFFF 60%, #941918 120%)', marginTop: 0, paddingTop: 0, overflow: 'hidden', position: 'relative' }}>
-        <div style={{ width: '100%', minHeight: '100vh', height: '100vh', backgroundImage: 'url(/tienda%20anime.png)', backgroundSize: 'cover', backgroundPosition: 'top', filter: 'brightness(0.92)', opacity: 0.32, position: 'absolute', top: 0, left: 0, zIndex: 1 }} />
-        <img src="/R.png" alt="Logo R" className="absolute w-[300px] md:w-[500px] lg:w-[700px] opacity-60 z-10" style={{ top: '55%', right: '0%', transform: 'translateY(-50%)', minWidth: 300, maxWidth: 800, WebkitImageRendering: 'crisp-edges', imageRendering: 'crisp-edges' }} />
+      <div
+        className="w-full flex relative items-center justify-start"
+        style={{
+          minHeight: '100vh',
+          height: '100vh',
+          background: '#FFFFFF',
+          marginTop: 0,
+          paddingTop: 0,
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        {/* Figura degradada diagonal (lado derecho, corte cayendo a la izquierda) */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '48%',
+            height: '100%',
+            backgroundImage: `linear-gradient(
+              315deg,
+              hsl(0deg 0% 100%) 0%,
+              hsl(43deg 100% 95%) 0%,
+              hsl(44deg 100% 90%) 1%,
+              hsl(44deg 100% 84%) 3%,
+              hsl(46deg 100% 76%) 6%,
+              hsl(48deg 100% 65%) 11%,
+              hsl(49deg 94% 50%) 17%,
+              hsl(47deg 90% 48%) 26%,
+              hsl(43deg 86% 45%) 37%,
+              hsl(38deg 82% 42%) 51%,
+              hsl(29deg 78% 38%) 71%,
+              hsl(0deg 72% 34%) 100%
+            )`,
+            clipPath: 'polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            filter: 'drop-shadow(-45px 0px 55px rgba(0,0,0,0.45))',
+            zIndex: 1,
+          }}
+        />
+
+        {/* Logo */}
+        <img
+          src="/R.png"
+          alt="Logo R"
+          className="absolute w-[300px] md:w-[500px] lg:w-[700px] opacity-60 z-10"
+          style={{
+            top: '55%',
+            right: '0%',
+            transform: 'translateY(-50%)',
+            minWidth: 300,
+            maxWidth: 800,
+            WebkitImageRendering: 'crisp-edges',
+            imageRendering: 'crisp-edges',
+          }}
+        />
+
+        {/* Texto */}
         <div className="absolute left-4 md:left-16 top-1/2 transform -translate-y-1/2 text-left z-20 max-w-sm md:max-w-md lg:max-w-lg bg-black bg-opacity-30 rounded-xl p-6 md:p-8 shadow-2xl">
           <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">Vidrio perfecto,<br />instalación que inspira confianza.</h2>
           <div className="text-sm md:text-base lg:text-lg text-white font-normal leading-relaxed mt-2">
