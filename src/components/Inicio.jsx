@@ -698,6 +698,22 @@ function Inicio() {
           position: 'relative',
         }}
       >
+        {/* Sombra del panel — capa independiente detrás, sin afectar el color del panel */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '48%',
+            height: '100%',
+            transform: 'translateX(-14px)',
+            background: 'rgba(0,0,0,0.45)',
+            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%)',
+            filter: 'blur(14px)',
+            zIndex: 0,
+          }}
+        />
+
         {/* Figura degradada diagonal (lado derecho, la caída va de abajo hacia arriba) */}
         <div
           style={{
@@ -722,7 +738,6 @@ function Inicio() {
               hsl(0deg 72% 34%) 100%
             )`,
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%)',
-            filter: 'drop-shadow(-14px 0px 14px rgba(0,0,0,0.45))',
             zIndex: 1,
           }}
         />
