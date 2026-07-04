@@ -698,7 +698,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Figura degradada diagonal (lado derecho, corte cayendo a la izquierda) */}
+        {/* Figura degradada diagonal (lado derecho, la caída va de abajo hacia arriba) */}
         <div
           style={{
             position: 'absolute',
@@ -707,22 +707,16 @@ function Inicio() {
             width: '48%',
             height: '100%',
             backgroundImage: `linear-gradient(
-              315deg,
-              hsl(0deg 0% 100%) 0%,
-              hsl(43deg 100% 95%) 0%,
-              hsl(44deg 100% 90%) 1%,
-              hsl(44deg 100% 84%) 3%,
-              hsl(46deg 100% 76%) 6%,
-              hsl(48deg 100% 65%) 11%,
-              hsl(49deg 94% 50%) 17%,
-              hsl(47deg 90% 48%) 26%,
-              hsl(43deg 86% 45%) 37%,
-              hsl(38deg 82% 42%) 51%,
-              hsl(29deg 78% 38%) 71%,
+              135deg,
+              hsl(49deg 94% 50%) 0%,
+              hsl(47deg 90% 48%) 15%,
+              hsl(43deg 86% 45%) 30%,
+              hsl(38deg 82% 42%) 50%,
+              hsl(29deg 78% 38%) 75%,
               hsl(0deg 72% 34%) 100%
             )`,
-            clipPath: 'polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            filter: 'drop-shadow(-45px 0px 55px rgba(0,0,0,0.45))',
+            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%)',
+            filter: 'drop-shadow(-14px 0px 14px rgba(0,0,0,0.45))',
             zIndex: 1,
           }}
         />
