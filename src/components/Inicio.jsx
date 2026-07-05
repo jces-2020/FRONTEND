@@ -114,15 +114,16 @@ const FeatureIconItem = ({ item }) => {
   );
 };
 
-// Margen izquierdo: crece con el ancho de pantalla para que el bloque quede
-// más centrado (en vez de pegado al borde izquierdo), pero el degradado sigue
-// llegando siempre hasta el borde derecho real (marginRight: 0 más abajo).
-const QS_GUTTER = 'max(24px, calc((100vw - 1300px) / 2))';
+// Margen izquierdo: crece con el ancho de pantalla para dejar un espacio en
+// blanco visible antes de la imagen (la imagen y el degradado quedan más
+// hacia la derecha), pero el degradado sigue llegando siempre hasta el borde
+// derecho real (marginRight: 0 más abajo).
+const QS_GUTTER = 'max(24px, calc((100vw - 1000px) / 2))';
 
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
-  const imgHeight = isMobile ? 240 : 380;
-  const overlap = isMobile ? 60 : 110; // cuánto sube el degradado para "morder" la imagen
+  const imgHeight = isMobile ? 260 : 420;
+  const overlap = imgHeight / 2; // el degradado empieza exactamente a la mitad de la imagen
 
   return (
     // Sin padding horizontal en la sección: así el degradado puede llegar
@@ -139,13 +140,14 @@ const QuienesSomos = () => {
       </p>
 
       <div style={{ position: 'relative' }}>
-        {/* Fila: imagen + Visión/Misión, con el mismo gutter lateral que el resto del sitio */}
+        {/* Fila: espacio en blanco a la izquierda (por el QS_GUTTER) + imagen
+            (ancho fijo, no tan ancha) + recuadro Visión + recuadro Misión */}
         <div style={{ maxWidth: 1180, paddingLeft: QS_GUTTER, paddingRight: QS_GUTTER }}>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '340px 1fr',
-              gap: 40,
+              gridTemplateColumns: isMobile ? '1fr' : '320px 1fr 1fr',
+              gap: 24,
               alignItems: 'start',
             }}
           >
@@ -163,32 +165,31 @@ const QuienesSomos = () => {
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
               }}
             />
-            <div style={{ display: 'grid', gap: 24, paddingTop: isMobile ? 0 : 8 }}>
-              <div>
-                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
-                  Nuestra
-                </p>
-                <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
-                <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-                  Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
-                </p>
-              </div>
-              <div>
-                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
-                  Nuestra
-                </p>
-                <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Misión</h3>
-                <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-                  Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
-                </p>
-              </div>
+            <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #80C2DC' }}>
+              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
+                Nuestra
+              </p>
+              <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
+              <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+                Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
+              </p>
+            </div>
+            <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #941918' }}>
+              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
+                Nuestra
+              </p>
+              <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Misión</h3>
+              <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+                Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Degradado: sube y "muerde" la mitad inferior de la imagen, y choca
+        {/* Degradado: empieza exactamente a la mitad de la imagen y choca
             contra el borde derecho real de la pantalla (marginRight: 0, sin
-            maxWidth, dentro de una sección que ya no tiene padding lateral). */}
+            maxWidth, dentro de una sección que ya no tiene padding lateral).
+            Su borde izquierdo arranca en el mismo punto que la imagen. */}
         <div
           style={{
             position: 'relative',
@@ -197,7 +198,7 @@ const QuienesSomos = () => {
             marginLeft: QS_GUTTER,
             marginRight: 0,
             borderRadius: 0,
-            padding: isMobile ? `${overlap + 24}px 24px 32px` : `48px 48px 48px 380px`,
+            padding: isMobile ? `${overlap + 24}px 24px 32px` : '48px 48px 48px 360px',
             backgroundImage: `linear-gradient(
               205deg,
               hsl(0deg 72% 34%) 0%,
