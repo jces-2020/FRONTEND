@@ -787,20 +787,20 @@ function Inicio() {
         />
 
         {/* Texto */}
-        <div className="relative z-20 max-w-xl lg:max-w-2xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
+        <div className="relative z-20 max-w-2xl lg:max-w-3xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
           <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
-          <p style={{ margin: 0, color: '#941918', fontWeight: 800, letterSpacing: '0.12em', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+          <p style={{ margin: 0, color: '#941918', fontWeight: 800, letterSpacing: '0.12em', fontSize: 'clamp(0.85rem, 1.1vw, 1.05rem)', textTransform: 'uppercase' }}>
             Líderes en vidrio y aluminio
           </p>
 
-          <h1 style={{ margin: '8px 0 0', lineHeight: 0.98 }}>
-            <span style={{ display: 'block', fontSize: 'clamp(2.6rem, 7vw, 5.2rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
+          <h1 style={{ margin: '8px 0 0', lineHeight: 0.96 }}>
+            <span style={{ display: 'block', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
               VIDRIO
             </span>
             <span
               style={{
                 display: 'block',
-                fontSize: 'clamp(2.6rem, 7vw, 5.2rem)',
+                fontSize: 'clamp(3rem, 9vw, 6.6rem)',
                 fontWeight: 900,
                 letterSpacing: '-0.01em',
                 color: 'transparent',
@@ -811,7 +811,7 @@ function Inicio() {
             </span>
           </h1>
 
-          <p style={{ margin: '14px 0 0', color: '#374151', fontWeight: 600, fontSize: 'clamp(1.05rem, 1.6vw, 1.3rem)' }}>
+          <p style={{ margin: '14px 0 0', color: '#374151', fontWeight: 600, fontSize: 'clamp(1.2rem, 2.1vw, 1.6rem)' }}>
             Instalación que inspira confianza
           </p>
 
