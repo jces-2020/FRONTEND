@@ -114,8 +114,10 @@ const FeatureIconItem = ({ item }) => {
   );
 };
 
-// Gutter lateral consistente con el hero (mismo valor que usa el texto del hero)
-const QS_GUTTER = 'clamp(16px, 6vw, 64px)';
+// Margen izquierdo: crece con el ancho de pantalla para que el bloque quede
+// más centrado (en vez de pegado al borde izquierdo), pero el degradado sigue
+// llegando siempre hasta el borde derecho real (marginRight: 0 más abajo).
+const QS_GUTTER = 'max(24px, calc((100vw - 1300px) / 2))';
 
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
@@ -154,7 +156,7 @@ const QuienesSomos = () => {
                 width: '100%',
                 height: imgHeight,
                 objectFit: 'cover',
-                borderRadius: 18,
+                borderRadius: 0,
                 display: 'block',
                 position: 'relative',
                 zIndex: 5,
@@ -194,7 +196,7 @@ const QuienesSomos = () => {
             marginTop: -overlap,
             marginLeft: QS_GUTTER,
             marginRight: 0,
-            borderRadius: isMobile ? 24 : '24px 0 0 24px',
+            borderRadius: 0,
             padding: isMobile ? `${overlap + 24}px 24px 32px` : `48px 48px 48px 380px`,
             backgroundImage: `linear-gradient(
               205deg,
