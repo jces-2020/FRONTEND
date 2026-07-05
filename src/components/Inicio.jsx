@@ -114,102 +114,112 @@ const FeatureIconItem = ({ item }) => {
   );
 };
 
+// Gutter lateral consistente con el hero (mismo valor que usa el texto del hero)
+const QS_GUTTER = 'clamp(16px, 6vw, 64px)';
+
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
+  const imgHeight = isMobile ? 240 : 380;
+  const overlap = isMobile ? 60 : 110; // cuánto sube el degradado para "morder" la imagen
 
   return (
-    <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-        <SectionEyebrow
-          label="¿QUIÉNES SOMOS?"
-          title="Experiencia, calidad y compromiso en cada proyecto"
-          subtitle="Somos una empresa dedicada a la fabricación e instalación de vidrio y aluminio, comprometidos con la excelencia en cada etapa del servicio."
-        />
+    // Sin padding horizontal en la sección: así el degradado puede llegar
+    // hasta el borde derecho real de la pantalla (igual que el hero).
+    <section className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
+      {/* Solo el label "¿Quiénes somos?", sin título ni párrafo extra */}
+      <p style={{
+        margin: '0 0 28px',
+        paddingLeft: QS_GUTTER,
+        color: '#5a8ba8', fontWeight: 700, letterSpacing: '0.14em',
+        fontSize: '0.8rem', textTransform: 'uppercase',
+      }}>
+        ¿Quiénes somos?
+      </p>
 
-        <div style={{ position: 'relative', marginTop: 48 }}>
-          {/* Fila superior: hueco para la imagen + Visión + Misión */}
+      <div style={{ position: 'relative' }}>
+        {/* Fila: imagen + Visión/Misión, con el mismo gutter lateral que el resto del sitio */}
+        <div style={{ maxWidth: 1180, paddingLeft: QS_GUTTER, paddingRight: QS_GUTTER }}>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '280px 1fr 1fr',
-              gap: 24,
+              gridTemplateColumns: isMobile ? '1fr' : '340px 1fr',
+              gap: 40,
+              alignItems: 'start',
             }}
           >
-            {!isMobile && <div />}
-            <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #80C2DC' }}>
-              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
-                Nuestra
-              </p>
-              <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
-              <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-                Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
-              </p>
-            </div>
-            <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #941918' }}>
-              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
-                Nuestra
-              </p>
-              <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Misión</h3>
-              <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-                Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
-              </p>
-            </div>
-          </div>
-
-          {/* Bloque inferior: degradado con los 3 iconos + imagen superpuesta */}
-          <div style={{ position: 'relative', marginTop: isMobile ? 170 : 40 }}>
-            <div
-              style={{
-                position: 'relative',
-                borderRadius: 28,
-                overflow: 'hidden',
-                padding: isMobile ? '40px 24px 36px' : '52px 40px 52px 300px',
-                // Mismos colores del degradado del hero, pero con otro ángulo/patrón
-                backgroundImage: `linear-gradient(
-                  205deg,
-                  hsl(0deg 72% 34%) 0%,
-                  hsl(30deg 76% 43%) 18%,
-                  hsl(46deg 89% 50%) 40%,
-                  hsl(48deg 100% 71%) 64%,
-                  hsl(47deg 100% 88%) 82%,
-                  hsl(199deg 55% 96%) 93%,
-                  hsl(198deg 55% 82%) 99%,
-                  hsl(197deg 57% 68%) 100%
-                )`,
-                boxShadow: '0 30px 50px -20px rgba(148,25,24,0.35)',
-              }}
-            >
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                  gap: 28,
-                }}
-              >
-                {quienesSomosData.map((item) => (
-                  <FeatureIconItem key={item.titulo} item={item} />
-                ))}
-              </div>
-            </div>
-
-            {/* Imagen "paisaje" superpuesta, mismo criterio que el logo R del hero */}
             <img
-              src="/paisaje.png"
+              src="/paisaje.jpg"
               alt="Vidriobras instalación"
               style={{
-                position: 'absolute',
-                top: isMobile ? -150 : -70,
-                left: isMobile ? '50%' : 24,
-                transform: isMobile ? 'translateX(-50%)' : 'none',
-                width: isMobile ? 220 : 280,
-                height: isMobile ? 240 : 320,
+                width: '100%',
+                height: imgHeight,
                 objectFit: 'cover',
                 borderRadius: 18,
-                border: '4px solid #fff',
-                boxShadow: '0 24px 48px rgba(0,0,0,0.35)',
+                display: 'block',
+                position: 'relative',
                 zIndex: 5,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
               }}
             />
+            <div style={{ display: 'grid', gap: 24, paddingTop: isMobile ? 0 : 8 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
+                  Nuestra
+                </p>
+                <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
+                <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+                  Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
+                  Nuestra
+                </p>
+                <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Misión</h3>
+                <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+                  Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Degradado: sube y "muerde" la mitad inferior de la imagen, y choca
+            contra el borde derecho real de la pantalla (marginRight: 0, sin
+            maxWidth, dentro de una sección que ya no tiene padding lateral). */}
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 1,
+            marginTop: -overlap,
+            marginLeft: QS_GUTTER,
+            marginRight: 0,
+            borderRadius: isMobile ? 24 : '24px 0 0 24px',
+            padding: isMobile ? `${overlap + 24}px 24px 32px` : `48px 48px 48px 380px`,
+            backgroundImage: `linear-gradient(
+              205deg,
+              hsl(0deg 72% 34%) 0%,
+              hsl(30deg 76% 43%) 18%,
+              hsl(46deg 89% 50%) 40%,
+              hsl(48deg 100% 71%) 64%,
+              hsl(47deg 100% 88%) 82%,
+              hsl(199deg 55% 96%) 93%,
+              hsl(198deg 55% 82%) 99%,
+              hsl(197deg 57% 68%) 100%
+            )`,
+            boxShadow: '0 30px 50px -20px rgba(148,25,24,0.35)',
+          }}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 28,
+            }}
+          >
+            {quienesSomosData.map((item) => (
+              <FeatureIconItem key={item.titulo} item={item} />
+            ))}
           </div>
         </div>
       </div>
