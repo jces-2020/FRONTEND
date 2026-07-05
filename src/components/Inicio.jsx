@@ -28,36 +28,22 @@ const NeonButton = ({ onClick, children }) => {
         transition: 'color 0.3s ease',
       }}
     >
-      {/* Borde superior — se expande desde el centro hacia los lados */}
       <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: hovered ? '100%' : '0%',
-        height: '1.5px',
-        background: '#80C2DC',
+        position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
+        width: hovered ? '100%' : '0%', height: '1.5px', background: '#80C2DC',
         boxShadow: hovered
           ? '0 -5px 14px 0 rgba(128,194,220,0.9), 0 -1px 6px 0 rgba(128,194,220,0.7)'
           : '0 -3px 8px 0 rgba(128,194,220,0.4)',
         transition: 'width 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s ease',
       }} />
-
-      {/* Borde inferior — se expande desde el centro hacia los lados */}
       <div style={{
-        position: 'absolute',
-        bottom: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: hovered ? '100%' : '0%',
-        height: '1.5px',
-        background: '#80C2DC',
+        position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: hovered ? '100%' : '0%', height: '1.5px', background: '#80C2DC',
         boxShadow: hovered
           ? '0 5px 14px 0 rgba(128,194,220,0.9), 0 1px 6px 0 rgba(128,194,220,0.7)'
           : '0 3px 8px 0 rgba(128,194,220,0.4)',
         transition: 'width 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.4s ease',
       }} />
-
       {children}
     </div>
   );
@@ -67,19 +53,12 @@ const NeonButton = ({ onClick, children }) => {
 const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
   <div style={{ textAlign: align, maxWidth: 840, margin: align === 'center' ? '0 auto' : 0 }}>
     <p style={{
-      margin: 0,
-      color: dark ? '#80C2DC' : '#5a8ba8',
-      fontWeight: 700,
-      letterSpacing: '0.14em',
-      fontSize: '0.75rem',
-      textTransform: 'uppercase',
+      margin: 0, color: dark ? '#80C2DC' : '#5a8ba8', fontWeight: 700,
+      letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase',
     }}>{label}</p>
     <h2 style={{
-      margin: '8px 0 10px',
-      color: dark ? '#fff' : '#941918',
-      fontSize: 'clamp(1.7rem, 2.6vw, 2.35rem)',
-      fontWeight: 900,
-      lineHeight: 1.15,
+      margin: '8px 0 10px', color: dark ? '#fff' : '#941918',
+      fontSize: 'clamp(1.7rem, 2.6vw, 2.35rem)', fontWeight: 900, lineHeight: 1.15,
     }}>{title}</h2>
     {subtitle && (
       <p style={{ margin: 0, color: dark ? 'rgba(255,255,255,0.75)' : '#4b5563', lineHeight: 1.75, fontSize: '0.97rem' }}>
@@ -89,55 +68,8 @@ const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
   </div>
 );
 
-// ─── Tarjeta Misión / Visión ────────────────────────────────────────────────
-const InfoCard = ({ titulo, texto, color, delay, rotate }) => {
-  const [visible, setVisible] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold: 0.2 }
-    );
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flex: '1 1 340px', maxWidth: 480, background: '#fff',
-        borderRadius: '24px', padding: '36px 32px', border: 'none', cursor: 'default',
-        boxShadow: hovered
-          ? `0 20px 60px 0 ${color}99, 0 4px 20px rgba(0,0,0,0.10)`
-          : `0 8px 40px 0 ${color}55, 0 2px 12px rgba(0,0,0,0.06)`,
-        opacity: visible ? 1 : 0,
-        transform: !visible ? 'translateY(40px)' : hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`,
-        transition: `opacity 0.7s ease ${delay}ms, transform 0.3s ease, box-shadow 0.3s ease`,
-        zIndex: hovered ? 10 : 1, position: 'relative',
-      }}
-    >
-      <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 600, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>NUESTRA</p>
-      <h3 style={{ margin: '6px 0 20px', fontSize: '1.7rem', fontWeight: 800, color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{titulo}</h3>
-      <p style={{ margin: 0, color: '#444', lineHeight: 1.8, fontSize: '0.97rem' }}>{texto}</p>
-    </div>
-  );
-};
-
-const MisionVision = () => (
-  <div className="w-full px-8 py-20" style={{ background: 'linear-gradient(180deg, #f5fbff 0%, #eef6fb 45%, #f7f2f2 100%)' }}>
-    <div style={{ display: 'flex', gap: 28, justifyContent: 'center', flexWrap: 'wrap' }}>
-      <InfoCard titulo="Visión de Empresa" texto="Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente." color="#941918" delay={0} rotate="-1.5deg" />
-      <InfoCard titulo="Misión de Empresa" texto="Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos." color="#80C2DC" delay={150} rotate="1.5deg" />
-    </div>
-  </div>
-);
-
-const offerData = [
+// ─── QUIÉNES SOMOS — misión/visión a la izquierda, iconos + texto a la derecha ──
+const quienesSomosData = [
   {
     titulo: 'Instalación Profesional',
     descripcion: 'Equipo técnico especializado en vidrio templado, mamparas, fachadas y estructuras de aluminio.',
@@ -156,60 +88,177 @@ const offerData = [
     icono: IconTruckDelivery,
     color: '#5a8ba8',
   },
+];
+
+const FeatureCircleCard = ({ item }) => {
+  const Icono = item.icono;
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div
+        style={{
+          width: 78, height: 78, borderRadius: '50%', margin: '0 auto 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: `${item.color}14`, border: `2px solid ${item.color}45`,
+          color: item.color, boxShadow: `0 10px 26px ${item.color}25`,
+        }}
+      >
+        <Icono size={32} stroke={1.8} />
+      </div>
+      <div className="vb-surface" style={{ padding: '20px 18px', textAlign: 'left' }}>
+        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#1f2937' }}>{item.titulo}</h3>
+        <p style={{ margin: '8px 0 0', color: '#4b5563', fontSize: '0.9rem', lineHeight: 1.65 }}>{item.descripcion}</p>
+      </div>
+    </div>
+  );
+};
+
+const MisionVisionMini = () => (
+  <div style={{ display: 'grid', gap: 18 }}>
+    <div className="vb-surface" style={{ padding: '24px 22px', borderLeft: '4px solid #941918' }}>
+      <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>Nuestra</p>
+      <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Visión</h3>
+      <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+        Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
+      </p>
+    </div>
+    <div className="vb-surface" style={{ padding: '24px 22px', borderLeft: '4px solid #80C2DC' }}>
+      <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>Nuestra</p>
+      <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Misión</h3>
+      <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+        Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
+      </p>
+    </div>
+  </div>
+);
+
+const QuienesSomos = () => (
+  <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: 'linear-gradient(180deg, #f9fcff 0%, #f0f7fc 55%, #f7f2f2 100%)' }}>
+    <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
+      <SectionEyebrow
+        label="¿QUIÉNES SOMOS?"
+        title="Experiencia, calidad y compromiso en cada proyecto"
+        subtitle="Somos una empresa dedicada a la fabricación e instalación de vidrio y aluminio, comprometidos con la excelencia en cada etapa del servicio."
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: window.innerWidth < 900 ? '1fr' : '0.85fr 1.3fr',
+          gap: 36,
+          alignItems: 'start',
+        }}
+      >
+        <MisionVisionMini />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 24 }}>
+          {quienesSomosData.map((item) => (
+            <FeatureCircleCard key={item.titulo} item={item} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+);
+
+// ─── PRODUCTOS — cajas con efecto 3D "saliendo" del marco, con sombra ───────
+const productosData = [
   {
-    titulo: 'Diseño Personalizado',
-    descripcion: 'Adaptamos cada proyecto a tu espacio para lograr equilibrio entre funcionalidad, estética y presupuesto.',
+    nombre: 'Aluminio',
+    descripcion: 'Perfiles, ventanas y estructuras de aluminio resistentes y de acabado premium.',
+    icono: IconRulerMeasure,
+    color: '#5a8ba8',
+  },
+  {
+    nombre: 'Vidrio',
+    descripcion: 'Vidrio templado, laminado y de seguridad en distintos espesores y acabados.',
+    icono: IconShieldCheck,
+    color: '#941918',
+  },
+  {
+    nombre: 'Accesorios',
+    descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
     icono: IconSparkles,
     color: '#ad7d00',
   },
 ];
 
-const OfferCard = ({ item }) => {
+const ProductCard = ({ item }) => {
   const Icono = item.icono;
+  const [hovered, setHovered] = useState(false);
   return (
-    <article
-      className="vb-surface vb-card"
-      style={{
-        minHeight: 200,
-        borderColor: `${item.color}33`,
-        display: 'grid',
-        gap: 12,
-        background: `linear-gradient(160deg, ${item.color}12 0%, rgba(255,255,255,0.94) 55%, ${item.color}08 100%)`,
-        boxShadow: `0 14px 28px ${item.color}22`,
-      }}
+    <div
+      style={{ position: 'relative', height: 240 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span
-          style={{
-            width: 42,
-            height: 42,
-            borderRadius: 12,
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: `${item.color}1a`,
-            border: `1px solid ${item.color}4d`,
-            color: item.color,
-          }}
-        >
-          <Icono size={20} stroke={2.1} />
+      {/* Marco plano de fondo */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 22,
+        background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
+      }} />
+
+      {/* Caja "saliendo" con perspectiva y sombra */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: '16px 16px 28px 16px',
+          borderRadius: 18,
+          background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 100%)`,
+          transform: hovered
+            ? 'perspective(700px) rotateX(0deg) rotateY(0deg) translateY(-18px) scale(1.03)'
+            : 'perspective(700px) rotateX(7deg) rotateY(-5deg) translateY(-8px)',
+          boxShadow: hovered
+            ? `0 40px 55px -14px ${item.color}77, 0 14px 24px rgba(0,0,0,0.22)`
+            : `0 28px 40px -14px ${item.color}55, 0 8px 16px rgba(0,0,0,0.16)`,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '20px 22px',
+          transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+        }}
+      >
+        <span style={{
+          width: 46, height: 46, borderRadius: 12,
+          background: 'rgba(255,255,255,0.18)', display: 'inline-flex',
+          alignItems: 'center', justifyContent: 'center', color: '#fff',
+        }}>
+          <Icono size={24} stroke={2} />
         </span>
-        <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#1f2937', fontWeight: 800 }}>{item.titulo}</h3>
+        <div>
+          <h3 style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.25rem' }}>{item.nombre}</h3>
+          <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.88)', fontSize: '0.86rem', lineHeight: 1.55 }}>
+            {item.descripcion}
+          </p>
+        </div>
       </div>
-      <p style={{ margin: 0, color: '#4b5563', lineHeight: 1.7, fontSize: '0.95rem' }}>{item.descripcion}</p>
-    </article>
+    </div>
   );
 };
 
-// ─── Zona de Cobertura — mapa estilizado de zonas de envío/servicio ─────────
-const coverageCities = [
-  { nombre: 'Jauja',     x: 300, y: 78,  principal: false },
-  { nombre: 'El Tambo',  x: 352, y: 235, principal: false },
-  { nombre: 'Huancayo',  x: 316, y: 270, principal: true  },
-  { nombre: 'Chupaca',   x: 268, y: 336, principal: false },
+const Productos = () => (
+  <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
+    <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
+      <SectionEyebrow
+        label="PRODUCTOS"
+        title="Lo que vendemos"
+        subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial."
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 30 }}>
+        {productosData.map((item) => (
+          <ProductCard key={item.nombre} item={item} />
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+// ─── UBICACIÓN — foto del local + silueta de la región, con la caída del hero ──
+const zonasCobertura = [
+  { nombre: 'Huancayo', desc: 'Sede principal, taller y despacho de pedidos.', destacado: true },
+  { nombre: 'El Tambo', desc: 'Instalación y entrega en 24–48h según proyecto.' },
+  { nombre: 'Chupaca', desc: 'Cobertura completa para obras residenciales y comerciales.' },
+  { nombre: 'Jauja', desc: 'Visitas técnicas y envío coordinado de materiales.' },
 ];
 
-const CoverageMap = () => {
+const Ubicacion = () => {
   const [visible, setVisible] = useState(false);
   const ref = useRef(null);
 
@@ -222,181 +271,71 @@ const CoverageMap = () => {
     return () => observer.disconnect();
   }, []);
 
+  const isMobile = window.innerWidth < 900;
+
   return (
-    <section
-      className="w-full px-4 sm:px-6 lg:px-12 py-20"
-      style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f4f9fc 55%, #f9fcff 100%)' }}
-    >
-      <style>{`
-        @keyframes vbPing {
-          0%   { transform: scale(0.9); opacity: 0.55; }
-          70%  { transform: scale(2.6); opacity: 0; }
-          100% { transform: scale(2.6); opacity: 0; }
-        }
-        @keyframes vbFadeUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .vb-cov-fade { animation: vbFadeUp 0.7s ease both; }
-        .vb-cov-pin { transition: transform 0.25s ease; }
-        .vb-cov-pin:hover { transform: translateY(-3px); }
-      `}</style>
+    <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
+        {/* Foto del local */}
+        <div style={{ position: 'relative', minHeight: 300 }}>
+          <img
+            src="/tienda%20anime.png"
+            alt="Local Vidriobras"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
+        </div>
 
-      <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40, gridTemplateColumns: 'minmax(0,1fr)', }}>
-        <SectionEyebrow
-          label="ZONA DE COBERTURA"
-          title="Llevamos nuestro servicio hasta la puerta de tu proyecto"
-          subtitle="Instalamos, entregamos y damos soporte técnico en Huancayo, El Tambo, Chupaca y Jauja. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca."
-        />
-
+        {/* Silueta de la región + texto, con la misma caída diagonal del hero */}
         <div
-          ref={ref}
           style={{
-            display: 'grid',
-            gridTemplateColumns: window.innerWidth < 900 ? '1fr' : '1.1fr 0.9fr',
-            gap: 28,
-            alignItems: 'center',
+            position: 'relative',
+            background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
+            clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            padding: isMobile ? '48px 24px' : '56px 60px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
           }}
         >
-          {/* Mapa estilizado */}
-          <div
-            className={visible ? 'vb-cov-fade' : ''}
-            style={{
-              position: 'relative',
-              borderRadius: 28,
-              overflow: 'hidden',
-              background:
-                'linear-gradient(160deg, #f7fbfd 0%, #eef6fb 100%), repeating-linear-gradient(0deg, rgba(90,139,168,0.08) 0 1px, transparent 1px 40px), repeating-linear-gradient(90deg, rgba(90,139,168,0.08) 0 1px, transparent 1px 40px)',
-              backgroundBlendMode: 'normal',
-              border: '1px solid rgba(90,139,168,0.18)',
-              boxShadow: '0 24px 60px rgba(15,23,42,0.10)',
-              padding: '28px 20px 20px',
-            }}
-          >
-            {/* Insignia de cobertura */}
-            <div style={{
-              position: 'absolute', top: 20, left: 20, zIndex: 4,
-              background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
-              borderRadius: 16, padding: '10px 16px',
-              boxShadow: '0 8px 22px rgba(15,23,42,0.12)',
-              border: '1px solid rgba(148,25,24,0.12)',
-            }}>
-              <p style={{ margin: 0, fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.12em', color: '#941918' }}>COBERTURA</p>
-              <p style={{ margin: '2px 0 0', fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', lineHeight: 1 }}>4 zonas</p>
-              <p style={{ margin: '2px 0 0', fontSize: '0.68rem', color: '#64748b' }}>Valle del Mantaro</p>
-            </div>
+          <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+            UBICACIÓN
+          </p>
+          <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>
+            Lugares donde distribuimos nuestros productos
+          </h2>
+          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>
+            Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.
+          </p>
 
-            <svg viewBox="0 0 600 460" style={{ width: '100%', height: 'auto', display: 'block' }}>
-              <defs>
-                <radialGradient id="vbZone" cx="50%" cy="45%" r="65%">
-                  <stop offset="0%" stopColor="#80C2DC" stopOpacity="0.38" />
-                  <stop offset="100%" stopColor="#80C2DC" stopOpacity="0.14" />
-                </radialGradient>
-              </defs>
-
-              {/* Zona de cobertura (blob orgánico) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+            <svg width="150" height="150" viewBox="0 0 600 460" style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.8s ease' }}>
               <path
                 d="M300,40 C400,40 452,120 440,200 C470,270 440,360 360,410 C300,444 220,440 170,400 C100,360 78,280 96,210 C70,140 110,60 210,44 C240,38 270,36 300,40 Z"
-                fill="url(#vbZone)"
-                stroke="#5a8ba8"
-                strokeWidth="2"
-                strokeDasharray="2 6"
-                opacity={visible ? 1 : 0}
-                style={{ transition: 'opacity 1s ease 0.15s' }}
+                fill="#12131a"
+                stroke="#80C2DC"
+                strokeWidth="3"
               />
-
-              {/* Radio de servicio activo (punteado rojo, como el "hub" de reparto) */}
-              <circle
-                cx={coverageCities.find(c => c.principal).x}
-                cy={coverageCities.find(c => c.principal).y}
-                r="96"
-                fill="none"
-                stroke="#941918"
-                strokeWidth="1.6"
-                strokeDasharray="6 6"
-                opacity={visible ? 0.85 : 0}
-                style={{ transition: 'opacity 1s ease 0.4s' }}
-              />
-
-              {/* Pines de ciudades */}
-              {coverageCities.map((c, i) => (
-                <g
-                  key={c.nombre}
-                  className="vb-cov-pin"
-                  style={{
-                    opacity: visible ? 1 : 0,
-                    transform: visible ? 'translateY(0px)' : 'translateY(10px)',
-                    transition: `opacity 0.5s ease ${0.5 + i * 0.12}s, transform 0.5s ease ${0.5 + i * 0.12}s`,
-                  }}
-                >
-                  {c.principal && (
-                    <circle cx={c.x} cy={c.y} r="14" fill="#941918" opacity="0.35" style={{ transformOrigin: `${c.x}px ${c.y}px`, animation: 'vbPing 2.2s ease-out infinite' }} />
-                  )}
-                  <circle
-                    cx={c.x} cy={c.y}
-                    r={c.principal ? 11 : 8}
-                    fill={c.principal ? '#941918' : '#80C2DC'}
-                    stroke="#fff"
-                    strokeWidth={c.principal ? 3 : 2.5}
-                  />
-                  <text
-                    x={c.x + (c.principal ? 18 : 14)}
-                    y={c.y + 5}
-                    fontSize={c.principal ? 16 : 13.5}
-                    fontWeight={c.principal ? 800 : 700}
-                    fill={c.principal ? '#941918' : '#1f2937'}
-                  >
-                    {c.nombre}
-                  </text>
-                </g>
-              ))}
             </svg>
-
-            {/* Leyenda */}
-            <div style={{ display: 'flex', gap: 22, justifyContent: 'center', paddingTop: 4 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
-                <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#941918', display: 'inline-block' }} />
-                Ciudad principal
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', color: '#334155', fontWeight: 600 }}>
-                <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#80C2DC', display: 'inline-block' }} />
-                Zona de cobertura
-              </span>
+            <div>
+              <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
+              <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
             </div>
           </div>
 
-          {/* Lista de zonas con detalle */}
-          <div style={{ display: 'grid', gap: 14 }}>
-            {[
-              { nombre: 'Huancayo', desc: 'Sede principal, taller y despacho de pedidos.', destacado: true },
-              { nombre: 'El Tambo', desc: 'Instalación y entrega en 24–48h según proyecto.' },
-              { nombre: 'Chupaca', desc: 'Cobertura completa para obras residenciales y comerciales.' },
-              { nombre: 'Jauja', desc: 'Visitas técnicas y envío coordinado de materiales.' },
-            ].map((z) => (
-              <div
-                key={z.nombre}
-                className="vb-surface"
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 12,
-                  padding: '16px 18px',
-                  borderColor: z.destacado ? 'rgba(148,25,24,0.25)' : 'rgba(128,194,220,0.35)',
-                  background: z.destacado ? 'linear-gradient(160deg, rgba(148,25,24,0.06) 0%, rgba(255,255,255,0.95) 60%)' : '#fff',
-                }}
-              >
+          <div style={{ display: 'grid', gap: 10, marginTop: 28 }}>
+            {zonasCobertura.map((z) => (
+              <div key={z.nombre} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span style={{
-                  width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: z.destacado ? 'rgba(148,25,24,0.12)' : 'rgba(128,194,220,0.18)',
-                  color: z.destacado ? '#941918' : '#3b6f8c',
+                  background: 'rgba(255,255,255,0.12)', color: '#80C2DC',
                 }}>
-                  <IconMapPin size={18} stroke={2.1} />
+                  <IconMapPin size={15} stroke={2.1} />
                 </span>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: 800, color: '#0f172a' }}>
-                    {z.nombre} {z.destacado && <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#941918', letterSpacing: '0.08em', marginLeft: 6 }}>PRINCIPAL</span>}
-                  </h4>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.86rem', color: '#4b5563', lineHeight: 1.6 }}>{z.desc}</p>
-                </div>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -406,228 +345,54 @@ const CoverageMap = () => {
   );
 };
 
-// ─── Carrusel Equipo ─────────────────────────────────────────────────────────
-const teamData = [
-  { nombre: 'Carlos Mendoza',  cargo: 'Instalador Principal',  desc: 'Especialista en ventanas y mamparas con más de 10 años de experiencia en el rubro.' },
-  { nombre: 'Ana Quispe',      cargo: 'Gerente de Ventas',     desc: 'Responsable de atención al cliente, cotizaciones y cierre de contratos comerciales.' },
-  { nombre: 'Luis Herrera',    cargo: 'Técnico de Aluminio',   desc: 'Experto en estructuras de aluminio, perfiles y acabados de alta precisión.' },
-  { nombre: 'María Torres',    cargo: 'Jefa de Almacén',       desc: 'Controla el inventario y la distribución de materiales para cada proyecto.' },
-  { nombre: 'Jorge Palomino',  cargo: 'Instalador de Vidrio',  desc: 'Manejo de vidrios templados, laminados y de seguridad para todo tipo de obra.' },
+// ─── TESTIMONIOS — inicial en círculo + reseña, con CTA final ───────────────
+const testimoniosData = [
+  { nombre: 'Rosa Álvarez',    resena: 'Excelente atención y acabado impecable en la instalación de mis ventanas.' },
+  { nombre: 'Jorge Ccora',     resena: 'Cumplieron con el tiempo prometido y el vidrio quedó perfecto.' },
+  { nombre: 'Miluska Pérez',   resena: 'Muy buen trato y asesoría clara durante toda la cotización.' },
+  { nombre: 'Daniel Rojas',    resena: 'Instalación rápida y materiales de calidad. Muy recomendados.' },
+  { nombre: 'Katherine Soto',  resena: 'El equipo fue muy profesional de principio a fin.' },
 ];
 
-// Dimensiones fijas
-const SIDE_W    = 400;  // ancho tarjeta lateral
-const CENTER_W  = 500;  // ancho tarjeta central
-const SIDE_H    = 260;  // alto tarjeta lateral
-const CENTER_H  = 320;  // alto tarjeta central
-const AVATAR_D  = 110;  // diámetro círculo lateral
-const AVATAR_DC = 130;  // diámetro círculo central
-const GAP       = 24;   // espacio entre tarjetas
-
-// Ancho visible = tarjeta izq + gap + centro + gap + tarjeta der
-const VIEWPORT_W = SIDE_W + GAP + CENTER_W + GAP + SIDE_W;
-
-const TeamCard = ({ item, isCenter, sideW, centerW, sideH, centerH, avD, avDC, fontSize }) => {
-  const color   = isCenter ? '#941918' : '#80C2DC';
-  const cardW   = isCenter ? centerW : sideW;
-  const cardH   = isCenter ? centerH : sideH;
-  const avatarDiameter = isCenter ? avDC : avD;
-  // Mitad del círculo sobresale por encima del rectángulo
-  const topSpace = avatarDiameter / 2;
-
-  return (
+const TestimonioCard = ({ item }) => (
+  <div style={{ textAlign: 'center' }}>
     <div style={{
-      width: cardW,
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      paddingTop: topSpace,     // espacio completo para el círculo (no lo tapa)
-      position: 'relative',
-      transition: 'opacity 0.5s ease, transform 0.5s ease',
+      width: 64, height: 64, borderRadius: '50%', margin: '0 auto 14px',
+      background: '#941918', color: '#fff', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', fontWeight: 800, fontSize: '1.3rem',
+      border: '3px solid #80C2DC',
     }}>
-      {/* Círculo: sin relleno, borde grueso de color, completamente ENCIMA del rectángulo */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: avatarDiameter,
-        height: avatarDiameter,
-        borderRadius: '50%',
-        background: 'rgba(15,15,30,0.92)',   // fondo oscuro
-        border: `5px solid ${color}`,         // borde grueso de color
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: `${fontSize}px`,
-        color: color,
-        fontWeight: 800,
-        zIndex: 3,                            // encima del rectángulo siempre
-      }}>
-        {item.nombre.charAt(0)}
-      </div>
+      {item.nombre.charAt(0)}
+    </div>
+    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', lineHeight: 1.65 }}>
+      {item.resena}
+    </p>
+    <p style={{ margin: '10px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.8rem' }}>
+      {item.nombre}
+    </p>
+  </div>
+);
 
-      {/* Rectángulo con color sólido — empieza DEBAJO del círculo completo */}
-      <div style={{
-        width: '100%',
-        height: cardH,
-        background: color,
-        borderRadius: '20px',
-        padding: `${avatarDiameter / 2 + 14}px 22px 24px`,  // espacio para la mitad del círculo
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
-        boxShadow: isCenter
-          ? '0 20px 56px rgba(148,25,24,0.5)'
-          : '0 8px 28px rgba(128,194,220,0.35)',
-        overflow: 'hidden',
-        zIndex: 1,
-      }}>
-        <p style={{
-          margin: '0 0 4px',
-          fontSize: '0.65rem',
-          fontWeight: 700,
-          letterSpacing: '0.12em',
-          color: 'rgba(255,255,255,0.7)',
-          textTransform: 'uppercase',
-        }}>
-          {item.cargo}
-        </p>
-        <h3 style={{
-          margin: '0 0 10px',
-          color: '#fff',
-          fontSize: isCenter ? '1.05rem' : '0.9rem',
-          fontWeight: 800,
-          lineHeight: 1.3,
-        }}>
-          {item.nombre}
-        </h3>
-        <p style={{
-          margin: 0,
-          color: 'rgba(255,255,255,0.82)',
-          fontSize: '0.74rem',
-          lineHeight: 1.6,
-        }}>
-          {item.desc}
-        </p>
+const Testimonios = ({ navigate }) => (
+  <div className="w-full py-20" style={{ background: 'rgba(15,15,30,0.92)' }}>
+    <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
+      <SectionEyebrow
+        label="NUESTRO EQUIPO"
+        title="Las manos detrás de cada instalación"
+        subtitle="Un equipo estable, capacitado y presente en cada etapa del proyecto: desde almacén hasta la entrega final."
+        dark
+      />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 32, marginTop: 48 }}>
+        {testimoniosData.map((t) => (
+          <TestimonioCard key={t.nombre} item={t} />
+        ))}
+      </div>
+      <div className="mt-16 text-center" style={{ marginTop: 48, textAlign: 'center' }}>
+        <NeonButton onClick={() => navigate('/contacto')}>Más información</NeonButton>
       </div>
     </div>
-  );
-};
-
-const TeamCarousel = () => {
-  const [active, setActive] = useState(0);
-  const [fading, setFading] = useState(false);
-  const total = teamData.length;
-
-  // Responsivo
-  const windowWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-  const SIDE_W = windowWidth < 768 ? 180 : 400;
-  const CENTER_W = windowWidth < 768 ? 240 : 500;
-  const SIDE_H = windowWidth < 768 ? 120 : 260;
-  const CENTER_H = windowWidth < 768 ? 160 : 320;
-  const AVATAR_D = windowWidth < 768 ? 50 : 110;
-  const AVATAR_DC = windowWidth < 768 ? 60 : 130;
-  const CENTER_FONT_SIZE = windowWidth < 768 ? 24 : 32;
-  const SIDE_FONT_SIZE = windowWidth < 768 ? 19 : 26;
-  const GAP = windowWidth < 768 ? 12 : 24;
-  const offsets = windowWidth < 1024 ? [0] : [-2, -1, 0, 1, 2];
-  const VIEWPORT_W = windowWidth < 1024 ? CENTER_W : SIDE_W + GAP + CENTER_W + GAP + SIDE_W;
-
-  // Auto-avanza cada 3s con fade entre tarjetas
-  useEffect(() => {
-    const id = setInterval(() => {
-      setFading(true);
-      setTimeout(() => {
-        setActive(prev => (prev + 1) % total);
-        setFading(false);
-      }, 280);
-    }, 3200);
-    return () => clearInterval(id);
-  }, [total]);
-
-  const getIdx = (offset) => (active + offset + total) % total;
-  const offsetX = windowWidth < 1024 ? 0 : (VIEWPORT_W / 2) - (2 * (SIDE_W + GAP) + CENTER_W / 2);
-
-  return (
-    <div
-      className="w-full py-20"
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        background: 'rgba(15,15,30,0.92)',
-      }}
-    >
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ maxWidth: 1180, margin: '0 auto 48px', padding: '0 24px' }}>
-          <SectionEyebrow
-            label="NUESTRO EQUIPO"
-            title="Las manos detrás de cada instalación"
-            subtitle="Un equipo estable, capacitado y presente en cada etapa del proyecto: desde almacén hasta la entrega final."
-            dark
-          />
-        </div>
-
-        {/* Viewport centrado */}
-        <div style={{
-          width: VIEWPORT_W,
-          margin: '0 auto',
-          overflow: 'hidden',
-          paddingTop: AVATAR_DC / 2 + 8,  // espacio para la mitad del círculo central
-        }}>
-          {/* Track deslizante — 5 tarjetas visibles (activo en centro) */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: GAP,
-            transform: `translateX(${offsetX}px)`,
-            transition: 'transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease',
-            opacity: fading ? 0.35 : 1,
-            willChange: 'transform',
-          }}>
-            {offsets.map((offset) => {
-              const idx      = getIdx(offset);
-              const isCenter = offset === 0;
-              return (
-                <TeamCard
-                  key={`${active}-${offset}`}
-                  item={teamData[idx]}
-                  isCenter={isCenter}
-                  sideW={SIDE_W}
-                  centerW={CENTER_W}
-                  sideH={SIDE_H}
-                  centerH={CENTER_H}
-                  avD={AVATAR_D}
-                  avDC={AVATAR_DC}
-                  fontSize={isCenter ? CENTER_FONT_SIZE : SIDE_FONT_SIZE}
-                />
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Dots indicadores */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 32 }}>
-          {teamData.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                width: i === active ? 28 : 10,
-                height: 10,
-                borderRadius: 5,
-                background: i === active ? '#941918' : '#80C2DC',
-                opacity: i === active ? 1 : 0.45,
-                transition: 'all 0.4s ease',
-              }}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+  </div>
+);
 
 // ─── Componente principal ───────────────────────────────────────────────────
 function Inicio() {
@@ -652,9 +417,7 @@ function Inicio() {
       <img
         src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
         alt={serv?.nombre}
-        onError={(e) => {
-          e.currentTarget.src = DEFAULT_SERVICE_IMAGE;
-        }}
+        onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
       />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.05) 55%)' }} />
@@ -677,10 +440,7 @@ function Inicio() {
   };
 
   const s = servicios;
-
-  const gridColumns = windowWidth < 768 ? '1fr' : windowWidth < 1024 ? '1fr 1fr' : '1fr 1.3fr 1fr';
-  const cardHeight = windowWidth < 768 ? 200 : 220;
-  const centerHeight = windowWidth < 768 ? 400 : 456;
+  const proyectosGridCols = windowWidth < 640 ? '1fr' : '1fr 1fr';
 
   return (
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
@@ -863,82 +623,44 @@ function Inicio() {
         </div>
       </div>
 
-      {/* QUÉ OFRECEMOS */}
-      <section className="w-full px-4 sm:px-6 lg:px-12 py-16" style={{ background: 'linear-gradient(180deg, #f9fcff 0%, #f0f7fc 56%, #f4ecec 100%)' }}>
-        <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 24 }}>
-          <SectionEyebrow
-            label="¿QUÉ OFRECEMOS?"
-            title="Soluciones en vidrio y aluminio para hogar y negocio"
-            subtitle="Diseñamos, fabricamos e instalamos con enfoque técnico y estético. Desde divisiones interiores hasta fachadas, te acompañamos con una atención clara, tiempos ordenados y resultados que elevan tu espacio."
-          />
+      {/* QUIÉNES SOMOS */}
+      <QuienesSomos />
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: windowWidth < 768 ? '1fr' : windowWidth < 1100 ? '1fr 1fr' : 'repeat(4, minmax(0, 1fr))',
-              gap: 14,
-            }}
-          >
-            {offerData.map((item) => (
-              <OfferCard key={item.titulo} item={item} />
-            ))}
-          </div>
+      {/* PRODUCTOS */}
+      <Productos />
 
-          <div
-            className="vb-surface-strong"
-            style={{
-              padding: windowWidth < 768 ? 16 : 22,
-              display: 'grid',
-              gridTemplateColumns: windowWidth < 768 ? '1fr' : '1.3fr 1fr',
-              gap: 16,
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem', fontWeight: 800 }}>Cómo trabajamos contigo</h3>
-              <p style={{ margin: '8px 0 0', color: '#475569', lineHeight: 1.7 }}>
-                1) Evaluamos tu necesidad. 2) Te enviamos cotización detallada. 3) Ejecutamos con control de calidad.
-                4) Entregamos con validación final y soporte postventa.
-              </p>
-            </div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              <span className="vb-button vb-button--ghost vb-button--sm" style={{ justifyContent: 'flex-start' }}>Atención personalizada</span>
-              <span className="vb-button vb-button--ghost vb-button--sm" style={{ justifyContent: 'flex-start' }}>Garantía por instalación</span>
-              <span className="vb-button vb-button--ghost vb-button--sm" style={{ justifyContent: 'flex-start' }}>Seguimiento de proyecto</span>
+      {/* UBICACIÓN */}
+      <Ubicacion />
+
+      {/* NUESTROS PROYECTOS — contexto a la izquierda, 4 imágenes a la derecha */}
+      <div className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
+        <div style={{
+          maxWidth: 1180, margin: '0 auto', display: 'grid',
+          gridTemplateColumns: windowWidth < 900 ? '1fr' : '0.9fr 1.3fr',
+          gap: 40, alignItems: 'center',
+        }}>
+          <div>
+            <SectionEyebrow
+              label="PORTAFOLIO"
+              title="Nuestros Proyectos"
+              subtitle="Realizamos instalaciones de vidrio y aluminio para hogares, oficinas y negocios en toda la región, cuidando cada detalle desde la medición hasta el acabado final."
+              align="left"
+            />
+            <div style={{ marginTop: 28 }}>
+              <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ZONA DE COBERTURA */}
-      <CoverageMap />
-
-      {/* MISIÓN Y VISIÓN */}
-      <MisionVision />
-
-      {/* NUESTROS PROYECTOS */}
-      <div className="w-full px-8 py-20 text-center" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
-        <div style={{ marginBottom: 12 }}>
-          <SectionEyebrow label="PORTAFOLIO" title="Nuestros Proyectos" />
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: gridColumns, gap: '16px', maxWidth: '900px', margin: '32px auto 0', alignItems: 'stretch' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Card serv={s[0]} rotate="-2deg"  height={cardHeight} />
-            <Card serv={s[3]} rotate="1.5deg" height={cardHeight} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <Card serv={s[0]} rotate="-1.5deg" height={220} />
+            <Card serv={s[1]} rotate="1.5deg" height={220} />
+            <Card serv={s[2]} rotate="1.5deg" height={220} />
+            <Card serv={s[3]} rotate="-1.5deg" height={220} />
           </div>
-          <Card serv={s[1]} rotate="0deg" height={centerHeight} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Card serv={s[2]} rotate="2deg"    height={cardHeight} />
-            <Card serv={s[4]} rotate="-1.5deg" height={cardHeight} />
-          </div>
-        </div>
-        <div className="mt-12">
-          <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
         </div>
       </div>
 
-      {/* CARRUSEL EQUIPO */}
-      <TeamCarousel />
+      {/* TESTIMONIOS / EQUIPO */}
+      <Testimonios navigate={navigate} />
 
     </section>
   );
