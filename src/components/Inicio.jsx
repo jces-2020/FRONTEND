@@ -69,9 +69,6 @@ const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
 );
 
 // ─── QUIÉNES SOMOS ───────────────────────────────────────────────────────────
-// Layout: imagen "paisaje" superpuesta (misma lógica que el logo R del hero),
-// dos recuadros de Misión / Visión arriba, y un degradado (mismos colores del
-// hero, otro patrón/ángulo) con los 3 iconos de servicio abajo.
 const quienesSomosData = [
   {
     titulo: 'Instalación Profesional',
@@ -90,8 +87,6 @@ const quienesSomosData = [
   },
 ];
 
-// Item de icono + texto, pensado para verse sobre el fondo degradado (claro
-// en la parte baja), por eso usa tonos oscuros para el texto.
 const FeatureIconItem = ({ item }) => {
   const Icono = item.icono;
   return (
@@ -114,22 +109,15 @@ const FeatureIconItem = ({ item }) => {
   );
 };
 
-// Margen izquierdo: crece con el ancho de pantalla para dejar un espacio en
-// blanco visible antes de la imagen (la imagen y el degradado quedan más
-// hacia la derecha), pero el degradado sigue llegando siempre hasta el borde
-// derecho real (marginRight: 0 más abajo).
 const QS_GUTTER = 'max(24px, calc((100vw - 1000px) / 2))';
 
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
   const imgHeight = isMobile ? 260 : 420;
-  const overlap = imgHeight / 2; // el degradado empieza exactamente a la mitad de la imagen
+  const overlap = imgHeight / 2; 
 
   return (
-    // Sin padding horizontal en la sección: así el degradado puede llegar
-    // hasta el borde derecho real de la pantalla (igual que el hero).
     <section className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
-      {/* Solo el label "¿Quiénes somos?", sin título ni párrafo extra */}
       <p style={{
         margin: '0 0 28px',
         paddingLeft: QS_GUTTER,
@@ -140,10 +128,6 @@ const QuienesSomos = () => {
       </p>
 
       <div style={{ position: 'relative' }}>
-        {/* Fila: espacio en blanco a la izquierda (por el QS_GUTTER) + imagen
-            (ancho fijo, no tan ancha) + recuadro Visión + recuadro Misión.
-            OJO: el padding derecho es fijo (no crece con QS_GUTTER) para que
-            Visión/Misión tengan ancho de sobra y no queden aplastadas. */}
         <div style={{ paddingLeft: QS_GUTTER, paddingRight: 24, maxWidth: 1500 }}>
           <div
             style={{
@@ -173,7 +157,7 @@ const QuienesSomos = () => {
               </p>
               <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
               <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-                Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
+                Expandirnos a nivel regional y consolidarnos como líderes en installation y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
               </p>
             </div>
             <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #941918' }}>
@@ -188,19 +172,16 @@ const QuienesSomos = () => {
           </div>
         </div>
 
-        {/* Degradado: empieza exactamente a la mitad de la imagen y choca
-            contra el borde derecho real de la pantalla (marginRight: 0, sin
-            maxWidth, dentro de una sección que ya no tiene padding lateral).
-            Su borde izquierdo arranca en el mismo punto que la imagen. */}
+        {/* Degradado Modificado */}
         <div
           style={{
             position: 'relative',
             zIndex: 1,
             marginTop: -overlap,
-            marginLeft: QS_GUTTER,
+            marginLeft: isMobile ? QS_GUTTER : `calc(${QS_GUTTER} + 160px)`, // Empieza a la mitad horizontal de la imagen de 320px
             marginRight: 0,
             borderRadius: 0,
-            padding: isMobile ? `${overlap + 24}px 24px 32px` : '48px 48px 48px 360px',
+            padding: isMobile ? `${overlap + 24}px 24px 32px` : '48px 48px 48px 200px', // Ajustado padding izquierdo por el desplazamiento
             backgroundImage: `linear-gradient(
               205deg,
               hsl(0deg 72% 34%) 0%,
@@ -232,7 +213,7 @@ const QuienesSomos = () => {
   );
 };
 
-// ─── PRODUCTOS — cajas con efecto 3D "saliendo" del marco, con sombra ───────
+// ─── PRODUCTOS ───────────────────────────────────────────────────────────────
 const productosData = [
   {
     nombre: 'Aluminio',
@@ -263,13 +244,11 @@ const ProductCard = ({ item }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Marco plano de fondo */}
       <div style={{
         position: 'absolute', inset: 0, borderRadius: 22,
         background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
       }} />
 
-      {/* Caja "saliendo" con perspectiva y sombra */}
       <div
         style={{
           position: 'absolute',
@@ -324,7 +303,7 @@ const Productos = () => (
   </section>
 );
 
-// ─── UBICACIÓN — foto del local + silueta de la región, con la caída del hero ──
+// ─── UBICACIÓN ───────────────────────────────────────────────────────────────
 const zonasCobertura = [
   { nombre: 'Huancayo', desc: 'Sede principal, taller y despacho de pedidos.', destacado: true },
   { nombre: 'El Tambo', desc: 'Instalación y entrega en 24–48h según proyecto.' },
@@ -350,7 +329,6 @@ const Ubicacion = () => {
   return (
     <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
-        {/* Foto del local */}
         <div style={{ position: 'relative', minHeight: 300 }}>
           <img
             src="/tienda%20anime.png"
@@ -360,7 +338,6 @@ const Ubicacion = () => {
           <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
         </div>
 
-        {/* Silueta de la región + texto, con la misma caída diagonal del hero */}
         <div
           style={{
             position: 'relative',
@@ -419,7 +396,7 @@ const Ubicacion = () => {
   );
 };
 
-// ─── TESTIMONIOS — inicial en círculo + reseña, con CTA final ───────────────
+// ─── TESTIMONIOS ─────────────────────────────────────────────────────────────
 const testimoniosData = [
   { nombre: 'Rosa Álvarez',    resena: 'Excelente atención y acabado impecable en la instalación de mis ventanas.' },
   { nombre: 'Jorge Ccora',     resena: 'Cumplieron con el tiempo prometido y el vidrio quedó perfecto.' },
@@ -514,7 +491,6 @@ function Inicio() {
   };
 
   const s = servicios;
-  const proyectosGridCols = windowWidth < 640 ? '1fr' : '1fr 1fr';
 
   return (
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
@@ -532,7 +508,6 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Sombra del gradiente trasero — capa más grande y más clara, mismo degradado detrás */}
         <div
           style={{
             position: 'absolute',
@@ -558,7 +533,6 @@ function Inicio() {
           }}
         />
 
-        {/* Gradiente trasero — corte en sentido opuesto al frontal, cruzando a la mitad */}
         <div
           style={{
             position: 'absolute',
@@ -582,7 +556,6 @@ function Inicio() {
           }}
         />
 
-        {/* Figura degradada diagonal principal (lado derecho, caída izquierda un poco menos pronunciada) */}
         <div
           style={{
             position: 'absolute',
@@ -606,7 +579,6 @@ function Inicio() {
           }}
         />
 
-        {/* Logo */}
         <img
           src="/R.png"
           alt="Logo R"
@@ -620,7 +592,6 @@ function Inicio() {
           }}
         />
 
-        {/* Texto */}
         <div className="relative z-20 max-w-2xl lg:max-w-3xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
           <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
           <p style={{ margin: 0, color: '#941918', fontWeight: 800, letterSpacing: '0.12em', fontSize: 'clamp(0.85rem, 1.1vw, 1.05rem)', textTransform: 'uppercase' }}>
@@ -706,7 +677,7 @@ function Inicio() {
       {/* UBICACIÓN */}
       <Ubicacion />
 
-      {/* NUESTROS PROYECTOS — contexto a la izquierda, 4 imágenes a la derecha */}
+      {/* NUESTROS PROYECTOS */}
       <div className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
         <div style={{
           maxWidth: 1180, margin: '0 auto', display: 'grid',
@@ -739,6 +710,5 @@ function Inicio() {
     </section>
   );
 }
-
 
 export default Inicio;
