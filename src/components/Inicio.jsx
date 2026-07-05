@@ -746,7 +746,7 @@ function Inicio() {
         <img
           src="/R.png"
           alt="Logo R"
-          className="absolute w-[300px] md:w-[500px] lg:w-[700px] opacity-60 z-10"
+          className="absolute w-[300px] md:w-[500px] lg:w-[700px] z-10"
           style={{
             top: '55%',
             right: '0%',
