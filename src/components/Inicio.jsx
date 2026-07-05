@@ -68,95 +68,154 @@ const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
   </div>
 );
 
-// ─── QUIÉNES SOMOS — misión/visión a la izquierda, iconos + texto a la derecha ──
+// ─── QUIÉNES SOMOS ───────────────────────────────────────────────────────────
+// Layout: imagen "paisaje" superpuesta (misma lógica que el logo R del hero),
+// dos recuadros de Misión / Visión arriba, y un degradado (mismos colores del
+// hero, otro patrón/ángulo) con los 3 iconos de servicio abajo.
 const quienesSomosData = [
   {
     titulo: 'Instalación Profesional',
     descripcion: 'Equipo técnico especializado en vidrio templado, mamparas, fachadas y estructuras de aluminio.',
     icono: IconRulerMeasure,
-    color: '#941918',
   },
   {
     titulo: 'Materiales Certificados',
     descripcion: 'Trabajamos con insumos de alta calidad para asegurar seguridad, acabado premium y larga vida útil.',
     icono: IconShieldCheck,
-    color: '#0c4a6e',
   },
   {
     titulo: 'Entrega y Soporte',
     descripcion: 'Cumplimos tiempos acordados y te acompañamos en cada etapa: cotización, ejecución y postventa.',
     icono: IconTruckDelivery,
-    color: '#5a8ba8',
   },
 ];
 
-const FeatureCircleCard = ({ item }) => {
+// Item de icono + texto, pensado para verse sobre el fondo degradado (claro
+// en la parte baja), por eso usa tonos oscuros para el texto.
+const FeatureIconItem = ({ item }) => {
   const Icono = item.icono;
   return (
     <div style={{ textAlign: 'center' }}>
       <div
         style={{
-          width: 78, height: 78, borderRadius: '50%', margin: '0 auto 16px',
+          width: 70, height: 70, borderRadius: '50%', margin: '0 auto 14px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: `${item.color}14`, border: `2px solid ${item.color}45`,
-          color: item.color, boxShadow: `0 10px 26px ${item.color}25`,
+          background: 'rgba(255,255,255,0.55)', border: '2px solid rgba(255,255,255,0.85)',
+          color: '#12131a', boxShadow: '0 10px 22px rgba(0,0,0,0.18)',
         }}
       >
-        <Icono size={32} stroke={1.8} />
+        <Icono size={30} stroke={1.8} />
       </div>
-      <div className="vb-surface" style={{ padding: '20px 18px', textAlign: 'left' }}>
-        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#1f2937' }}>{item.titulo}</h3>
-        <p style={{ margin: '8px 0 0', color: '#4b5563', fontSize: '0.9rem', lineHeight: 1.65 }}>{item.descripcion}</p>
-      </div>
+      <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#12131a' }}>{item.titulo}</h3>
+      <p style={{ margin: '6px 0 0', color: 'rgba(18,19,26,0.75)', fontSize: '0.82rem', lineHeight: 1.55 }}>
+        {item.descripcion}
+      </p>
     </div>
   );
 };
 
-const MisionVisionMini = () => (
-  <div style={{ display: 'grid', gap: 18 }}>
-    <div className="vb-surface" style={{ padding: '24px 22px', borderLeft: '4px solid #941918' }}>
-      <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>Nuestra</p>
-      <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Visión</h3>
-      <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-        Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
-      </p>
-    </div>
-    <div className="vb-surface" style={{ padding: '24px 22px', borderLeft: '4px solid #80C2DC' }}>
-      <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>Nuestra</p>
-      <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Misión</h3>
-      <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-        Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
-      </p>
-    </div>
-  </div>
-);
+const QuienesSomos = () => {
+  const isMobile = window.innerWidth < 900;
 
-const QuienesSomos = () => (
-  <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: 'linear-gradient(180deg, #f9fcff 0%, #f0f7fc 55%, #f7f2f2 100%)' }}>
-    <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
-      <SectionEyebrow
-        label="¿QUIÉNES SOMOS?"
-        title="Experiencia, calidad y compromiso en cada proyecto"
-        subtitle="Somos una empresa dedicada a la fabricación e instalación de vidrio y aluminio, comprometidos con la excelencia en cada etapa del servicio."
-      />
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: window.innerWidth < 900 ? '1fr' : '0.85fr 1.3fr',
-          gap: 36,
-          alignItems: 'start',
-        }}
-      >
-        <MisionVisionMini />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 24 }}>
-          {quienesSomosData.map((item) => (
-            <FeatureCircleCard key={item.titulo} item={item} />
-          ))}
+  return (
+    <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <SectionEyebrow
+          label="¿QUIÉNES SOMOS?"
+          title="Experiencia, calidad y compromiso en cada proyecto"
+          subtitle="Somos una empresa dedicada a la fabricación e instalación de vidrio y aluminio, comprometidos con la excelencia en cada etapa del servicio."
+        />
+
+        <div style={{ position: 'relative', marginTop: 48 }}>
+          {/* Fila superior: hueco para la imagen + Visión + Misión */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '280px 1fr 1fr',
+              gap: 24,
+            }}
+          >
+            {!isMobile && <div />}
+            <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #80C2DC' }}>
+              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
+                Nuestra
+              </p>
+              <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
+              <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+                Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
+              </p>
+            </div>
+            <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #941918' }}>
+              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.12em', color: '#999', textTransform: 'uppercase' }}>
+                Nuestra
+              </p>
+              <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#941918' }}>Misión</h3>
+              <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
+                Realizar instalaciones con materiales de alta calidad, garantizando seguridad, durabilidad y satisfacción total del cliente en cada proyecto que emprendemos.
+              </p>
+            </div>
+          </div>
+
+          {/* Bloque inferior: degradado con los 3 iconos + imagen superpuesta */}
+          <div style={{ position: 'relative', marginTop: isMobile ? 170 : 40 }}>
+            <div
+              style={{
+                position: 'relative',
+                borderRadius: 28,
+                overflow: 'hidden',
+                padding: isMobile ? '40px 24px 36px' : '52px 40px 52px 300px',
+                // Mismos colores del degradado del hero, pero con otro ángulo/patrón
+                backgroundImage: `linear-gradient(
+                  205deg,
+                  hsl(0deg 72% 34%) 0%,
+                  hsl(30deg 76% 43%) 18%,
+                  hsl(46deg 89% 50%) 40%,
+                  hsl(48deg 100% 71%) 64%,
+                  hsl(47deg 100% 88%) 82%,
+                  hsl(199deg 55% 96%) 93%,
+                  hsl(198deg 55% 82%) 99%,
+                  hsl(197deg 57% 68%) 100%
+                )`,
+                boxShadow: '0 30px 50px -20px rgba(148,25,24,0.35)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                  gap: 28,
+                }}
+              >
+                {quienesSomosData.map((item) => (
+                  <FeatureIconItem key={item.titulo} item={item} />
+                ))}
+              </div>
+            </div>
+
+            {/* Imagen "paisaje" superpuesta, mismo criterio que el logo R del hero */}
+            <img
+              src="/paisaje.png"
+              alt="Vidriobras instalación"
+              style={{
+                position: 'absolute',
+                top: isMobile ? -150 : -70,
+                left: isMobile ? '50%' : 24,
+                transform: isMobile ? 'translateX(-50%)' : 'none',
+                width: isMobile ? 220 : 280,
+                height: isMobile ? 240 : 320,
+                objectFit: 'cover',
+                borderRadius: 18,
+                border: '4px solid #fff',
+                boxShadow: '0 24px 48px rgba(0,0,0,0.35)',
+                zIndex: 5,
+              }}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // ─── PRODUCTOS — cajas con efecto 3D "saliendo" del marco, con sombra ───────
 const productosData = [
