@@ -787,20 +787,20 @@ function Inicio() {
         />
 
         {/* Texto */}
-        <div className="relative z-20 max-w-sm md:max-w-md lg:max-w-xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
+        <div className="relative z-20 max-w-xl lg:max-w-2xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
           <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
           <p style={{ margin: 0, color: '#941918', fontWeight: 800, letterSpacing: '0.12em', fontSize: '0.8rem', textTransform: 'uppercase' }}>
             Líderes en vidrio y aluminio
           </p>
 
           <h1 style={{ margin: '8px 0 0', lineHeight: 0.98 }}>
-            <span style={{ display: 'block', fontSize: 'clamp(2.6rem, 6vw, 4.4rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
+            <span style={{ display: 'block', fontSize: 'clamp(2.6rem, 7vw, 5.2rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
               VIDRIO
             </span>
             <span
               style={{
                 display: 'block',
-                fontSize: 'clamp(2.6rem, 6vw, 4.4rem)',
+                fontSize: 'clamp(2.6rem, 7vw, 5.2rem)',
                 fontWeight: 900,
                 letterSpacing: '-0.01em',
                 color: 'transparent',
@@ -815,7 +815,7 @@ function Inicio() {
             Instalación que inspira confianza
           </p>
 
-          <p style={{ margin: '12px 0 0', color: '#6b7280', lineHeight: 1.75, fontSize: '0.97rem', maxWidth: 440 }}>
+          <p style={{ margin: '12px 0 0', color: '#6b7280', lineHeight: 1.75, fontSize: '0.97rem', maxWidth: 520 }}>
             Transformamos tus espacios con vidrio de alta calidad; instalación precisa que garantiza elegancia, seguridad y durabilidad.
           </p>
 
@@ -847,9 +847,9 @@ function Inicio() {
 
           <div style={{ display: 'flex', gap: 22, marginTop: 34, alignItems: 'stretch' }}>
             {[
-              { valor: '15+', label: 'Años de experiencia' },
-              { valor: '2,000+', label: 'Proyectos entregados' },
-              { valor: '10', label: 'Profesionales' },
+              { valor: '7+', label: 'Años de experiencia' },
+              { valor: '1,000+', label: 'Proyectos entregados' },
+              { valor: '1,000+', label: 'Clientes' },
             ].map((stat, i) => (
               <React.Fragment key={stat.label}>
                 {i > 0 && <div style={{ width: 2, background: '#941918', opacity: 0.35 }} />}
