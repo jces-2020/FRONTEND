@@ -689,8 +689,8 @@ function Inicio() {
       <div
         className="w-full flex relative items-center"
         style={{
-          minHeight: '100vh',
-          height: '100vh',
+          minHeight: '92vh',
+          height: '92vh',
           background: '#FFFFFF',
           marginTop: 0,
           paddingTop: 0,
@@ -702,11 +702,11 @@ function Inicio() {
         <div
           style={{
             position: 'absolute',
-            top: '-6%',
+            top: '-5%',
             right: 0,
-            width: '64%',
-            height: '112%',
-            transform: 'translateX(-110px)',
+            width: '58%',
+            height: '108%',
+            transform: 'translateX(-100px)',
             backgroundImage: `linear-gradient(
               40deg,
               hsl(50deg 100% 50%) 0%,
@@ -717,9 +717,9 @@ function Inicio() {
               hsl(198deg 55% 85%) 99%,
               hsl(0deg 0% 100%) 100%
             )`,
-            opacity: 0.5,
+            opacity: 0.35,
             clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            filter: 'blur(270px)',
+            filter: 'blur(240px)',
             zIndex: 0,
           }}
         />
