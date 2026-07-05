@@ -698,7 +698,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Sombra del gradiente trasero — el mismo degradado, difuminado (glow de color, no plano) */}
+        {/* Sombra del gradiente trasero — el mismo degradado, difuminado y más grueso */}
         <div
           style={{
             position: 'absolute',
@@ -706,26 +706,25 @@ function Inicio() {
             right: 0,
             width: '48%',
             height: '100%',
-            transform: 'translateX(-64px)',
+            transform: 'translateX(-90px)',
             backgroundImage: `linear-gradient(
-              150deg,
-              hsl(0deg 72% 34%) 0%,
-              hsl(30deg 76% 43%) 15%,
-              hsl(46deg 89% 50%) 38%,
-              hsl(48deg 100% 71%) 62%,
-              hsl(47deg 100% 88%) 80%,
-              hsl(199deg 55% 96%) 92%,
-              hsl(198deg 55% 82%) 99%,
-              hsl(197deg 57% 68%) 100%
+              40deg,
+              hsl(50deg 100% 50%) 0%,
+              hsl(33deg 78% 45%) 15%,
+              hsl(0deg 72% 34%) 53%,
+              hsl(1deg 19% 54%) 80%,
+              hsl(197deg 57% 68%) 94%,
+              hsl(198deg 55% 85%) 99%,
+              hsl(0deg 0% 100%) 100%
             )`,
-            opacity: 0.7,
+            opacity: 0.75,
             clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            filter: 'blur(60px)',
+            filter: 'blur(90px)',
             zIndex: 0,
           }}
         />
 
-        {/* Gradiente trasero — mismo orden de colores que el frontal, corte en sentido opuesto */}
+        {/* Gradiente trasero — corte en sentido opuesto al frontal */}
         <div
           style={{
             position: 'absolute',
@@ -735,15 +734,14 @@ function Inicio() {
             height: '100%',
             transform: 'translateX(-40px)',
             backgroundImage: `linear-gradient(
-              150deg,
-              hsl(0deg 72% 34%) 0%,
-              hsl(30deg 76% 43%) 15%,
-              hsl(46deg 89% 50%) 38%,
-              hsl(48deg 100% 71%) 62%,
-              hsl(47deg 100% 88%) 80%,
-              hsl(199deg 55% 96%) 92%,
-              hsl(198deg 55% 82%) 99%,
-              hsl(197deg 57% 68%) 100%
+              40deg,
+              hsl(50deg 100% 50%) 0%,
+              hsl(33deg 78% 45%) 15%,
+              hsl(0deg 72% 34%) 53%,
+              hsl(1deg 19% 54%) 80%,
+              hsl(197deg 57% 68%) 94%,
+              hsl(198deg 55% 85%) 99%,
+              hsl(0deg 0% 100%) 100%
             )`,
             clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
             zIndex: 1,
