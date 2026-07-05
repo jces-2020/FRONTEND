@@ -170,14 +170,14 @@ const QuienesSomos = () => {
             </div>
           </div>
         </div>
-        
+
 
         {/* Degradado Ajustado: Sube exactamente al nivel del final de Misión y Visión indicado en image_635520.jpg */}
         <div
           style={{
             position: 'relative',
             zIndex: 1,
-            marginTop: isMobile ? 24 : -120, // Sube el gradiente para colisionar justo donde termina la línea roja
+            marginTop: isMobile ? 24 : -150, // Sube el gradiente para colisionar justo donde termina la línea roja
             marginLeft: isMobile ? QS_GUTTER : `calc(${QS_GUTTER} + 160px)`, 
             marginRight: 0,
             borderRadius: 0,
