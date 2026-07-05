@@ -170,6 +170,7 @@ const QuienesSomos = () => {
             </div>
           </div>
         </div>
+        
 
         {/* Degradado Ajustado: Sube exactamente al nivel del final de Misión y Visión indicado en image_635520.jpg */}
         <div
