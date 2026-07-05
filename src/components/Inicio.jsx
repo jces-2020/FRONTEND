@@ -687,7 +687,7 @@ function Inicio() {
 
       {/* HERO */}
       <div
-        className="w-full flex relative items-center justify-start"
+        className="w-full flex relative items-center"
         style={{
           minHeight: '100vh',
           height: '100vh',
@@ -698,7 +698,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Sombra del panel — mismo tono que el degradado, más grande */}
+        {/* Eco del degradado — misma figura, detrás, difuminada, funciona como sombra */}
         <div
           style={{
             position: 'absolute',
@@ -706,16 +706,26 @@ function Inicio() {
             right: 0,
             width: '48%',
             height: '100%',
-            transform: 'translateX(-28px)',
-            background: 'hsl(0deg 72% 34%)',
-            opacity: 0.55,
+            transform: 'translateX(-46px) scale(1.03)',
+            backgroundImage: `linear-gradient(
+              150deg,
+              hsl(0deg 72% 34%) 0%,
+              hsl(30deg 76% 43%) 15%,
+              hsl(46deg 89% 50%) 38%,
+              hsl(48deg 100% 71%) 62%,
+              hsl(47deg 100% 88%) 80%,
+              hsl(199deg 55% 96%) 92%,
+              hsl(198deg 55% 82%) 99%,
+              hsl(197deg 57% 68%) 100%
+            )`,
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%)',
-            filter: 'blur(34px)',
+            opacity: 0.4,
+            filter: 'blur(38px)',
             zIndex: 0,
           }}
         />
 
-        {/* Figura degradada diagonal (lado derecho, la caída va de abajo hacia arriba) */}
+        {/* Figura degradada diagonal principal (lado derecho, la caída va de abajo hacia arriba) */}
         <div
           style={{
             position: 'absolute',
@@ -754,21 +764,78 @@ function Inicio() {
         />
 
         {/* Texto */}
-        <div className="absolute left-4 md:left-16 top-1/2 transform -translate-y-1/2 text-left z-20 max-w-sm md:max-w-md lg:max-w-lg bg-black bg-opacity-30 rounded-xl p-6 md:p-8 shadow-2xl">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
-            Vidrio perfecto,<br />
+        <div className="relative z-20 max-w-sm md:max-w-md lg:max-w-xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
+          <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
+          <p style={{ margin: 0, color: '#941918', fontWeight: 800, letterSpacing: '0.12em', fontSize: '0.8rem', textTransform: 'uppercase' }}>
+            Líderes en vidrio y aluminio
+          </p>
+
+          <h1 style={{ margin: '8px 0 0', lineHeight: 0.98 }}>
+            <span style={{ display: 'block', fontSize: 'clamp(2.6rem, 6vw, 4.4rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
+              VIDRIO
+            </span>
             <span
               style={{
+                display: 'block',
+                fontSize: 'clamp(2.6rem, 6vw, 4.4rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.01em',
                 color: 'transparent',
-                WebkitTextStroke: '1.5px #ffffff',
+                WebkitTextStroke: '2px #941918',
               }}
             >
-              instalación
-            </span>{' '}
-            <span className="font-normal">que inspira confianza.</span>
-          </h2>
-          <div className="text-sm md:text-base lg:text-lg text-white font-normal leading-relaxed mt-2">
-            <span className="block">Transformamos tus espacios con vidrio de alta calidad; Instalación precisa que garantiza elegancia, seguridad y durabilidad.</span>
+              PERFECTO
+            </span>
+          </h1>
+
+          <p style={{ margin: '14px 0 0', color: '#374151', fontWeight: 600, fontSize: 'clamp(1.05rem, 1.6vw, 1.3rem)' }}>
+            Instalación que inspira confianza
+          </p>
+
+          <p style={{ margin: '12px 0 0', color: '#6b7280', lineHeight: 1.75, fontSize: '0.97rem', maxWidth: 440 }}>
+            Transformamos tus espacios con vidrio de alta calidad; instalación precisa que garantiza elegancia, seguridad y durabilidad.
+          </p>
+
+          <div style={{ display: 'flex', gap: 14, marginTop: 26, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => navigate('/contacto')}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(90deg, #f4c430 0%, #941918 100%)',
+                color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em',
+                textTransform: 'uppercase', boxShadow: '0 10px 26px rgba(148,25,24,0.35)',
+              }}
+            >
+              Cotización gratis →
+            </button>
+            <button
+              onClick={() => navigate('/servicios')}
+              style={{
+                padding: '13px 26px', borderRadius: 999,
+                border: '2px solid #941918', background: '#fff', color: '#941918',
+                fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em',
+                textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >
+              Servicios
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 22, marginTop: 34, alignItems: 'stretch' }}>
+            {[
+              { valor: '15+', label: 'Años de experiencia' },
+              { valor: '2,000+', label: 'Proyectos entregados' },
+              { valor: '10', label: 'Profesionales' },
+            ].map((stat, i) => (
+              <React.Fragment key={stat.label}>
+                {i > 0 && <div style={{ width: 2, background: '#941918', opacity: 0.35 }} />}
+                <div>
+                  <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#12131a' }}>{stat.valor}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#6b7280' }}>{stat.label}</p>
+                </div>
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>
