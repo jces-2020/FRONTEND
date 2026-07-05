@@ -114,7 +114,6 @@ const QS_GUTTER = 'max(24px, calc((100vw - 1000px) / 2))';
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
   const imgHeight = isMobile ? 260 : 420;
-  const overlap = imgHeight / 2; 
 
   return (
     <section className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
@@ -157,7 +156,7 @@ const QuienesSomos = () => {
               </p>
               <h3 style={{ margin: '4px 0 12px', fontSize: '1.25rem', fontWeight: 800, color: '#3b6f8c' }}>Visión</h3>
               <p style={{ margin: 0, color: '#444', lineHeight: 1.75, fontSize: '0.94rem' }}>
-                Expandirnos a nivel regional y consolidarnos como líderes en installation y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
+                Expandirnos a nivel regional y consolidarnos como líderes en instalación y distribución de vidrio y aluminio, brindando soluciones innovadoras y de alta calidad a cada cliente.
               </p>
             </div>
             <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #941918' }}>
@@ -172,16 +171,16 @@ const QuienesSomos = () => {
           </div>
         </div>
 
-        {/* Degradado Modificado */}
+        {/* Degradado: empieza horizontalmente a la mitad de la imagen y verticalmente debajo de misión/visión */}
         <div
           style={{
             position: 'relative',
             zIndex: 1,
-            marginTop: -overlap,
-            marginLeft: isMobile ? QS_GUTTER : `calc(${QS_GUTTER} + 160px)`, // Empieza a la mitad horizontal de la imagen de 320px
+            marginTop: isMobile ? 24 : 32, 
+            marginLeft: isMobile ? QS_GUTTER : `calc(${QS_GUTTER} + 160px)`, 
             marginRight: 0,
             borderRadius: 0,
-            padding: isMobile ? `${overlap + 24}px 24px 32px` : '48px 48px 48px 200px', // Ajustado padding izquierdo por el desplazamiento
+            padding: isMobile ? '32px 24px' : '48px 48px 48px 200px', 
             backgroundImage: `linear-gradient(
               205deg,
               hsl(0deg 72% 34%) 0%,
@@ -213,7 +212,7 @@ const QuienesSomos = () => {
   );
 };
 
-// ─── PRODUCTOS ───────────────────────────────────────────────────────────────
+// ─── PRODUCTOS — cajas con efecto 3D "saliendo" del marco, con sombra ───────
 const productosData = [
   {
     nombre: 'Aluminio',
@@ -244,11 +243,13 @@ const ProductCard = ({ item }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Marco plano de fondo */}
       <div style={{
         position: 'absolute', inset: 0, borderRadius: 22,
         background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
       }} />
 
+      {/* Caja "saliendo" con perspectiva y sombra */}
       <div
         style={{
           position: 'absolute',
@@ -303,7 +304,7 @@ const Productos = () => (
   </section>
 );
 
-// ─── UBICACIÓN ───────────────────────────────────────────────────────────────
+// ─── UBICACIÓN — foto del local + silueta de la región ───────────────────────
 const zonasCobertura = [
   { nombre: 'Huancayo', desc: 'Sede principal, taller y despacho de pedidos.', destacado: true },
   { nombre: 'El Tambo', desc: 'Instalación y entrega en 24–48h según proyecto.' },
@@ -329,6 +330,7 @@ const Ubicacion = () => {
   return (
     <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
+        {/* Foto del local */}
         <div style={{ position: 'relative', minHeight: 300 }}>
           <img
             src="/tienda%20anime.png"
@@ -338,6 +340,7 @@ const Ubicacion = () => {
           <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
         </div>
 
+        {/* Silueta de la región + texto */}
         <div
           style={{
             position: 'relative',
@@ -396,7 +399,7 @@ const Ubicacion = () => {
   );
 };
 
-// ─── TESTIMONIOS ─────────────────────────────────────────────────────────────
+// ─── TESTIMONIOS — inicial en círculo + reseña, con CTA final ───────────────
 const testimoniosData = [
   { nombre: 'Rosa Álvarez',    resena: 'Excelente atención y acabado impecable en la instalación de mis ventanas.' },
   { nombre: 'Jorge Ccora',     resena: 'Cumplieron con el tiempo prometido y el vidrio quedó perfecto.' },
