@@ -698,15 +698,15 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Sombra del gradiente trasero — el mismo degradado, difuminado, mucho más grueso */}
+        {/* Sombra del gradiente trasero — capa más grande y más clara, mismo degradado detrás */}
         <div
           style={{
             position: 'absolute',
-            top: 0,
+            top: '-6%',
             right: 0,
-            width: '48%',
-            height: '100%',
-            transform: 'translateX(-90px)',
+            width: '64%',
+            height: '112%',
+            transform: 'translateX(-110px)',
             backgroundImage: `linear-gradient(
               40deg,
               hsl(50deg 100% 50%) 0%,
@@ -717,7 +717,7 @@ function Inicio() {
               hsl(198deg 55% 85%) 99%,
               hsl(0deg 0% 100%) 100%
             )`,
-            opacity: 0.75,
+            opacity: 0.5,
             clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
             filter: 'blur(270px)',
             zIndex: 0,
