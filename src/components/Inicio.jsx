@@ -709,13 +709,13 @@ function Inicio() {
             transform: 'translateX(-64px)',
             background: 'hsl(0deg 72% 34%)',
             opacity: 0.55,
-            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 15% 100%)',
+            clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
             filter: 'blur(60px)',
             zIndex: 0,
           }}
         />
 
-        {/* Gradiente trasero — mismos colores, otro patrón (ángulo invertido) */}
+        {/* Gradiente trasero — mismos colores, corte en sentido opuesto al frontal */}
         <div
           style={{
             position: 'absolute',
@@ -735,7 +735,7 @@ function Inicio() {
               hsl(30deg 76% 43%) 85%,
               hsl(0deg 72% 34%) 100%
             )`,
-            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 15% 100%)',
+            clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
             zIndex: 1,
           }}
         />
