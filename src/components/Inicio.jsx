@@ -698,7 +698,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Sombra del gradiente trasero — el mismo degradado, difuminado y más grueso */}
+        {/* Sombra del gradiente trasero — el mismo degradado, difuminado, mucho más grueso */}
         <div
           style={{
             position: 'absolute',
@@ -718,13 +718,13 @@ function Inicio() {
               hsl(0deg 0% 100%) 100%
             )`,
             opacity: 0.75,
-            clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            filter: 'blur(90px)',
+            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            filter: 'blur(270px)',
             zIndex: 0,
           }}
         />
 
-        {/* Gradiente trasero — corte en sentido opuesto al frontal */}
+        {/* Gradiente trasero — corte en sentido opuesto al frontal, cruzando a la mitad */}
         <div
           style={{
             position: 'absolute',
@@ -743,7 +743,7 @@ function Inicio() {
               hsl(198deg 55% 85%) 99%,
               hsl(0deg 0% 100%) 100%
             )`,
-            clipPath: 'polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
             zIndex: 1,
           }}
         />
