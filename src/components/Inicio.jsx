@@ -141,12 +141,14 @@ const QuienesSomos = () => {
 
       <div style={{ position: 'relative' }}>
         {/* Fila: espacio en blanco a la izquierda (por el QS_GUTTER) + imagen
-            (ancho fijo, no tan ancha) + recuadro Visión + recuadro Misión */}
-        <div style={{ maxWidth: 1180, paddingLeft: QS_GUTTER, paddingRight: QS_GUTTER }}>
+            (ancho fijo, no tan ancha) + recuadro Visión + recuadro Misión.
+            OJO: el padding derecho es fijo (no crece con QS_GUTTER) para que
+            Visión/Misión tengan ancho de sobra y no queden aplastadas. */}
+        <div style={{ paddingLeft: QS_GUTTER, paddingRight: 24, maxWidth: 1500 }}>
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '320px 1fr 1fr',
+              gridTemplateColumns: isMobile ? '1fr' : `320px minmax(240px, 1fr) minmax(240px, 1fr)`,
               gap: 24,
               alignItems: 'start',
             }}
