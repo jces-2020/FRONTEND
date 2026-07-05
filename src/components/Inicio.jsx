@@ -171,16 +171,16 @@ const QuienesSomos = () => {
           </div>
         </div>
 
-        {/* Degradado: empieza horizontalmente a la mitad de la imagen y verticalmente debajo de misión/visión */}
+        {/* Degradado Ajustado: Sube exactamente al nivel del final de Misión y Visión indicado en image_635520.jpg */}
         <div
           style={{
             position: 'relative',
             zIndex: 1,
-            marginTop: isMobile ? 24 : 36, 
+            marginTop: isMobile ? 24 : -100, // Sube el gradiente para colisionar justo donde termina la línea roja
             marginLeft: isMobile ? QS_GUTTER : `calc(${QS_GUTTER} + 160px)`, 
             marginRight: 0,
             borderRadius: 0,
-            padding: isMobile ? '32px 24px' : '48px 48px 48px 200px', 
+            padding: isMobile ? '32px 24px' : '48px 48px 48px 200px', // Compensamos el espacio superior interno por el margen negativo
             backgroundImage: `linear-gradient(
               205deg,
               hsl(0deg 72% 34%) 0%,
@@ -212,7 +212,7 @@ const QuienesSomos = () => {
   );
 };
 
-// ─── PRODUCTOS — cajas con efecto 3D "saliendo" del marco, con sombra ───────
+// ─── PRODUCTOS ───────────────────────────────────────────────────────────────
 const productosData = [
   {
     nombre: 'Aluminio',
@@ -243,13 +243,11 @@ const ProductCard = ({ item }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      {/* Marco plano de fondo */}
       <div style={{
         position: 'absolute', inset: 0, borderRadius: 22,
         background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
       }} />
 
-      {/* Caja "saliendo" con perspectiva y sombra */}
       <div
         style={{
           position: 'absolute',
@@ -304,7 +302,7 @@ const Productos = () => (
   </section>
 );
 
-// ─── UBICACIÓN — foto del local + silueta de la región ───────────────────────
+// ─── UBICACIÓN ───────────────────────────────────────────────────────────────
 const zonasCobertura = [
   { nombre: 'Huancayo', desc: 'Sede principal, taller y despacho de pedidos.', destacado: true },
   { nombre: 'El Tambo', desc: 'Instalación y entrega en 24–48h según proyecto.' },
@@ -330,7 +328,6 @@ const Ubicacion = () => {
   return (
     <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
-        {/* Foto del local */}
         <div style={{ position: 'relative', minHeight: 300 }}>
           <img
             src="/tienda%20anime.png"
@@ -340,7 +337,6 @@ const Ubicacion = () => {
           <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
         </div>
 
-        {/* Silueta de la región + texto */}
         <div
           style={{
             position: 'relative',
@@ -399,7 +395,7 @@ const Ubicacion = () => {
   );
 };
 
-// ─── TESTIMONIOS — inicial en círculo + reseña, con CTA final ───────────────
+// ─── TESTIMONIOS ─────────────────────────────────────────────────────────────
 const testimoniosData = [
   { nombre: 'Rosa Álvarez',    resena: 'Excelente atención y acabado impecable en la instalación de mis ventanas.' },
   { nombre: 'Jorge Ccora',     resena: 'Cumplieron con el tiempo prometido y el vidrio quedó perfecto.' },
