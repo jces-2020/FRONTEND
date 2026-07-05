@@ -698,7 +698,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Sombra del panel — capa independiente detrás, sin afectar el color del panel */}
+        {/* Sombra del panel — mismo tono que el degradado, más grande */}
         <div
           style={{
             position: 'absolute',
@@ -706,10 +706,11 @@ function Inicio() {
             right: 0,
             width: '48%',
             height: '100%',
-            transform: 'translateX(-14px)',
-            background: 'rgba(0,0,0,0.45)',
+            transform: 'translateX(-28px)',
+            background: 'hsl(0deg 72% 34%)',
+            opacity: 0.55,
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%)',
-            filter: 'blur(14px)',
+            filter: 'blur(34px)',
             zIndex: 0,
           }}
         />
@@ -723,19 +724,15 @@ function Inicio() {
             width: '48%',
             height: '100%',
             backgroundImage: `linear-gradient(
-              315deg,
-              hsl(0deg 0% 100%) 0%,
-              hsl(43deg 100% 95%) 0%,
-              hsl(44deg 100% 90%) 1%,
-              hsl(44deg 100% 84%) 3%,
-              hsl(46deg 100% 76%) 6%,
-              hsl(48deg 100% 65%) 11%,
-              hsl(49deg 94% 50%) 17%,
-              hsl(47deg 90% 48%) 26%,
-              hsl(43deg 86% 45%) 37%,
-              hsl(38deg 82% 42%) 51%,
-              hsl(29deg 78% 38%) 71%,
-              hsl(0deg 72% 34%) 100%
+              150deg,
+              hsl(0deg 72% 34%) 0%,
+              hsl(30deg 76% 43%) 15%,
+              hsl(46deg 89% 50%) 38%,
+              hsl(48deg 100% 71%) 62%,
+              hsl(47deg 100% 88%) 80%,
+              hsl(199deg 55% 96%) 92%,
+              hsl(198deg 55% 82%) 99%,
+              hsl(197deg 57% 68%) 100%
             )`,
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%)',
             zIndex: 1,
@@ -753,14 +750,23 @@ function Inicio() {
             transform: 'translateY(-50%)',
             minWidth: 300,
             maxWidth: 800,
-            WebkitImageRendering: 'crisp-edges',
-            imageRendering: 'crisp-edges',
           }}
         />
 
         {/* Texto */}
         <div className="absolute left-4 md:left-16 top-1/2 transform -translate-y-1/2 text-left z-20 max-w-sm md:max-w-md lg:max-w-lg bg-black bg-opacity-30 rounded-xl p-6 md:p-8 shadow-2xl">
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">Vidrio perfecto,<br />instalación que inspira confianza.</h2>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
+            Vidrio perfecto,<br />
+            <span
+              style={{
+                color: 'transparent',
+                WebkitTextStroke: '1.5px #ffffff',
+              }}
+            >
+              instalación
+            </span>{' '}
+            <span className="font-normal">que inspira confianza.</span>
+          </h2>
           <div className="text-sm md:text-base lg:text-lg text-white font-normal leading-relaxed mt-2">
             <span className="block">Transformamos tus espacios con vidrio de alta calidad; Instalación precisa que garantiza elegancia, seguridad y durabilidad.</span>
           </div>
