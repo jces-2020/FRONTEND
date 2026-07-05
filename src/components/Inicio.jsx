@@ -194,7 +194,7 @@ const QuienesSomos = () => {
 
             {/* Imagen "paisaje" superpuesta, mismo criterio que el logo R del hero */}
             <img
-              src="/paisaje.jpg"
+              src="/paisaje.png"
               alt="Vidriobras instalación"
               style={{
                 position: 'absolute',
