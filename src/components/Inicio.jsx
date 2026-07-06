@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
-import { anime } from 'animejs'; // Corregido para la versión 4.x de animejs
+// IMPORTACIÓN DEFINITIVA PARA ANIME.JS V4 EN VITE:
+import { anime } from 'animejs/dist/esm/index.js'; 
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -315,7 +316,7 @@ const testimoniosData = [
 ];
 
 const TestimonioCard = ({ item }) => (
-  <div style={{ textAlignment: 'center' }}>
+  <div style={{ textAlign: 'center' }}>
     <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 14px', background: '#941918', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.3rem', border: '3px solid #80C2DC' }}>{item.nombre.charAt(0)}</div>
     <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', lineHeight: 1.65 }}>{item.resena}</p>
     <p style={{ margin: '10px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.8rem' }}>{item.nombre}</p>
@@ -342,7 +343,7 @@ function Inicio() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
 
-  // ─── ANIMACIÓN CON ANIME.JS V4 ─────────────────────────────────────────────
+  // ─── ANIMACIÓN CON ANIME.JS V4 (CORREGIDA PARA VITE) ───────────────────────
   useEffect(() => {
     const tl = anime.timeline({
       easing: 'cubicBezier(0.25, 1, 0.5, 1)', 
