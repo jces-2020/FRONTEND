@@ -5,6 +5,7 @@ import Inicio from './components/Inicio';
 import Proyectos from './components/Proyectos';
 import Productos from './components/Productos';
 import LoginInicioSesion from './components/LOGIN/LoginInicioSesion';
+import LoginResetPassword from './components/LOGIN/LoginResetPassword';
 import LoginPersonal from './components/LoginPersonal';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
@@ -74,6 +75,7 @@ function AppLayout() {
           <Route path="/proyectos" element={<Proyectos />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/login" element={<LoginInicioSesion />} />
+          <Route path="/login/reset-password" element={<LoginResetPassword />} />
           <Route path="/personal" element={<LoginPersonal />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/almacen" element={<Almacen />} />
