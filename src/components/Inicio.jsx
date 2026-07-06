@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
-import anime from 'animejs'; // Asegúrate de tener instalado animejs
+import { anime } from 'animejs'; // Corregido para la versión 4.x de animejs
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -315,7 +315,7 @@ const testimoniosData = [
 ];
 
 const TestimonioCard = ({ item }) => (
-  <div style={{ textAlign: 'center' }}>
+  <div style={{ textAlignment: 'center' }}>
     <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 14px', background: '#941918', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.3rem', border: '3px solid #80C2DC' }}>{item.nombre.charAt(0)}</div>
     <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', lineHeight: 1.65 }}>{item.resena}</p>
     <p style={{ margin: '10px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.8rem' }}>{item.nombre}</p>
@@ -342,34 +342,32 @@ function Inicio() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
 
-  // ─── ANIMACIÓN CON ANIME.JS ────────────────────────────────────────────────
+  // ─── ANIMACIÓN CON ANIME.JS V4 ─────────────────────────────────────────────
   useEffect(() => {
-    // Definimos el Timeline secuencial tal y como lo ordenaste
     const tl = anime.timeline({
       easing: 'cubicBezier(0.25, 1, 0.5, 1)', 
     });
 
     tl.add({
       targets: '.hero-bg-back',
-      translateY: ['100%', '0%'], // 1. Sube de la nada a su posición
+      translateY: ['100%', '0%'], 
       opacity: [0, 0.35],
       duration: 1000,
     })
     .add({
       targets: '.hero-bg-front',
-      translateY: ['-100%', '0%'], // 2. Baja desde detrás del navbar
+      translateY: ['-100%', '0%'], 
       duration: 900,
-    }, '-=200') // Ligero solapamiento para fluidez
+    }, '-=200') 
     .add({
       targets: '.hero-logo',
-      scale: [0, 1], // 3. El logo aparece creciendo
+      scale: [0, 1], 
       opacity: [0, 1],
       duration: 800,
       easing: 'easeOutBack'
     }, '-=300')
     .add({
       targets: '.hero-bg-back',
-      // 4. El sombreado (filtro blur / sombra) sale hacia el lado derecho
       boxShadow: ['0px 0px 0px rgba(148,25,24,0)', '80px 40px 180px rgba(148,25,24,0.4)'], 
       filter: ['blur(120px)', 'blur(240px)'],
       duration: 1200,
@@ -428,7 +426,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* GRADIANTE DE ATRÁS (Con Clase para Anime.js) */}
+        {/* GRADIANTE DE ATRÁS */}
         <div
           className="hero-bg-back"
           style={{
@@ -448,7 +446,7 @@ function Inicio() {
               hsl(198deg 55% 85%) 99%,
               hsl(0deg 0% 100%) 100%
             )`,
-            opacity: 0, // Inicia invisible para la animación
+            opacity: 0, 
             clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
             zIndex: 0,
           }}
@@ -478,7 +476,7 @@ function Inicio() {
           }}
         />
 
-        {/* GRADIANTE DE ADELANTE (Con Clase para Anime.js) */}
+        {/* GRADIANTE DE ADELANTE */}
         <div
           className="hero-bg-front"
           style={{
@@ -503,7 +501,7 @@ function Inicio() {
           }}
         />
 
-        {/* LOGO "V" (Con Clase para Anime.js) */}
+        {/* LOGO "V" */}
         <img
           src="/R.png"
           alt="Logo R"
@@ -514,7 +512,7 @@ function Inicio() {
             transform: 'translateY(-50%)',
             minWidth: 300,
             maxWidth: 800,
-            opacity: 0, // Inicia invisible para la animación
+            opacity: 0, 
           }}
         />
 
@@ -569,7 +567,6 @@ function Inicio() {
         </div>
       </div>
 
-      {/* COMPONENTES SECUNDARIOS */}
       <QuienesSomos />
       <Productos />
       <Ubicacion />
