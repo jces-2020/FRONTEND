@@ -776,7 +776,14 @@ export default function LoginInicioSesion() {
             </div>
 
             <div style={{ textAlign: "right", marginTop: -4 }}>
-              <a href="#" className="lb-link">¿Olvidaste tu contraseña?</a>
+              <button
+                type="button"
+                className="lb-link"
+                onClick={() => navigate("/login/reset-password")}
+                style={{ background: "transparent", border: "none", padding: 0 }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
 
             <button className="lb-btn-red" type="submit" disabled={loading} style={{ marginTop: 2 }}>

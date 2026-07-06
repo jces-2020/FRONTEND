@@ -20,7 +20,6 @@ const Personal = () => {
   const [bonoAEliminar, setBonoAEliminar] = useState("");
   const [selectedBonoId, setSelectedBonoId] = useState("");
   const [selectedPersonalIds, setSelectedPersonalIds] = useState([]);
-  const [guardandoAsignacion, setGuardandoAsignacion] = useState(false);
   const [selectedPersonal, setSelectedPersonal] = useState(null);
   const [personalBonos, setPersonalBonos] = useState([]);
   const [montoPagoBono, setMontoPagoBono] = useState("");
@@ -225,56 +224,16 @@ const Personal = () => {
   const handleSelectPersonal = (personal) => {
     setSelectedPersonal(personal);
     fetchPersonalBonos(personal.id_personal);
-    setMontoPagoBono("");
     setMontoPagoMensual("");
-    setErroresMontoBono("");
     setErroresMontoMensual("");
   };
 
   const handleTogglePersonalCheck = (personalId) => {
-    if (!selectedBonoId) return;
     setSelectedPersonalIds((prev) =>
       prev.includes(personalId)
         ? prev.filter((id) => id !== personalId)
         : [...prev, personalId]
     );
-  };
-
-  const handleGuardarAsignacionBono = async () => {
-    if (!selectedBonoId) { showToast("Selecciona un bono", "error"); return; }
-    if (selectedPersonalIds.length === 0) {
-      showToast("Selecciona al menos un personal", "error");
-      return;
-    }
-    setGuardandoAsignacion(true);
-    try {
-      const resultados = await Promise.all(
-        selectedPersonalIds.map(async (personalId) => {
-          const res = await fetch(`/api/personal/${personalId}/bonos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bono_id: selectedBonoId }),
-          });
-          const data = await res.json();
-          return { ok: Boolean(data.success), personalId };
-        })
-      );
-      const exitos = resultados.filter((r) => r.ok).length;
-      const fallidos = resultados.length - exitos;
-      if (exitos > 0 && fallidos === 0) {
-        showToast(`Bono asignado a ${exitos} personal`);
-      } else if (exitos > 0) {
-        showToast(`Asignados: ${exitos}, con error: ${fallidos}`, "error");
-      } else {
-        showToast("No se pudo asignar el bono", "error");
-      }
-      setSelectedPersonalIds([]);
-      if (selectedPersonal?.id_personal) fetchPersonalBonos(selectedPersonal.id_personal);
-    } catch {
-      showToast("Error al guardar asignacion", "error");
-    } finally {
-      setGuardandoAsignacion(false);
-    }
   };
 
   const handleCrearBono = async () => {
@@ -341,140 +300,84 @@ const Personal = () => {
     }
   };
 
-  // ─── Envío de correo ─────────────────────────────────────────────────────────
+  // ─── Flujo asignar bono + pagar + notificar ─────────────────────────────────
 
   /**
-   * Envía una notificación de pago por correo usando el endpoint /mail/send-payment.
-   * tipo: "mensual" | "bono"
-   */
-  const enviarNotificacionPago = async (monto, tipo = "mensual") => {
-    if (!selectedPersonal?.correo) return; // sin correo, silencioso
-
-    try {
-      const res = await fetch("/mail/send-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: selectedPersonal.correo,
-          nombre: selectedPersonal.nombre,
-          monto: parseFloat(monto),
-          tipo,
-        }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        console.warn("No se pudo enviar el correo:", data.error);
-      }
-    } catch (e) {
-      console.warn("Error al enviar notificación por correo:", e);
-    }
-  };
-
-  /**
-   * Botón "Enviar correo" manual: envía un correo genérico al personal seleccionado.
+   * Botón "Enviar correo": asigna bono, registra pago como gasto y envía correo automático.
    */
   const handleEnviarCorreo = async () => {
-    if (!selectedPersonal) {
-      showToast("Selecciona un personal primero", "error");
+    if (selectedPersonalIds.length === 0) {
+      showToast("Selecciona al menos un personal (check)", "error");
       return;
     }
-    if (!selectedPersonal.correo) {
-      showToast("Este personal no tiene correo registrado", "error");
+    if (!selectedBonoId) {
+      showToast("Selecciona un bono antes de enviar correo", "error");
+      return;
+    }
+
+    const errorMonto = validarMonto(montoPagoBono, "bono");
+    setErroresMontoBono(errorMonto);
+    if (errorMonto) {
+      showToast(errorMonto, "error");
       return;
     }
 
     setEnviandoCorreo(true);
     try {
-      const res = await fetch("/mail/send", {
+      const res = await fetch("/api/personal/bonos/asignar-pagar-notificar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          to: selectedPersonal.correo,
-          subject: "Notificación de pago de sueldo",
-          html: `
-            <!DOCTYPE html>
-            <html lang="es">
-            <body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-                <tr><td align="center">
-                  <table width="520" cellpadding="0" cellspacing="0"
-                    style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-                    <tr>
-                      <td style="background:#4f46e5;padding:28px 36px;text-align:center;">
-                        <div style="font-size:32px;">💼</div>
-                        <h1 style="margin:8px 0 0;color:#fff;font-size:20px;font-weight:700;">¡Sueldo pagado!</h1>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:32px 36px;">
-                        <p style="margin:0 0 14px;color:#374151;font-size:15px;">
-                          Hola, <strong>${selectedPersonal.nombre}</strong> 👋
-                        </p>
-                        <p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;">
-                          Te informamos que tu <strong>remuneración ha sido pagada</strong> correctamente.
-                          Si tienes alguna duda, comunícate con el área de administración.
-                        </p>
-                        <p style="margin:0;color:#9ca3af;font-size:12px;">
-                          Este mensaje es generado automáticamente, por favor no respondas a este correo.
-                        </p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 36px;text-align:center;">
-                        <p style="margin:0;color:#9ca3af;font-size:11px;">© ${new Date().getFullYear()} Sistema de Gestión de Personal</p>
-                      </td>
-                    </tr>
-                  </table>
-                </td></tr>
-              </table>
-            </body>
-            </html>
-          `,
-          text: `Hola ${selectedPersonal.nombre}, tu sueldo ha sido pagado correctamente. Fecha: ${new Date().toLocaleDateString("es-ES")}.`,
-        }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        showToast(`Correo enviado a ${selectedPersonal.correo}`);
-      } else {
-        showToast(data.error || "Error al enviar el correo", "error");
-      }
-    } catch {
-      showToast("Error al enviar el correo", "error");
-    } finally {
-      setEnviandoCorreo(false);
-    }
-  };
-
-  // ─── Pago de bono ─────────────────────────────────────────────────────────────
-
-  const handlePagarBono = async () => {
-    const error = validarMonto(montoPagoBono, "bono");
-    setErroresMontoBono(error);
-    if (error) { showToast(error, "error"); return; }
-    if (!selectedPersonal) { showToast("Selecciona un personal", "error"); return; }
-
-    try {
-      const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago-bono`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+          personal_ids: selectedPersonalIds,
+          bono_id: selectedBonoId,
           monto: parseFloat(montoPagoBono),
           fecha: new Date().toISOString().split("T")[0],
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        showToast("Bono pagado y registrado correctamente");
+      if (res.ok) {
+        const exitos = data?.data?.exitos ?? selectedPersonalIds.length;
+        const correoOk = data?.data?.correos_ok ?? 0;
+        const correoError = data?.data?.correos_error ?? 0;
+        const resultados = data?.data?.resultados || [];
+        const erroresCorreo = resultados.filter(
+          (r) => r?.ok === true && r?.correo && r?.correo?.ok === false
+        );
+
+        if (erroresCorreo.length > 0) {
+          const nombrePorId = new Map((personalList || []).map((p) => [p.id_personal, p.nombre || p.id_personal]));
+          const detalle = erroresCorreo
+            .slice(0, 2)
+            .map((r) => `${nombrePorId.get(r.personal_id) || r.personal_id}: ${r?.correo?.message || "sin detalle"}`)
+            .join(" | ");
+
+          showToast(
+            `Pagos: ${exitos}. Correos OK: ${correoOk}, correos con error: ${correoError}. ${detalle}`,
+            "info"
+          );
+        } else {
+          showToast(
+            `Proceso completado: ${exitos} pago(s), correos OK: ${correoOk}, correos con error: ${correoError}`,
+            correoError > 0 ? "info" : "success"
+          );
+        }
+
         setMontoPagoBono("");
         setErroresMontoBono("");
-        // Envía correo de notificación si hay correo registrado
-        await enviarNotificacionPago(montoPagoBono, "bono");
+        setSelectedPersonalIds([]);
+        if (selectedPersonal?.id_personal) {
+          await fetchPersonalBonos(selectedPersonal.id_personal);
+        }
       } else {
-        showToast(data.message || "Error al pagar bono", "error");
+        const detalle = data?.data?.resultados
+          ? ` (${(data.data.resultados || []).filter((r) => !r.ok).length} fallidos)`
+          : "";
+        showToast((data.message || "Error al procesar bono y correo") + detalle, "error");
       }
     } catch {
-      showToast("Error al pagar bono", "error");
+      showToast("Error al procesar bono y enviar correo", "error");
+    } finally {
+      setEnviandoCorreo(false);
     }
   };
 
@@ -500,8 +403,9 @@ const Personal = () => {
         showToast("Pago mensual registrado correctamente");
         setMontoPagoMensual("");
         setErroresMontoMensual("");
-        // Envía correo de notificación si hay correo registrado
-        await enviarNotificacionPago(montoPagoMensual, "mensual");
+        if (data?.data?.correo?.ok) {
+          showToast("Comprobante mensual enviado", "success");
+        }
       } else {
         showToast(data.message || "Error al registrar pago mensual", "error");
       }
@@ -635,37 +539,6 @@ const Personal = () => {
               }}
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
-            </button>
-            {/* Botón Enviar correo — activo si hay personal seleccionado con correo */}
-            <button
-              onClick={handleEnviarCorreo}
-              disabled={enviandoCorreo}
-              title={
-                !selectedPersonal
-                  ? "Selecciona un personal primero"
-                  : !selectedPersonal.correo
-                  ? "El personal seleccionado no tiene correo"
-                  : `Enviar notificación a ${selectedPersonal.correo}`
-              }
-              style={{
-                background:
-                  enviandoCorreo || !selectedPersonal?.correo
-                    ? COLORS.textLight
-                    : COLORS.secondary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor:
-                  enviandoCorreo || !selectedPersonal?.correo
-                    ? "not-allowed"
-                    : "pointer",
-                opacity: !selectedPersonal?.correo ? 0.6 : 1,
-              }}
-            >
-              {enviandoCorreo ? "Enviando..." : "✉️ Enviar correo"}
             </button>
           </div>
         </div>
@@ -878,9 +751,8 @@ const Personal = () => {
                         <input
                           type="checkbox"
                           checked={selectedPersonalIds.includes(p.id_personal)}
-                          disabled={!selectedBonoId}
                           onChange={() => handleTogglePersonalCheck(p.id_personal)}
-                          style={{ cursor: selectedBonoId ? "pointer" : "not-allowed" }}
+                          style={{ cursor: "pointer" }}
                         />
                       </td>
                       <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>
@@ -930,7 +802,7 @@ const Personal = () => {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <select
               value={selectedBonoId}
-              onChange={(e) => { setSelectedBonoId(e.target.value); setSelectedPersonalIds([]); }}
+              onChange={(e) => { setSelectedBonoId(e.target.value); }}
               style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
             >
               <option value="">-- Seleccionar bono --</option>
@@ -938,16 +810,31 @@ const Personal = () => {
                 <option key={b.id_bono} value={b.id_bono}>{b.descripcion}</option>
               ))}
             </select>
+
+            <div style={{ minWidth: 140 }}>
+              <input
+                type="number"
+                placeholder="Monto"
+                value={montoPagoBono}
+                onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoBono(l); if (l.trim()) setErroresMontoBono(""); }}
+                onBlur={() => { if (montoPagoBono) setErroresMontoBono(validarMonto(montoPagoBono, "bono")); }}
+                onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
+                step="0.01" min="0"
+                style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${erroresMontoBono ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+              />
+              {errorMsg(erroresMontoBono)}
+            </div>
+
             <button
-              onClick={handleGuardarAsignacionBono}
-              disabled={!selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion}
+              onClick={handleEnviarCorreo}
+              disabled={selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo}
               style={{
-                background: !selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion ? COLORS.textLight : COLORS.primary,
+                background: selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? COLORS.textLight : COLORS.primary,
                 color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
-                cursor: !selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion ? "not-allowed" : "pointer",
+                cursor: selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? "not-allowed" : "pointer",
               }}
             >
-              {guardandoAsignacion ? "Guardando..." : "Guardar"}
+              {enviandoCorreo ? "Enviando..." : "Enviar correo"}
             </button>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
@@ -974,7 +861,7 @@ const Personal = () => {
             </button>
           </div>
           <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
-            Selecciona un bono y luego marca el check del personal para asignarlo.
+            Selecciona uno o más personal con check + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
           </div>
         </div>
 
@@ -1054,33 +941,6 @@ const Personal = () => {
             <div style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
                 <h5 style={{ fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>Bonos Asignados</h5>
-                <div style={{ display: "flex", flexDirection: windowWidth < 640 ? "column" : "row", gap: 8, alignItems: "stretch", width: windowWidth < 640 ? "100%" : "auto" }}>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="number"
-                      placeholder="Monto"
-                      value={montoPagoBono}
-                      onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoBono(l); if (l.trim()) setErroresMontoBono(""); }}
-                      onBlur={() => { if (montoPagoBono) setErroresMontoBono(validarMonto(montoPagoBono, "bono")); }}
-                      onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
-                      step="0.01" min="0"
-                      style={{ width: windowWidth < 640 ? "100%" : 130, padding: 10, borderRadius: 8, border: `1px solid ${erroresMontoBono ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
-                    />
-                    {errorMsg(erroresMontoBono)}
-                  </div>
-                  <button
-                    onClick={handlePagarBono}
-                    disabled={!montoPagoBono || !!erroresMontoBono}
-                    style={{
-                      background: !montoPagoBono || erroresMontoBono ? COLORS.textLight : COLORS.success,
-                      color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 16px",
-                      fontWeight: 700, fontFamily: FONTS.heading,
-                      cursor: !montoPagoBono || erroresMontoBono ? "not-allowed" : "pointer", whiteSpace: "nowrap",
-                    }}
-                  >
-                    Pagar
-                  </button>
-                </div>
               </div>
               <div style={{ background: COLORS.white, padding: 12, borderRadius: 10, border: `1px solid ${COLORS.border}`, maxHeight: 200, overflowY: "auto" }}>
                 {personalBonos.length === 0 ? (
