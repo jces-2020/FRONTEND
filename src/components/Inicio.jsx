@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
-// IMPORTACIÓN DEFINITIVA PARA ANIME.JS V4 EN VITE:
-import { anime } from 'animejs/dist/esm/index.js'; 
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -51,7 +49,7 @@ const NeonButton = ({ onClick, children }) => {
   );
 };
 
-// ─── Eyebrow reutilizable ──────────────────────────────────────────────────
+// ─── Eyebrow reutilizable (mismo patrón visual en todas las secciones) ──────
 const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
   <div style={{ textAlign: align, maxWidth: 840, margin: align === 'center' ? '0 auto' : 0 }}>
     <p style={{
@@ -173,15 +171,16 @@ const QuienesSomos = () => {
           </div>
         </div>
 
+        {/* Degradado Ajustado: Sube exactamente al nivel del final de Misión y Visión indicado en image_635520.jpg */}
         <div
           style={{
             position: 'relative',
             zIndex: 1,
-            marginTop: isMobile ? 24 : -110, 
+            marginTop: isMobile ? 24 : -150, // Sube el gradiente para colisionar justo donde termina la línea roja
             marginLeft: isMobile ? QS_GUTTER : `calc(${QS_GUTTER} + 160px)`, 
             marginRight: 0,
             borderRadius: 0,
-            padding: isMobile ? '32px 24px' : '140px 48px 48px 200px', 
+            padding: isMobile ? '32px 24px' : '48px 48px 48px 200px', // Compensamos el espacio superior interno por el margen negativo
             backgroundImage: `linear-gradient(
               205deg,
               hsl(0deg 72% 34%) 0%,
@@ -196,7 +195,13 @@ const QuienesSomos = () => {
             boxShadow: '0 30px 50px -20px rgba(148,25,24,0.35)',
           }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 28 }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 28,
+            }}
+          >
             {quienesSomosData.map((item) => (
               <FeatureIconItem key={item.titulo} item={item} />
             ))}
@@ -209,32 +214,71 @@ const QuienesSomos = () => {
 
 // ─── PRODUCTOS ───────────────────────────────────────────────────────────────
 const productosData = [
-  { nombre: 'Aluminio', descripcion: 'Perfiles, ventanas y estructuras de aluminio resistentes y de acabado premium.', icono: IconRulerMeasure, color: '#5a8ba8' },
-  { nombre: 'Vidrio', descripcion: 'Vidrio templado, laminado y de seguridad en distintos espesores y acabados.', icono: IconShieldCheck, color: '#941918' },
-  { nombre: 'Accesorios', descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.', icono: IconSparkles, color: '#ad7d00' },
+  {
+    nombre: 'Aluminio',
+    descripcion: 'Perfiles, ventanas y estructuras de aluminio resistentes y de acabado premium.',
+    icono: IconRulerMeasure,
+    color: '#5a8ba8',
+  },
+  {
+    nombre: 'Vidrio',
+    descripcion: 'Vidrio templado, laminado y de seguridad en distintos espesores y acabados.',
+    icono: IconShieldCheck,
+    color: '#941918',
+  },
+  {
+    nombre: 'Accesorios',
+    descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
+    icono: IconSparkles,
+    color: '#ad7d00',
+  },
 ];
 
 const ProductCard = ({ item }) => {
   const Icono = item.icono;
   const [hovered, setHovered] = useState(false);
   return (
-    <div style={{ position: 'relative', height: 240 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <div style={{ position: 'absolute', inset: 0, borderRadius: 22, background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)' }} />
+    <div
+      style={{ position: 'relative', height: 240 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 22,
+        background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
+      }} />
+
       <div
         style={{
-          position: 'absolute', inset: '16px 16px 28px 16px', borderRadius: 18,
+          position: 'absolute',
+          inset: '16px 16px 28px 16px',
+          borderRadius: 18,
           background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 100%)`,
-          transform: hovered ? 'perspective(700px) rotateX(0deg) rotateY(0deg) translateY(-18px) scale(1.03)' : 'perspective(700px) rotateX(7deg) rotateY(-5deg) translateY(-8px)',
-          boxShadow: hovered ? `0 40px 55px -14px ${item.color}77, 0 14px 24px rgba(0,0,0,0.22)` : `0 28px 40px -14px ${item.color}55, 0 8px 16px rgba(0,0,0,0.16)`,
-          display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px 22px', transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+          transform: hovered
+            ? 'perspective(700px) rotateX(0deg) rotateY(0deg) translateY(-18px) scale(1.03)'
+            : 'perspective(700px) rotateX(7deg) rotateY(-5deg) translateY(-8px)',
+          boxShadow: hovered
+            ? `0 40px 55px -14px ${item.color}77, 0 14px 24px rgba(0,0,0,0.22)`
+            : `0 28px 40px -14px ${item.color}55, 0 8px 16px rgba(0,0,0,0.16)`,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '20px 22px',
+          transition: 'transform 0.35s ease, box-shadow 0.35s ease',
         }}
       >
-        <span style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(255,255,255,0.18)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+        <span style={{
+          width: 46, height: 46, borderRadius: 12,
+          background: 'rgba(255,255,255,0.18)', display: 'inline-flex',
+          alignItems: 'center', justifyContent: 'center', color: '#fff',
+        }}>
           <Icono size={24} stroke={2} />
         </span>
         <div>
           <h3 style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.25rem' }}>{item.nombre}</h3>
-          <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.88)', fontSize: '0.86rem', lineHeight: 1.55 }}>{item.descripcion}</p>
+          <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.88)', fontSize: '0.86rem', lineHeight: 1.55 }}>
+            {item.descripcion}
+          </p>
         </div>
       </div>
     </div>
@@ -244,9 +288,15 @@ const ProductCard = ({ item }) => {
 const Productos = () => (
   <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
-      <SectionEyebrow label="PRODUCTOS" title="Lo que vendemos" subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial." />
+      <SectionEyebrow
+        label="PRODUCTOS"
+        title="Lo que vendemos"
+        subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial."
+      />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 30 }}>
-        {productosData.map((item) => <ProductCard key={item.nombre} item={item} />)}
+        {productosData.map((item) => (
+          <ProductCard key={item.nombre} item={item} />
+        ))}
       </div>
     </div>
   </section>
@@ -265,7 +315,10 @@ const Ubicacion = () => {
   const ref = useRef(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setVisible(true); }, { threshold: 0.15 });
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
@@ -276,27 +329,63 @@ const Ubicacion = () => {
     <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
         <div style={{ position: 'relative', minHeight: 300 }}>
-          <img src="/tienda%20anime.png" alt="Local Vidriobras" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }} />
+          <img
+            src="/tienda%20anime.png"
+            alt="Local Vidriobras"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
+          />
           <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
         </div>
-        <div style={{ position: 'relative', background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)', clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)', padding: isMobile ? '48px 24px' : '56px 60px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>UBICACIÓN</p>
-          <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>Lugares donde distribuimos nuestros productos</h2>
-          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.</p>
+
+        <div
+          style={{
+            position: 'relative',
+            background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
+            clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            padding: isMobile ? '48px 24px' : '56px 60px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+            UBICACIÓN
+          </p>
+          <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>
+            Lugares donde distribuimos nuestros productos
+          </h2>
+          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>
+            Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.
+          </p>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
             <svg width="150" height="150" viewBox="0 0 600 460" style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.8s ease' }}>
-              <path d="M300,40 C400,40 452,120 440,200 C470,270 440,360 360,410 C300,444 220,440 170,400 C100,360 78,280 96,210 C70,140 110,60 210,44 C240,38 270,36 300,40 Z" fill="#12131a" stroke="#80C2DC" strokeWidth="3" />
+              <path
+                d="M300,40 C400,40 452,120 440,200 C470,270 440,360 360,410 C300,444 220,440 170,400 C100,360 78,280 96,210 C70,140 110,60 210,44 C240,38 270,36 300,40 Z"
+                fill="#12131a"
+                stroke="#80C2DC"
+                strokeWidth="3"
+              />
             </svg>
             <div>
               <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
               <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
             </div>
           </div>
+
           <div style={{ display: 'grid', gap: 10, marginTop: 28 }}>
             {zonasCobertura.map((z) => (
               <div key={z.nombre} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.12)', color: '#80C2DC' }}><IconMapPin size={15} stroke={2.1} /></span>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}><strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}</p>
+                <span style={{
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'rgba(255,255,255,0.12)', color: '#80C2DC',
+                }}>
+                  <IconMapPin size={15} stroke={2.1} />
+                </span>
+                <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                  <strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -308,29 +397,47 @@ const Ubicacion = () => {
 
 // ─── TESTIMONIOS ─────────────────────────────────────────────────────────────
 const testimoniosData = [
-  { nombre: 'Rosa Álvarez', resena: 'Excelente atención y acabado impecable en la instalación de mis ventanas.' },
-  { nombre: 'Jorge Ccora', resena: 'Cumplieron con el tiempo prometido y el vidrio quedó perfecto.' },
-  { nombre: 'Miluska Pérez', resena: 'Muy buen trato y asesoría clara durante toda la cotización.' },
-  { nombre: 'Daniel Rojas', resena: 'Instalación rápida y materiales de calidad. Muy recomendados.' },
-  { nombre: 'Katherine Soto', resena: 'El equipo fue muy profesional de principio a fin.' },
+  { nombre: 'Rosa Álvarez',    resena: 'Excelente atención y acabado impecable en la instalación de mis ventanas.' },
+  { nombre: 'Jorge Ccora',     resena: 'Cumplieron con el tiempo prometido y el vidrio quedó perfecto.' },
+  { nombre: 'Miluska Pérez',   resena: 'Muy buen trato y asesoría clara durante toda la cotización.' },
+  { nombre: 'Daniel Rojas',    resena: 'Instalación rápida y materiales de calidad. Muy recomendados.' },
+  { nombre: 'Katherine Soto',  resena: 'El equipo fue muy profesional de principio a fin.' },
 ];
 
 const TestimonioCard = ({ item }) => (
   <div style={{ textAlign: 'center' }}>
-    <div style={{ width: 64, height: 64, borderRadius: '50%', margin: '0 auto 14px', background: '#941918', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.3rem', border: '3px solid #80C2DC' }}>{item.nombre.charAt(0)}</div>
-    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', lineHeight: 1.65 }}>{item.resena}</p>
-    <p style={{ margin: '10px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.8rem' }}>{item.nombre}</p>
+    <div style={{
+      width: 64, height: 64, borderRadius: '50%', margin: '0 auto 14px',
+      background: '#941918', color: '#fff', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', fontWeight: 800, fontSize: '1.3rem',
+      border: '3px solid #80C2DC',
+    }}>
+      {item.nombre.charAt(0)}
+    </div>
+    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', lineHeight: 1.65 }}>
+      {item.resena}
+    </p>
+    <p style={{ margin: '10px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.8rem' }}>
+      {item.nombre}
+    </p>
   </div>
 );
 
 const Testimonios = ({ navigate }) => (
   <div className="w-full py-20" style={{ background: 'rgba(15,15,30,0.92)' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
-      <SectionEyebrow label="NUESTRO EQUIPO" title="Las manos detrás de cada instalación" subtitle="Un equipo estable, capacitado y presente en cada etapa del proyecto: desde almacén hasta la entrega final." dark />
+      <SectionEyebrow
+        label="NUESTRO EQUIPO"
+        title="Las manos detrás de cada instalación"
+        subtitle="Un equipo estable, capacitado y presente en cada etapa del proyecto: desde almacén hasta la entrega final."
+        dark
+      />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 32, marginTop: 48 }}>
-        {testimoniosData.map((t) => <TestimonioCard key={t.nombre} item={t} />)}
+        {testimoniosData.map((t) => (
+          <TestimonioCard key={t.nombre} item={t} />
+        ))}
       </div>
-      <div style={{ marginTop: 48, textAlign: 'center' }}>
+      <div className="mt-16 text-center" style={{ marginTop: 48, textAlign: 'center' }}>
         <NeonButton onClick={() => navigate('/contacto')}>Más información</NeonButton>
       </div>
     </div>
@@ -342,38 +449,6 @@ function Inicio() {
   const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
-
-  // ─── ANIMACIÓN CON ANIME.JS V4 (CORREGIDA PARA VITE) ───────────────────────
-  useEffect(() => {
-    const tl = anime.timeline({
-      easing: 'cubicBezier(0.25, 1, 0.5, 1)', 
-    });
-
-    tl.add({
-      targets: '.hero-bg-back',
-      translateY: ['100%', '0%'], 
-      opacity: [0, 0.35],
-      duration: 1000,
-    })
-    .add({
-      targets: '.hero-bg-front',
-      translateY: ['-100%', '0%'], 
-      duration: 900,
-    }, '-=200') 
-    .add({
-      targets: '.hero-logo',
-      scale: [0, 1], 
-      opacity: [0, 1],
-      duration: 800,
-      easing: 'easeOutBack'
-    }, '-=300')
-    .add({
-      targets: '.hero-bg-back',
-      boxShadow: ['0px 0px 0px rgba(148,25,24,0)', '80px 40px 180px rgba(148,25,24,0.4)'], 
-      filter: ['blur(120px)', 'blur(240px)'],
-      duration: 1200,
-    });
-  }, []);
 
   useEffect(() => {
     fetch('/api/servicios/random')
@@ -389,7 +464,12 @@ function Inicio() {
 
   const CardContent = ({ serv }) => (
     <>
-      <img src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE} alt={serv?.nombre} onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      <img
+        src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
+        alt={serv?.nombre}
+        onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.05) 55%)' }} />
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', zIndex: 2 }}>
         <h3 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: 700, textShadow: '1px 2px 6px rgba(0,0,0,0.9)' }}>{serv?.nombre}</h3>
@@ -427,9 +507,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* GRADIANTE DE ATRÁS */}
         <div
-          className="hero-bg-back"
           style={{
             position: 'absolute',
             top: '-5%',
@@ -447,13 +525,13 @@ function Inicio() {
               hsl(198deg 55% 85%) 99%,
               hsl(0deg 0% 100%) 100%
             )`,
-            opacity: 0, 
+            opacity: 0.35,
             clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            filter: 'blur(240px)',
             zIndex: 0,
           }}
         />
 
-        {/* MARCO BASE INICIAL */}
         <div
           style={{
             position: 'absolute',
@@ -477,9 +555,7 @@ function Inicio() {
           }}
         />
 
-        {/* GRADIANTE DE ADELANTE */}
         <div
-          className="hero-bg-front"
           style={{
             position: 'absolute',
             top: 0,
@@ -502,22 +578,19 @@ function Inicio() {
           }}
         />
 
-        {/* LOGO "V" */}
         <img
           src="/R.png"
           alt="Logo R"
-          className="hero-logo absolute w-[300px] md:w-[500px] lg:w-[700px] z-10"
+          className="absolute w-[300px] md:w-[500px] lg:w-[700px] z-10"
           style={{
             top: '55%',
             right: '0%',
             transform: 'translateY(-50%)',
             minWidth: 300,
             maxWidth: 800,
-            opacity: 0, 
           }}
         />
 
-        {/* TEXTOS CENTRALES */}
         <div className="relative z-20 max-w-2xl lg:max-w-3xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
           <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
           <p style={{ margin: 0, color: '#941918', fontWeight: 800, letterSpacing: '0.12em', fontSize: 'clamp(0.85rem, 1.1vw, 1.05rem)', textTransform: 'uppercase' }}>
@@ -528,7 +601,16 @@ function Inicio() {
             <span style={{ display: 'block', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
               VIDRIO
             </span>
-            <span style={{ display: 'block', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, letterSpacing: '-0.01em', color: 'transparent', WebkitTextStroke: '2px #941918' }}>
+            <span
+              style={{
+                display: 'block',
+                fontSize: 'clamp(3rem, 9vw, 6.6rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.01em',
+                color: 'transparent',
+                WebkitTextStroke: '2px #941918',
+              }}
+            >
               PERFECTO
             </span>
           </h1>
@@ -542,10 +624,27 @@ function Inicio() {
           </p>
 
           <div style={{ display: 'flex', gap: 14, marginTop: 26, flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/contacto')} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer', background: 'linear-gradient(90deg, #f4c430 0%, #941918 100%)', color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em', textTransform: 'uppercase', boxShadow: '0 10px 26px rgba(148,25,24,0.35)' }}>
+            <button
+              onClick={() => navigate('/contacto')}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(90deg, #f4c430 0%, #941918 100%)',
+                color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em',
+                textTransform: 'uppercase', boxShadow: '0 10px 26px rgba(148,25,24,0.35)',
+              }}
+            >
               Cotización gratis →
             </button>
-            <button onClick={() => navigate('/servicios')} style={{ padding: '13px 26px', borderRadius: 999, border: '2px solid #941918', background: '#fff', color: '#941918', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button
+              onClick={() => navigate('/servicios')}
+              style={{
+                padding: '13px 26px', borderRadius: 999,
+                border: '2px solid #941918', background: '#fff', color: '#941918',
+                fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em',
+                textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >
               Servicios
             </button>
           </div>
@@ -568,15 +667,29 @@ function Inicio() {
         </div>
       </div>
 
+      {/* QUIÉNES SOMOS */}
       <QuienesSomos />
+
+      {/* PRODUCTOS */}
       <Productos />
+
+      {/* UBICACIÓN */}
       <Ubicacion />
 
       {/* NUESTROS PROYECTOS */}
       <div className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
-        <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: windowWidth < 900 ? '1fr' : '0.9fr 1.3fr', gap: 40, alignItems: 'center' }}>
+        <div style={{
+          maxWidth: 1180, margin: '0 auto', display: 'grid',
+          gridTemplateColumns: windowWidth < 900 ? '1fr' : '0.9fr 1.3fr',
+          gap: 40, alignItems: 'center',
+        }}>
           <div>
-            <SectionEyebrow label="PORTAFOLIO" title="Nuestros Proyectos" subtitle="Realizamos instalaciones de vidrio y aluminio para hogares, oficinas y negocios en toda la región." align="left" />
+            <SectionEyebrow
+              label="PORTAFOLIO"
+              title="Nuestros Proyectos"
+              subtitle="Realizamos instalaciones de vidrio y aluminio para hogares, oficinas y negocios en toda la región, cuidando cada detalle desde la medición hasta el acabado final."
+              align="left"
+            />
             <div style={{ marginTop: 28 }}>
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
@@ -590,7 +703,9 @@ function Inicio() {
         </div>
       </div>
 
+      {/* TESTIMONIOS / EQUIPO */}
       <Testimonios navigate={navigate} />
+
     </section>
   );
 }
