@@ -43,6 +43,13 @@ function AppLayout() {
         return;
       }
 
+      // Links de Magic Link/Invite usados como notificación: no deben iniciar sesión cliente.
+      if (authType === 'magiclink' || authType === 'invite') {
+        window.location.hash = '';
+        navigate('/login?comprobante=ok', { replace: true });
+        return;
+      }
+
       // En recuperación de contraseña no se debe iniciar sesión ni redirigir al panel.
       if (authType === 'recovery' && accessToken) {
         const qp = new URLSearchParams();
