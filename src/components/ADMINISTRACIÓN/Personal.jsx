@@ -341,106 +341,53 @@ const Personal = () => {
     }
   };
 
-  // ─── Envío de correo ─────────────────────────────────────────────────────────
+  // ─── Flujo asignar bono + pagar + notificar ─────────────────────────────────
 
   /**
-   * Envía una notificación de pago por correo usando el endpoint /mail/send-payment.
-   * tipo: "mensual" | "bono"
-   */
-  const enviarNotificacionPago = async (monto, tipo = "mensual") => {
-    if (!selectedPersonal?.correo) return; // sin correo, silencioso
-
-    try {
-      const res = await fetch("/mail/send-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          to: selectedPersonal.correo,
-          nombre: selectedPersonal.nombre,
-          monto: parseFloat(monto),
-          tipo,
-        }),
-      });
-      const data = await res.json();
-      if (!data.ok) {
-        console.warn("No se pudo enviar el correo:", data.error);
-      }
-    } catch (e) {
-      console.warn("Error al enviar notificación por correo:", e);
-    }
-  };
-
-  /**
-   * Botón "Enviar correo" manual: envía un correo genérico al personal seleccionado.
+   * Botón "Enviar correo": asigna bono, registra pago como gasto y envía correo automático.
    */
   const handleEnviarCorreo = async () => {
     if (!selectedPersonal) {
       showToast("Selecciona un personal primero", "error");
       return;
     }
-    if (!selectedPersonal.correo) {
-      showToast("Este personal no tiene correo registrado", "error");
+    if (!selectedBonoId) {
+      showToast("Selecciona un bono antes de enviar correo", "error");
+      return;
+    }
+
+    const errorMonto = validarMonto(montoPagoBono, "bono");
+    setErroresMontoBono(errorMonto);
+    if (errorMonto) {
+      showToast(errorMonto, "error");
       return;
     }
 
     setEnviandoCorreo(true);
     try {
-      const res = await fetch("/mail/send", {
+      const res = await fetch("/api/personal/bonos/asignar-pagar-notificar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          to: selectedPersonal.correo,
-          subject: "Notificación de pago de sueldo",
-          html: `
-            <!DOCTYPE html>
-            <html lang="es">
-            <body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,sans-serif;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-                <tr><td align="center">
-                  <table width="520" cellpadding="0" cellspacing="0"
-                    style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-                    <tr>
-                      <td style="background:#4f46e5;padding:28px 36px;text-align:center;">
-                        <div style="font-size:32px;">💼</div>
-                        <h1 style="margin:8px 0 0;color:#fff;font-size:20px;font-weight:700;">¡Sueldo pagado!</h1>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding:32px 36px;">
-                        <p style="margin:0 0 14px;color:#374151;font-size:15px;">
-                          Hola, <strong>${selectedPersonal.nombre}</strong> 👋
-                        </p>
-                        <p style="margin:0 0 24px;color:#6b7280;font-size:14px;line-height:1.6;">
-                          Te informamos que tu <strong>remuneración ha sido pagada</strong> correctamente.
-                          Si tienes alguna duda, comunícate con el área de administración.
-                        </p>
-                        <p style="margin:0;color:#9ca3af;font-size:12px;">
-                          Este mensaje es generado automáticamente, por favor no respondas a este correo.
-                        </p>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 36px;text-align:center;">
-                        <p style="margin:0;color:#9ca3af;font-size:11px;">© ${new Date().getFullYear()} Sistema de Gestión de Personal</p>
-                      </td>
-                    </tr>
-                  </table>
-                </td></tr>
-              </table>
-            </body>
-            </html>
-          `,
-          text: `Hola ${selectedPersonal.nombre}, tu sueldo ha sido pagado correctamente. Fecha: ${new Date().toLocaleDateString("es-ES")}.`,
+          personal_id: selectedPersonal.id_personal,
+          bono_id: selectedBonoId,
+          monto: parseFloat(montoPagoBono),
+          fecha: new Date().toISOString().split("T")[0],
         }),
       });
       const data = await res.json();
-      if (data.ok) {
-        showToast(`Correo enviado a ${selectedPersonal.correo}`);
+      if (res.ok && data.success) {
+        showToast("Bono pagado, descontado como gasto y correo enviado automáticamente");
+        setMontoPagoBono("");
+        setErroresMontoBono("");
+        if (selectedPersonal?.id_personal) {
+          await fetchPersonalBonos(selectedPersonal.id_personal);
+        }
       } else {
-        showToast(data.error || "Error al enviar el correo", "error");
+        showToast(data.message || "Error al procesar bono y correo", "error");
       }
     } catch {
-      showToast("Error al enviar el correo", "error");
+      showToast("Error al procesar bono y enviar correo", "error");
     } finally {
       setEnviandoCorreo(false);
     }
@@ -468,8 +415,9 @@ const Personal = () => {
         showToast("Bono pagado y registrado correctamente");
         setMontoPagoBono("");
         setErroresMontoBono("");
-        // Envía correo de notificación si hay correo registrado
-        await enviarNotificacionPago(montoPagoBono, "bono");
+        if (data?.data?.correo?.ok) {
+          showToast("Bono pagado y comprobante enviado", "success");
+        }
       } else {
         showToast(data.message || "Error al pagar bono", "error");
       }
@@ -500,8 +448,9 @@ const Personal = () => {
         showToast("Pago mensual registrado correctamente");
         setMontoPagoMensual("");
         setErroresMontoMensual("");
-        // Envía correo de notificación si hay correo registrado
-        await enviarNotificacionPago(montoPagoMensual, "mensual");
+        if (data?.data?.correo?.ok) {
+          showToast("Comprobante mensual enviado", "success");
+        }
       } else {
         showToast(data.message || "Error al registrar pago mensual", "error");
       }
@@ -636,20 +585,22 @@ const Personal = () => {
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
             </button>
-            {/* Botón Enviar correo — activo si hay personal seleccionado con correo */}
+            {/* Botón Enviar correo: asigna bono + paga + descuenta + notifica */}
             <button
               onClick={handleEnviarCorreo}
               disabled={enviandoCorreo}
               title={
                 !selectedPersonal
                   ? "Selecciona un personal primero"
-                  : !selectedPersonal.correo
-                  ? "El personal seleccionado no tiene correo"
-                  : `Enviar notificación a ${selectedPersonal.correo}`
+                  : !selectedBonoId
+                  ? "Selecciona un bono"
+                  : !montoPagoBono
+                  ? "Ingresa monto de bono"
+                  : "Asignar bono, pagar y enviar correo"
               }
               style={{
                 background:
-                  enviandoCorreo || !selectedPersonal?.correo
+                  enviandoCorreo || !selectedPersonal || !selectedBonoId || !montoPagoBono
                     ? COLORS.textLight
                     : COLORS.secondary,
                 color: COLORS.white,
@@ -659,13 +610,13 @@ const Personal = () => {
                 fontWeight: 700,
                 fontFamily: FONTS.heading,
                 cursor:
-                  enviandoCorreo || !selectedPersonal?.correo
+                  enviandoCorreo || !selectedPersonal || !selectedBonoId || !montoPagoBono
                     ? "not-allowed"
                     : "pointer",
-                opacity: !selectedPersonal?.correo ? 0.6 : 1,
+                opacity: !selectedPersonal || !selectedBonoId || !montoPagoBono ? 0.6 : 1,
               }}
             >
-              {enviandoCorreo ? "Enviando..." : "✉️ Enviar correo"}
+              {enviandoCorreo ? "Procesando..." : "✉️ Enviar correo"}
             </button>
           </div>
         </div>
