@@ -32,8 +32,16 @@ function AppLayout() {
       const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
       const authCode = hashParams.get('code') || searchParams.get('code');
       const authType = (hashParams.get('type') || searchParams.get('type') || '').toLowerCase();
+      const flow = (searchParams.get('flow') || '').toLowerCase();
 
       if (!accessToken && !authCode) return;
+
+      // Correos de comprobante: no deben crear sesión ni redirigir al panel cliente.
+      if (flow === 'comprobante') {
+        window.location.hash = '';
+        navigate('/login?comprobante=ok', { replace: true });
+        return;
+      }
 
       // En recuperación de contraseña no se debe iniciar sesión ni redirigir al panel.
       if (authType === 'recovery' && accessToken) {
