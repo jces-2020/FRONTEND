@@ -31,8 +31,19 @@ function AppLayout() {
       const searchParams = new URLSearchParams(window.location.search);
       const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
       const authCode = hashParams.get('code') || searchParams.get('code');
+      const authType = (hashParams.get('type') || searchParams.get('type') || '').toLowerCase();
 
       if (!accessToken && !authCode) return;
+
+      // En recuperación de contraseña no se debe iniciar sesión ni redirigir al panel.
+      if (authType === 'recovery' && accessToken) {
+        const qp = new URLSearchParams();
+        qp.set('access_token', accessToken);
+        qp.set('type', 'recovery');
+        window.location.hash = '';
+        navigate(`/login/reset-password?${qp.toString()}`, { replace: true });
+        return;
+      }
 
       try {
         const res = await fetch('/api/clientes/confirmar-supabase', {
