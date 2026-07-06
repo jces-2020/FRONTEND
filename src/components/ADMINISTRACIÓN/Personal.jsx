@@ -335,14 +335,33 @@ const Personal = () => {
         }),
       });
       const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok) {
         const exitos = data?.data?.exitos ?? selectedPersonalIds.length;
         const correoOk = data?.data?.correos_ok ?? 0;
         const correoError = data?.data?.correos_error ?? 0;
-        showToast(
-          `Proceso completado: ${exitos} pago(s), correos OK: ${correoOk}, correos con error: ${correoError}`,
-          correoError > 0 ? "info" : "success"
+        const resultados = data?.data?.resultados || [];
+        const erroresCorreo = resultados.filter(
+          (r) => r?.ok === true && r?.correo && r?.correo?.ok === false
         );
+
+        if (erroresCorreo.length > 0) {
+          const nombrePorId = new Map((personalList || []).map((p) => [p.id_personal, p.nombre || p.id_personal]));
+          const detalle = erroresCorreo
+            .slice(0, 2)
+            .map((r) => `${nombrePorId.get(r.personal_id) || r.personal_id}: ${r?.correo?.message || "sin detalle"}`)
+            .join(" | ");
+
+          showToast(
+            `Pagos: ${exitos}. Correos OK: ${correoOk}, correos con error: ${correoError}. ${detalle}`,
+            "info"
+          );
+        } else {
+          showToast(
+            `Proceso completado: ${exitos} pago(s), correos OK: ${correoOk}, correos con error: ${correoError}`,
+            correoError > 0 ? "info" : "success"
+          );
+        }
+
         setMontoPagoBono("");
         setErroresMontoBono("");
         setSelectedPersonalIds([]);
