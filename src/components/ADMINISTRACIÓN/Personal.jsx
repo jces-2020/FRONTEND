@@ -19,8 +19,6 @@ const Personal = () => {
   const [nuevoBono, setNuevoBono] = useState("");
   const [bonoAEliminar, setBonoAEliminar] = useState("");
   const [selectedBonoId, setSelectedBonoId] = useState("");
-  const [selectedPersonalIds, setSelectedPersonalIds] = useState([]);
-  const [guardandoAsignacion, setGuardandoAsignacion] = useState(false);
   const [selectedPersonal, setSelectedPersonal] = useState(null);
   const [personalBonos, setPersonalBonos] = useState([]);
   const [montoPagoBono, setMontoPagoBono] = useState("");
@@ -231,52 +229,6 @@ const Personal = () => {
     setErroresMontoMensual("");
   };
 
-  const handleTogglePersonalCheck = (personalId) => {
-    if (!selectedBonoId) return;
-    setSelectedPersonalIds((prev) =>
-      prev.includes(personalId)
-        ? prev.filter((id) => id !== personalId)
-        : [...prev, personalId]
-    );
-  };
-
-  const handleGuardarAsignacionBono = async () => {
-    if (!selectedBonoId) { showToast("Selecciona un bono", "error"); return; }
-    if (selectedPersonalIds.length === 0) {
-      showToast("Selecciona al menos un personal", "error");
-      return;
-    }
-    setGuardandoAsignacion(true);
-    try {
-      const resultados = await Promise.all(
-        selectedPersonalIds.map(async (personalId) => {
-          const res = await fetch(`/api/personal/${personalId}/bonos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bono_id: selectedBonoId }),
-          });
-          const data = await res.json();
-          return { ok: Boolean(data.success), personalId };
-        })
-      );
-      const exitos = resultados.filter((r) => r.ok).length;
-      const fallidos = resultados.length - exitos;
-      if (exitos > 0 && fallidos === 0) {
-        showToast(`Bono asignado a ${exitos} personal`);
-      } else if (exitos > 0) {
-        showToast(`Asignados: ${exitos}, con error: ${fallidos}`, "error");
-      } else {
-        showToast("No se pudo asignar el bono", "error");
-      }
-      setSelectedPersonalIds([]);
-      if (selectedPersonal?.id_personal) fetchPersonalBonos(selectedPersonal.id_personal);
-    } catch {
-      showToast("Error al guardar asignacion", "error");
-    } finally {
-      setGuardandoAsignacion(false);
-    }
-  };
-
   const handleCrearBono = async () => {
     const descripcion = nuevoBono.trim();
     if (!descripcion) { showToast("Ingresa el nombre del bono", "error"); return; }
@@ -377,7 +329,10 @@ const Personal = () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast("Bono pagado, descontado como gasto y correo enviado automáticamente");
+        const correoMsg = data?.correo?.ok
+          ? "Correo enviado"
+          : `Pago aplicado, pero correo no enviado: ${data?.correo?.message || "sin detalle"}`;
+        showToast(`Bono pagado y descontado. ${correoMsg}`, data?.correo?.ok ? "success" : "info");
         setMontoPagoBono("");
         setErroresMontoBono("");
         if (selectedPersonal?.id_personal) {
@@ -390,39 +345,6 @@ const Personal = () => {
       showToast("Error al procesar bono y enviar correo", "error");
     } finally {
       setEnviandoCorreo(false);
-    }
-  };
-
-  // ─── Pago de bono ─────────────────────────────────────────────────────────────
-
-  const handlePagarBono = async () => {
-    const error = validarMonto(montoPagoBono, "bono");
-    setErroresMontoBono(error);
-    if (error) { showToast(error, "error"); return; }
-    if (!selectedPersonal) { showToast("Selecciona un personal", "error"); return; }
-
-    try {
-      const res = await fetch(`/api/personal/${selectedPersonal.id_personal}/pago-bono`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monto: parseFloat(montoPagoBono),
-          fecha: new Date().toISOString().split("T")[0],
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast("Bono pagado y registrado correctamente");
-        setMontoPagoBono("");
-        setErroresMontoBono("");
-        if (data?.data?.correo?.ok) {
-          showToast("Bono pagado y comprobante enviado", "success");
-        }
-      } else {
-        showToast(data.message || "Error al pagar bono", "error");
-      }
-    } catch {
-      showToast("Error al pagar bono", "error");
     }
   };
 
@@ -584,39 +506,6 @@ const Personal = () => {
               }}
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
-            </button>
-            {/* Botón Enviar correo: asigna bono + paga + descuenta + notifica */}
-            <button
-              onClick={handleEnviarCorreo}
-              disabled={enviandoCorreo}
-              title={
-                !selectedPersonal
-                  ? "Selecciona un personal primero"
-                  : !selectedBonoId
-                  ? "Selecciona un bono"
-                  : !montoPagoBono
-                  ? "Ingresa monto de bono"
-                  : "Asignar bono, pagar y enviar correo"
-              }
-              style={{
-                background:
-                  enviandoCorreo || !selectedPersonal || !selectedBonoId || !montoPagoBono
-                    ? COLORS.textLight
-                    : COLORS.secondary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor:
-                  enviandoCorreo || !selectedPersonal || !selectedBonoId || !montoPagoBono
-                    ? "not-allowed"
-                    : "pointer",
-                opacity: !selectedPersonal || !selectedBonoId || !montoPagoBono ? 0.6 : 1,
-              }}
-            >
-              {enviandoCorreo ? "Procesando..." : "✉️ Enviar correo"}
             </button>
           </div>
         </div>
@@ -796,7 +685,6 @@ const Personal = () => {
           <table style={{ width: "100%", fontSize: "0.95rem", background: COLORS.white }}>
             <thead style={{ position: "sticky", top: 0, background: COLORS.light }}>
               <tr>
-                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "center", width: 56, fontFamily: FONTS.heading, color: COLORS.text }}>Check</th>
                 <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Nombre</th>
                 <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Código</th>
                 <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Tipo</th>
@@ -805,7 +693,7 @@ const Personal = () => {
             <tbody>
               {personalList.length === 0 ? (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: 14, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                  <td colSpan={3} style={{ textAlign: "center", padding: 14, color: COLORS.textLight, fontFamily: FONTS.body }}>
                     Sin personal registrado
                   </td>
                 </tr>
@@ -822,18 +710,6 @@ const Personal = () => {
                         borderBottom: `1px solid ${COLORS.border}`,
                       }}
                     >
-                      <td
-                        style={{ padding: "10px", textAlign: "center" }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedPersonalIds.includes(p.id_personal)}
-                          disabled={!selectedBonoId}
-                          onChange={() => handleTogglePersonalCheck(p.id_personal)}
-                          style={{ cursor: selectedBonoId ? "pointer" : "not-allowed" }}
-                        />
-                      </td>
                       <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           {p.nombre || "Sin nombre"}
@@ -881,7 +757,7 @@ const Personal = () => {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <select
               value={selectedBonoId}
-              onChange={(e) => { setSelectedBonoId(e.target.value); setSelectedPersonalIds([]); }}
+              onChange={(e) => { setSelectedBonoId(e.target.value); }}
               style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
             >
               <option value="">-- Seleccionar bono --</option>
@@ -889,16 +765,31 @@ const Personal = () => {
                 <option key={b.id_bono} value={b.id_bono}>{b.descripcion}</option>
               ))}
             </select>
+
+            <div style={{ minWidth: 140 }}>
+              <input
+                type="number"
+                placeholder="Monto"
+                value={montoPagoBono}
+                onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoBono(l); if (l.trim()) setErroresMontoBono(""); }}
+                onBlur={() => { if (montoPagoBono) setErroresMontoBono(validarMonto(montoPagoBono, "bono")); }}
+                onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
+                step="0.01" min="0"
+                style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${erroresMontoBono ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+              />
+              {errorMsg(erroresMontoBono)}
+            </div>
+
             <button
-              onClick={handleGuardarAsignacionBono}
-              disabled={!selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion}
+              onClick={handleEnviarCorreo}
+              disabled={!selectedPersonal || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo}
               style={{
-                background: !selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion ? COLORS.textLight : COLORS.primary,
+                background: !selectedPersonal || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? COLORS.textLight : COLORS.primary,
                 color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
-                cursor: !selectedBonoId || selectedPersonalIds.length === 0 || guardandoAsignacion ? "not-allowed" : "pointer",
+                cursor: !selectedPersonal || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? "not-allowed" : "pointer",
               }}
             >
-              {guardandoAsignacion ? "Guardando..." : "Guardar"}
+              {enviandoCorreo ? "Enviando..." : "Enviar correo"}
             </button>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
@@ -925,7 +816,7 @@ const Personal = () => {
             </button>
           </div>
           <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
-            Selecciona un bono y luego marca el check del personal para asignarlo.
+            Selecciona personal + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
           </div>
         </div>
 
@@ -1005,33 +896,6 @@ const Personal = () => {
             <div style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
                 <h5 style={{ fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>Bonos Asignados</h5>
-                <div style={{ display: "flex", flexDirection: windowWidth < 640 ? "column" : "row", gap: 8, alignItems: "stretch", width: windowWidth < 640 ? "100%" : "auto" }}>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="number"
-                      placeholder="Monto"
-                      value={montoPagoBono}
-                      onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoBono(l); if (l.trim()) setErroresMontoBono(""); }}
-                      onBlur={() => { if (montoPagoBono) setErroresMontoBono(validarMonto(montoPagoBono, "bono")); }}
-                      onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
-                      step="0.01" min="0"
-                      style={{ width: windowWidth < 640 ? "100%" : 130, padding: 10, borderRadius: 8, border: `1px solid ${erroresMontoBono ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
-                    />
-                    {errorMsg(erroresMontoBono)}
-                  </div>
-                  <button
-                    onClick={handlePagarBono}
-                    disabled={!montoPagoBono || !!erroresMontoBono}
-                    style={{
-                      background: !montoPagoBono || erroresMontoBono ? COLORS.textLight : COLORS.success,
-                      color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 16px",
-                      fontWeight: 700, fontFamily: FONTS.heading,
-                      cursor: !montoPagoBono || erroresMontoBono ? "not-allowed" : "pointer", whiteSpace: "nowrap",
-                    }}
-                  >
-                    Pagar
-                  </button>
-                </div>
               </div>
               <div style={{ background: COLORS.white, padding: 12, borderRadius: 10, border: `1px solid ${COLORS.border}`, maxHeight: 200, overflowY: "auto" }}>
                 {personalBonos.length === 0 ? (
