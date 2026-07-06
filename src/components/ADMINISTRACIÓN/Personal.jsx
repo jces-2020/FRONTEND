@@ -19,6 +19,7 @@ const Personal = () => {
   const [nuevoBono, setNuevoBono] = useState("");
   const [bonoAEliminar, setBonoAEliminar] = useState("");
   const [selectedBonoId, setSelectedBonoId] = useState("");
+  const [selectedPersonalIds, setSelectedPersonalIds] = useState([]);
   const [selectedPersonal, setSelectedPersonal] = useState(null);
   const [personalBonos, setPersonalBonos] = useState([]);
   const [montoPagoBono, setMontoPagoBono] = useState("");
@@ -223,10 +224,16 @@ const Personal = () => {
   const handleSelectPersonal = (personal) => {
     setSelectedPersonal(personal);
     fetchPersonalBonos(personal.id_personal);
-    setMontoPagoBono("");
     setMontoPagoMensual("");
-    setErroresMontoBono("");
     setErroresMontoMensual("");
+  };
+
+  const handleTogglePersonalCheck = (personalId) => {
+    setSelectedPersonalIds((prev) =>
+      prev.includes(personalId)
+        ? prev.filter((id) => id !== personalId)
+        : [...prev, personalId]
+    );
   };
 
   const handleCrearBono = async () => {
@@ -299,8 +306,8 @@ const Personal = () => {
    * Botón "Enviar correo": asigna bono, registra pago como gasto y envía correo automático.
    */
   const handleEnviarCorreo = async () => {
-    if (!selectedPersonal) {
-      showToast("Selecciona un personal primero", "error");
+    if (selectedPersonalIds.length === 0) {
+      showToast("Selecciona al menos un personal (check)", "error");
       return;
     }
     if (!selectedBonoId) {
@@ -321,7 +328,7 @@ const Personal = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          personal_id: selectedPersonal.id_personal,
+          personal_ids: selectedPersonalIds,
           bono_id: selectedBonoId,
           monto: parseFloat(montoPagoBono),
           fecha: new Date().toISOString().split("T")[0],
@@ -329,17 +336,24 @@ const Personal = () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        const correoMsg = data?.correo?.ok
-          ? "Correo enviado"
-          : `Pago aplicado, pero correo no enviado: ${data?.correo?.message || "sin detalle"}`;
-        showToast(`Bono pagado y descontado. ${correoMsg}`, data?.correo?.ok ? "success" : "info");
+        const exitos = data?.data?.exitos ?? selectedPersonalIds.length;
+        const correoOk = data?.data?.correos_ok ?? 0;
+        const correoError = data?.data?.correos_error ?? 0;
+        showToast(
+          `Proceso completado: ${exitos} pago(s), correos OK: ${correoOk}, correos con error: ${correoError}`,
+          correoError > 0 ? "info" : "success"
+        );
         setMontoPagoBono("");
         setErroresMontoBono("");
+        setSelectedPersonalIds([]);
         if (selectedPersonal?.id_personal) {
           await fetchPersonalBonos(selectedPersonal.id_personal);
         }
       } else {
-        showToast(data.message || "Error al procesar bono y correo", "error");
+        const detalle = data?.data?.resultados
+          ? ` (${(data.data.resultados || []).filter((r) => !r.ok).length} fallidos)`
+          : "";
+        showToast((data.message || "Error al procesar bono y correo") + detalle, "error");
       }
     } catch {
       showToast("Error al procesar bono y enviar correo", "error");
@@ -685,6 +699,7 @@ const Personal = () => {
           <table style={{ width: "100%", fontSize: "0.95rem", background: COLORS.white }}>
             <thead style={{ position: "sticky", top: 0, background: COLORS.light }}>
               <tr>
+                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "center", width: 56, fontFamily: FONTS.heading, color: COLORS.text }}>Check</th>
                 <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Nombre</th>
                 <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Código</th>
                 <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Tipo</th>
@@ -693,7 +708,7 @@ const Personal = () => {
             <tbody>
               {personalList.length === 0 ? (
                 <tr>
-                  <td colSpan={3} style={{ textAlign: "center", padding: 14, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                  <td colSpan={4} style={{ textAlign: "center", padding: 14, color: COLORS.textLight, fontFamily: FONTS.body }}>
                     Sin personal registrado
                   </td>
                 </tr>
@@ -710,6 +725,17 @@ const Personal = () => {
                         borderBottom: `1px solid ${COLORS.border}`,
                       }}
                     >
+                      <td
+                        style={{ padding: "10px", textAlign: "center" }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedPersonalIds.includes(p.id_personal)}
+                          onChange={() => handleTogglePersonalCheck(p.id_personal)}
+                          style={{ cursor: "pointer" }}
+                        />
+                      </td>
                       <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           {p.nombre || "Sin nombre"}
@@ -782,11 +808,11 @@ const Personal = () => {
 
             <button
               onClick={handleEnviarCorreo}
-              disabled={!selectedPersonal || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo}
+              disabled={selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo}
               style={{
-                background: !selectedPersonal || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? COLORS.textLight : COLORS.primary,
+                background: selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? COLORS.textLight : COLORS.primary,
                 color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
-                cursor: !selectedPersonal || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? "not-allowed" : "pointer",
+                cursor: selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? "not-allowed" : "pointer",
               }}
             >
               {enviandoCorreo ? "Enviando..." : "Enviar correo"}
@@ -816,7 +842,7 @@ const Personal = () => {
             </button>
           </div>
           <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
-            Selecciona personal + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
+            Selecciona uno o más personal con check + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
           </div>
         </div>
 
