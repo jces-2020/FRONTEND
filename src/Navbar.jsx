@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { COLORS, FONTS } from './colors';
+import { COLORS } from './colors';
 import { IconUser, IconShoppingCart, IconList, IconSearch, IconX } from '@tabler/icons-react';
 import MenuDesplegable from './MenuDesplegable';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
@@ -18,11 +18,9 @@ function Navbar() {
     <>
       <nav
         className="w-full fixed top-0 left-0 z-50 shadow overflow-x-hidden"
-        style={{ background: COLORS.primary }}
+        style={{ background: 'transparent' }}
       >
-        {/* Fila principal */}
         <div className="flex items-center justify-between px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
-          {/* Logo como enlace a Inicio */}
           <div className="flex items-center flex-shrink-0">
             <Link to="/">
               <img
@@ -34,64 +32,68 @@ function Navbar() {
             </Link>
           </div>
 
-          {/* Breadcrumb Navigation - Centrado en el navbar, oculto en pantallas pequeñas */}
           {location.pathname !== '/' && (
             <div className="hidden md:flex justify-center flex-grow">
               <BreadcrumbNavigation />
             </div>
           )}
 
-          {/* Iconos y buscador */}
           <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4 flex-shrink-0">
-            {/* Botón Usuario */}
             <BrandIconButton
               size="sm"
               tone="light"
               onClick={() => {
                 try {
-                  const t = localStorage.getItem('auth_token');
-                  if (t) {
-                    const parts = t.split('.');
+                  const token = localStorage.getItem('auth_token');
+                  if (token) {
+                    const parts = token.split('.');
                     if (parts.length === 3) {
                       const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            </BrandIconButton>
+                      if (!payload.exp || (payload.exp * 1000) > Date.now()) {
                         navigate('/user');
                         return;
+                      }
+                    }
+                  }
+                } catch {}
+                navigate('/login');
+              }}
+              ariaLabel="Usuario"
+            >
+              <IconUser stroke={2.5} size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+            </BrandIconButton>
+
             <BrandIconButton
               size="sm"
               tone="light"
               className="relative"
-                } catch {}
-                navigate('/login');
-              }}
-              aria-label="Usuario"
-            >
-              <IconUser stroke={2.5} size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-            </button>
-
-            {/* Botón Carrito */}
-            <button
-              className="rounded-full p-1.5 sm:p-2 lg:p-2.5 transition hover:brightness-110"
-              style={{ color: COLORS.primary, background: COLORS.light, position: 'relative' }}
               onClick={() => navigate('/carrito')}
-              aria-label="Carrito de compras"
+              ariaLabel="Carrito de compras"
             >
               <IconShoppingCart stroke={2.5} size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               {cartCount > 0 && (
                 <span style={{
-                  position: 'absolute', top: -4, right: -4,
-                  background: '#941918', color: '#fff',
-                  borderRadius: '50%', fontSize: 10, fontWeight: 700,
-                  minWidth: 17, height: 17, lineHeight: '17px',
-                  textAlign: 'center', padding: '0 3px',
-                  pointerEvents: 'none', boxShadow: '0 1px 4px rgba(0,0,0,0.25)'
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  background: '#941918',
+                  color: '#fff',
+                  borderRadius: '50%',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  minWidth: 17,
+                  height: 17,
+                  lineHeight: '17px',
+                  textAlign: 'center',
+                  padding: '0 3px',
+                  pointerEvents: 'none',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
                 }}>
                   {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </BrandIconButton>
 
-            {/* Buscador DESKTOP - visible solo en sm en adelante */}
             <div className="relative hidden sm:block">
               <input
                 type="text"
@@ -105,33 +107,28 @@ function Navbar() {
               </span>
             </div>
 
-            {/* Botón Buscar MÓVIL - solo visible en xs */}
             <BrandIconButton
               size="sm"
               tone="light"
               className="sm:hidden"
               onClick={() => setSearchOpen((prev) => !prev)}
-              aria-label="Buscar"
+              ariaLabel="Buscar"
             >
-              {searchOpen
-                ? <IconX stroke={2.5} size={18} />
-                : <IconSearch stroke={2.5} size={18} />
-              }
+              {searchOpen ? <IconX stroke={2.5} size={18} /> : <IconSearch stroke={2.5} size={18} />}
             </BrandIconButton>
 
-            {/* Botón Menú Desplegable */}
             <BrandIconButton
               size="sm"
               tone="accent"
+              shape="square"
               onClick={() => setMenuOpen((prev) => !prev)}
-              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+              ariaLabel={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
             >
               <IconList stroke={2} size={18} className="sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
             </BrandIconButton>
           </div>
         </div>
 
-        {/* Buscador expandido en MÓVIL - segunda fila */}
         {searchOpen && (
           <div className="sm:hidden px-3 pb-2">
             <div className="relative">
