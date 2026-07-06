@@ -6,6 +6,7 @@ import Proyectos from './components/Proyectos';
 import Productos from './components/Productos';
 import LoginInicioSesion from './components/LOGIN/LoginInicioSesion';
 import LoginResetPassword from './components/LOGIN/LoginResetPassword';
+import ComprobantePagoExito from './components/ADMINISTRACIÓN/ComprobantePagoExito';
 import LoginPersonal from './components/LoginPersonal';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
@@ -33,20 +34,21 @@ function AppLayout() {
       const authCode = hashParams.get('code') || searchParams.get('code');
       const authType = (hashParams.get('type') || searchParams.get('type') || '').toLowerCase();
       const flow = (searchParams.get('flow') || '').toLowerCase();
+      const inComprobantePage = location.pathname === '/comprobante-exito';
 
       if (!accessToken && !authCode) return;
 
       // Correos de comprobante: no deben crear sesión ni redirigir al panel cliente.
-      if (flow === 'comprobante') {
+      if (flow === 'comprobante' || inComprobantePage) {
         window.location.hash = '';
-        navigate('/login?comprobante=ok', { replace: true });
+        navigate('/comprobante-exito', { replace: true });
         return;
       }
 
       // Links de Magic Link/Invite usados como notificación: no deben iniciar sesión cliente.
       if (authType === 'magiclink' || authType === 'invite') {
         window.location.hash = '';
-        navigate('/login?comprobante=ok', { replace: true });
+        navigate('/comprobante-exito', { replace: true });
         return;
       }
 
@@ -83,7 +85,7 @@ function AppLayout() {
     parseAuthCallback();
 
     return () => { cancelled = true; };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
 
   useEffect(() => {
     const legacySensitiveKeys = ['cliente_correo', 'cliente_nombre', 'cliente_numero', 'cliente_documento'];
@@ -102,6 +104,7 @@ function AppLayout() {
           <Route path="/productos" element={<Productos />} />
           <Route path="/login" element={<LoginInicioSesion />} />
           <Route path="/login/reset-password" element={<LoginResetPassword />} />
+          <Route path="/comprobante-exito" element={<ComprobantePagoExito />} />
           <Route path="/personal" element={<LoginPersonal />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route path="/almacen" element={<Almacen />} />
