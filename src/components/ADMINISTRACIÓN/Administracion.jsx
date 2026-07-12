@@ -378,7 +378,6 @@ const injectStyles = () => {
 
 /* ─── Tab config ──────────────────────────────────────────── */
 const TABS = [
-  { key: 'inicio',    label: 'Inicio'     },
   { key: 'personal',  label: 'Personal'   },
   { key: 'gastos',    label: 'Gastos'     },
   { key: 'cuadre',    label: 'Cuadre'     },
@@ -390,10 +389,8 @@ const TABS = [
 /* ─── Component ───────────────────────────────────────────── */
 const Administracion = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('inicio');
+  const [activeTab, setActiveTab] = useState('personal');
   const [toast, setToast] = useState(null);
-  const [charts, setCharts] = useState(null);
-  const [chartsLoading, setChartsLoading] = useState(false);
 
   useEffect(() => { injectStyles(); }, []);
 
@@ -420,22 +417,6 @@ const Administracion = () => {
     setToast({ mensaje, tipo });
     setTimeout(() => setToast(null), 3500);
   }, []);
-
-  useEffect(() => {
-    if (activeTab !== 'inicio') return;
-    setChartsLoading(true);
-    
-    // Fetch matplotlib charts
-    fetch('/api/charts/dashboard')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.success && data?.charts) {
-          setCharts(data.charts);
-        }
-      })
-      .catch(() => setCharts(null))
-      .finally(() => setChartsLoading(false));
-  }, [activeTab]);
 
   const handleLogout = useCallback(() => {
     // Detener sesión de IA
@@ -489,39 +470,6 @@ const Administracion = () => {
 
         {/* Content card */}
         <div className="adm-card" key={activeTab}>
-
-          {/* ── INICIO dashboard ── */}
-          {activeTab === 'inicio' && (
-            <>
-              {/* Charts */}
-              {chartsLoading ? (
-                <div style={{ color: '#4a90b8', fontSize: '0.9rem', marginTop: '20px' }}>Cargando gráficos…</div>
-                ) : charts ? (
-                  <div className="adm-charts-grid" style={{ marginTop: '20px' }}>
-                    {charts.summary_bars && (
-                      <div className="adm-chart-card">
-                        <div className="adm-chart-title">Resumen General</div>
-                        <img src={charts.summary_bars} alt="Resumen de datos" style={{ width: '100%', height: 'auto' }} />
-                      </div>
-                    )}
-                    {charts.products_by_cat && (
-                      <div className="adm-chart-card">
-                        <div className="adm-chart-title">Productos por Categoría</div>
-                        <img src={charts.products_by_cat} alt="Productos" style={{ width: '100%', height: 'auto' }} />
-                      </div>
-                    )}
-                    {charts.clients_chart && (
-                      <div className="adm-chart-card">
-                        <div className="adm-chart-title">Clientes</div>
-                        <img src={charts.clients_chart} alt="Clientes" style={{ width: '100%', height: 'auto' }} />
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ color: '#666', fontSize: '0.9rem', marginTop: '20px' }}>No se pudieron cargar los gráficos</div>
-                )}
-            </>
-          )}
 
           {activeTab === 'proyecto'  && <Proyecto onToast={showToast} />}
           {activeTab === 'personal'  && <Personal />}
