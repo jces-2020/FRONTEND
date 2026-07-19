@@ -7,6 +7,7 @@ const CuadreCaja = () => {
   const usuario = "Juan Pérez"; // Temporal
   const [totales, setTotales] = useState({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
   const [totalesAnimados, setTotalesAnimados] = useState({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
+  const [totalesPorTipo, setTotalesPorTipo] = useState({});
   const [comprobantes, setComprobantes] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [retiro, setRetiro] = useState("");
@@ -32,6 +33,7 @@ const CuadreCaja = () => {
       yape: Number(data?.totales?.yape || 0),
       total: Number(data?.totales?.total || 0),
     },
+    totalesPorTipo: data?.totales_por_tipo || {},
     comprobantes: Array.isArray(data?.comprobantes) ? data.comprobantes : [],
     cantidadEnCaja: Number(data?.cantidad_en_caja || 0),
     retiros: Array.isArray(data?.retiros) ? data.retiros : [],
@@ -55,6 +57,7 @@ const CuadreCaja = () => {
     const { desdeStream = false } = options;
     const data = normalizarCuadreData(rawData);
     setTotales(data.totales);
+    setTotalesPorTipo(data.totalesPorTipo);
     setComprobantes(data.comprobantes);
     setBaseCaja(data.cantidadEnCaja);
     setRetiros(data.retiros);
@@ -620,6 +623,40 @@ const CuadreCaja = () => {
               </div>
             </div>
           </div>
+
+          {/* Totales por Tipo de Venta */}
+          {Object.keys(totalesPorTipo).length > 0 && (
+            <div style={{ 
+              background: COLORS.white, 
+              borderRadius: '16px', 
+              boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08)`, 
+              padding: '24px', 
+              marginBottom: '32px' 
+            }}>
+              <h3 style={{ 
+                fontSize: '1.4rem', 
+                fontWeight: 700, 
+                fontFamily: FONTS.heading, 
+                color: COLORS.text,
+                marginBottom: '16px'
+              }}>Totales por Tipo de Venta</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {Object.entries(totalesPorTipo).map(([tipo, monto]) => (
+                  <div key={tipo} style={{ 
+                    background: 'rgba(13, 148, 136, 0.08)',
+                    border: '1px solid rgba(13, 148, 136, 0.22)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontFamily: FONTS.body
+                  }}>
+                    <div style={{ fontSize: '0.9rem', color: COLORS.textLight, fontWeight: 500 }}>{tipo}</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0d9488', marginTop: '4px' }}>S/ {Number(monto).toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={cardGlassStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: FONTS.heading, color: COLORS.text }}>Comprobantes</h3>
