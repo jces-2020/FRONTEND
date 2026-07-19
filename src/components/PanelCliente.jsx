@@ -458,13 +458,15 @@ const PanelCliente = ({ onLogout }) => {
           loop: true,
           ease: "linear",
         });
-        animate(".pc-chart-shell", {
-          opacity: [0, 1],
-          translateY: [18, 0],
-          scale: [0.98, 1],
-          duration: 760,
-          ease: "outExpo",
-        });
+        if (document.querySelector(".pc-chart-shell")) {
+          animate(".pc-chart-shell", {
+            opacity: [0, 1],
+            translateY: [18, 0],
+            scale: [0.98, 1],
+            duration: 760,
+            ease: "outExpo",
+          });
+        }
       }).catch(() => {
         document.querySelectorAll(".pc-card").forEach(el => { el.style.opacity = "1"; });
       });
@@ -642,13 +644,11 @@ const PanelCliente = ({ onLogout }) => {
       await recargarBarraProgreso(clienteId, authToken);
       if (cancelled) return;
       await recargarBarraProgresoServicio(clienteId);
-      if (cancelled) return;
-      await cargarComprobantes(authToken, { animarNuevos: true });
       // El grafico se refresca por realtime; evitamos pegarle cada pocos segundos.
-      if (!cancelled) timerId = setTimeout(tick, 5000);
+      if (!cancelled) timerId = setTimeout(tick, 15000);
     };
 
-    timerId = setTimeout(tick, 5000);
+    timerId = setTimeout(tick, 15000);
     return () => { cancelled = true; clearTimeout(timerId); };
   }, [clienteId, token]);
 
