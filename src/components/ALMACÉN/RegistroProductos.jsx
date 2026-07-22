@@ -455,7 +455,7 @@ const ConfirmModal = ({ nombreProducto, onAceptar, onCancelar }) => (
   </div>
 );
 
-/* ─── Campos técnicos por categoría ────────────────────── */
+/* ─── Campos técnicos por producto ────────────────────── */
 const CamposTecnicos = ({ esVidrio, esAluminio, det, setDet }) => {
   if (!esVidrio && !esAluminio) return null;
   const upd = (k, v) => setDet(prev => ({ ...prev, [k]: v }));
@@ -580,16 +580,18 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
   const [generandoPDF, setGenerandoPDF] = useState(false);
   const [newProductIds, setNewProductIds] = useState(new Set());
   const [showImageEditor, setShowImageEditor] = useState(false);
-  const [catDetalle, setCatDetalle]  = useState({});
+  const [productoDetalle, setProductoDetalle]  = useState({});
 
-  // Cargar specs técnicas al cambiar categoría
+  // Cargar detalle del producto seleccionado si ya existe
   useEffect(() => {
-    if (!categoriaId) { setCatDetalle({}); return; }
-    fetch(`/api/categorias/${categoriaId}/detalle`)
+    const productoId = seleccionado?.id_producto || seleccionado?.id;
+    if (!productoId) { setProductoDetalle({}); return; }
+
+    fetch(`/api/productos/${productoId}/detalle`)
       .then(r => r.json())
-      .then(d => setCatDetalle(d?.data || {}))
-      .catch(() => setCatDetalle({}));
-  }, [categoriaId]);
+      .then(d => setProductoDetalle(d?.data || {}))
+      .catch(() => setProductoDetalle({}));
+  }, [seleccionado]);
 
   const catObj  = categoriasCache.find(c => String(c.id_categoria) === String(categoriaId));
   const rawName = (catObj?.nombre || catObj?.nombre_categoria || catObj?.descripcion || '');
@@ -686,6 +688,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
     setNombre(''); setCodigo(''); setCatId(''); setCantidad('');
     setPrecio(''); setDesc(''); setGrosor(''); setLugar(''); setFila(''); setColumna('');
     setImgFile(null); setPreview(''); setOrigImg(''); setSeleccionado(null);
+    setProductoDetalle({});
     setFileKey(k => k + 1);
   }, []);
 
@@ -729,18 +732,10 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
     const datos  = { nombre, codigo, categoria_id: categoriaId, cantidad, precio_unitario: precio,
                      descripcion, grosor: esVidrio ? grosor : '', fila, columna };
 
-    // Guardar specs técnicas de la categoría si hay datos
     const specFields = ['plancha_ancho_cm','plancha_alto_cm','espesor_mm','rebaje_mm',
                         'cara_visible_mm','barra_largo_cm','tolerancia_mm','serie','forma'];
     const specPayload = {};
-    specFields.forEach(k => { if (catDetalle[k] !== undefined && catDetalle[k] !== '') specPayload[k] = catDetalle[k]; });
-    if (Object.keys(specPayload).length > 0) {
-      fetch(`/api/categorias/${categoriaId}/detalle`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(specPayload),
-      }).catch(() => {});
-    }
+    specFields.forEach(k => { if (productoDetalle[k] !== undefined && productoDetalle[k] !== '') specPayload[k] = productoDetalle[k]; });
 
     let imgUrl = originalImgUrl;
     let processingMetadata = null;
@@ -794,13 +789,28 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
       const url    = existe ? `/api/productos/${existe.id_producto}` : '/api/productos';
       const method = existe ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
-      if (!res.ok) throw new Error();
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error || 'Error guardando producto');
+
+      const productoId = existe?.id_producto || payload?.data?.[0]?.id_producto || payload?.data?.id_producto;
+      if (productoId && Object.keys(specPayload).length > 0) {
+        const detalleRes = await fetch(`/api/productos/${productoId}/detalle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(specPayload),
+        });
+        const detallePayload = await detalleRes.json().catch(() => ({}));
+        if (!detalleRes.ok) throw new Error(detallePayload?.error || 'Error guardando detalle del producto');
+      }
+
       showToast(`Producto ${existe ? 'actualizado' : 'registrado'} correctamente`);
       setAnotados(prev => [...prev, { ...datos }]);
       limpiar();
       await cargarProductos();
       localStorage.setItem('productos-updated-at', Date.now().toString());
-    } catch { showToast('Error al guardar producto', 'error'); }
+    } catch (err) {
+      showToast(err?.message || 'Error al guardar producto', 'error');
+    }
   };
 
   const handleEliminar = () => {
@@ -1064,8 +1074,8 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
               <CamposTecnicos
                 esVidrio={esVidrio}
                 esAluminio={esAluminio}
-                det={catDetalle}
-                setDet={setCatDetalle}
+                det={productoDetalle}
+                setDet={setProductoDetalle}
               />
 
               {/* Imagen + botones */}

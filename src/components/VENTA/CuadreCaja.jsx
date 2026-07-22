@@ -7,10 +7,12 @@ const CuadreCaja = () => {
   const usuario = "Juan Pérez"; // Temporal
   const [totales, setTotales] = useState({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
   const [totalesAnimados, setTotalesAnimados] = useState({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
+  const [totalesPorTipo, setTotalesPorTipo] = useState({});
   const [comprobantes, setComprobantes] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [retiro, setRetiro] = useState("");
   const [baseCaja, setBaseCaja] = useState(0);
+  const [cajaId, setCajaId] = useState(null);
   const [baseCajaAnimada, setBaseCajaAnimada] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -32,8 +34,10 @@ const CuadreCaja = () => {
       yape: Number(data?.totales?.yape || 0),
       total: Number(data?.totales?.total || 0),
     },
+    totalesPorTipo: data?.totales_por_tipo || {},
     comprobantes: Array.isArray(data?.comprobantes) ? data.comprobantes : [],
     cantidadEnCaja: Number(data?.cantidad_en_caja || 0),
+    cajaId: data?.caja_id || null,
     retiros: Array.isArray(data?.retiros) ? data.retiros : [],
   });
 
@@ -51,12 +55,28 @@ const CuadreCaja = () => {
     timeoutPulsoRef.current = setTimeout(() => setPulsoRealtime(false), 850);
   };
 
+  const resetearArqueoLocal = (nextCajaId = null) => {
+    setTotales({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
+    setTotalesAnimados({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
+    setTotalesPorTipo({});
+    setComprobantes([]);
+    setBaseCaja(0);
+    setBaseCajaAnimada(0);
+    setCajaId(nextCajaId);
+    setRetiros([]);
+    setRetiro("");
+    setError("");
+    setSuccess("");
+  };
+
   const aplicarCuadreCaja = (rawData, options = {}) => {
     const { desdeStream = false } = options;
     const data = normalizarCuadreData(rawData);
     setTotales(data.totales);
+    setTotalesPorTipo(data.totalesPorTipo);
     setComprobantes(data.comprobantes);
     setBaseCaja(data.cantidadEnCaja);
+    setCajaId(data.cajaId);
     setRetiros(data.retiros);
 
     if (desdeStream) {
@@ -235,7 +255,7 @@ const CuadreCaja = () => {
     apiFetch("/api/caja/retiro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ monto: Number(retiro), usuario }),
+      body: JSON.stringify({ monto: Number(retiro), usuario, caja_id: cajaId }),
     })
       .then(res => res.json())
       .then(data => {
@@ -458,15 +478,19 @@ const CuadreCaja = () => {
       </html>`;
 
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;visibility:hidden;';
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;border:none;';
     document.body.appendChild(iframe);
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     doc.open();
     doc.write(html);
     doc.close();
     setTimeout(() => {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch {
+        window.open('', '_blank', 'noopener,noreferrer');
+      }
       setTimeout(() => document.body.removeChild(iframe), 1200);
     }, 300);
   };
@@ -478,21 +502,15 @@ const CuadreCaja = () => {
       apiFetch("/api/caja/crear-nueva", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ turno: "diurno" })
+        body: JSON.stringify({ turno: "diurno", caja_id: cajaId })
       })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            setSuccess(data.message || "Nueva caja creada exitosamente");
-            // Recargar cuadre con la nueva caja (cantidad = 0, sin retiros)
-            setTimeout(() => {
-              apiFetch("/api/caja/cuadre")
-                .then(res => res.json())
-                .then(cuadreData => {
-                  aplicarCuadreCaja(cuadreData);
-                  setSuccess("");
-                });
-            }, 1500);
+            const nuevaCajaId = data?.nueva_caja?.id_caja || null;
+            resetearArqueoLocal(nuevaCajaId);
+            setSuccess("Nuevo turno iniciado. El arqueo quedó en cero.");
+            setTimeout(() => setSuccess(""), 3500);
           } else {
             setError(data.message || "Error al crear nueva caja");
           }
@@ -620,6 +638,40 @@ const CuadreCaja = () => {
               </div>
             </div>
           </div>
+
+          {/* Totales por Tipo de Venta */}
+          {Object.keys(totalesPorTipo).length > 0 && (
+            <div style={{ 
+              background: COLORS.white, 
+              borderRadius: '16px', 
+              boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08)`, 
+              padding: '24px', 
+              marginBottom: '32px' 
+            }}>
+              <h3 style={{ 
+                fontSize: '1.4rem', 
+                fontWeight: 700, 
+                fontFamily: FONTS.heading, 
+                color: COLORS.text,
+                marginBottom: '16px'
+              }}>Totales por Tipo de Venta</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {Object.entries(totalesPorTipo).map(([tipo, monto]) => (
+                  <div key={tipo} style={{ 
+                    background: 'rgba(13, 148, 136, 0.08)',
+                    border: '1px solid rgba(13, 148, 136, 0.22)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontFamily: FONTS.body
+                  }}>
+                    <div style={{ fontSize: '0.9rem', color: COLORS.textLight, fontWeight: 500 }}>{tipo}</div>
+                    <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0d9488', marginTop: '4px' }}>S/ {Number(monto).toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div style={cardGlassStyle}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: FONTS.heading, color: COLORS.text }}>Comprobantes</h3>
@@ -744,7 +796,7 @@ const CuadreCaja = () => {
               onClick={handleRetiro}
               disabled={loading}
             >Retirar</button>
-            {/* <button
+            <button
               style={{ 
                 background: COLORS.secondary, 
                 color: COLORS.white, 
@@ -761,7 +813,7 @@ const CuadreCaja = () => {
               }}
               onClick={handleCrearNuevaCaja}
               disabled={loading}
-            >Crear Nueva Caja</button> */}
+            >Crear Nueva Caja</button>
             {error && <div style={{ marginTop: '8px', color: COLORS.error, fontWeight: 600, fontFamily: FONTS.body }}>{error}</div>}
             {success && <div style={{ marginTop: '8px', color: COLORS.success, fontWeight: 600, fontFamily: FONTS.body }}>{success}</div>}
           </div>

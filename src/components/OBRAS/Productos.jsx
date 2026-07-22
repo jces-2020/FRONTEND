@@ -1836,28 +1836,9 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
     });
   }, []);
 
-  // Dimensiones reales de plancha/barra desde categoria_detalle (null = aún cargando)
-  const [dimsVidrio,   setDimsVidrio]   = useState(null);
-  const [dimsAluminio, setDimsAluminio] = useState(null);
-
-  useEffect(() => {
-    fetch('/api/categorias/detalles')
-      .then(r => r.json())
-      .then(d => {
-        let foundVid = false, foundAl = false;
-        if (d?.data) d.data.forEach(det => {
-          const n = (det.categoria_nombre || '').toUpperCase();
-          if (n.includes('VIDRIO')) { setDimsVidrio(det); foundVid = true; }
-          if (n.includes('ALUMIN')) { setDimsAluminio(det); foundAl = true; }
-        });
-        if (!foundVid) setDimsVidrio({ plancha_ancho_cm: 300, plancha_alto_cm: 300 });
-        if (!foundAl)  setDimsAluminio({ barra_largo_cm: 300 });
-      })
-      .catch(() => {
-        setDimsVidrio({ plancha_ancho_cm: 300, plancha_alto_cm: 300 });
-        setDimsAluminio({ barra_largo_cm: 300 });
-      });
-  }, []);
+  // Dimensiones base de plancha/barra para la optimización; sin dependencia del detalle de categoría legado.
+  const dimsVidrio = { plancha_ancho_cm: 300, plancha_alto_cm: 300 };
+  const dimsAluminio = { barra_largo_cm: 300 };
 
   const largoBarraCm = Number(dimsAluminio?.barra_largo_cm || 300);
 

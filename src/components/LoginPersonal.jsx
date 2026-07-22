@@ -260,6 +260,7 @@ const LoginPersonal = () => {
         setMensaje('¡Ingreso exitoso!'); setAutenticado(true); setAreaUsuario(form.area);
         try { localStorage.setItem('usuario', JSON.stringify({ nombre:form.nombre, codigo:form.codigo, rol:form.area })); } catch {}
         try { if (data.token) localStorage.setItem('personalToken', data.token); } catch {}
+
         const an = normalizarArea(form.area);
         if (an === 'ALMACEN')        { navigate('/almacen');       return; }
         if (an === 'ADMINISTRACION') { navigate('/administracion'); return; }
