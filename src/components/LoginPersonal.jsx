@@ -261,17 +261,6 @@ const LoginPersonal = () => {
         try { localStorage.setItem('usuario', JSON.stringify({ nombre:form.nombre, codigo:form.codigo, rol:form.area })); } catch {}
         try { if (data.token) localStorage.setItem('personalToken', data.token); } catch {}
 
-        try {
-          const an = normalizarArea(form.area);
-          if (an === 'VENTAS') {
-            await fetch('/api/caja/abrir', {
-              method:'POST',
-              headers:{ 'Content-Type':'application/json' },
-              body: JSON.stringify({ turno: 'diurno' })
-            }).catch(() => undefined);
-          }
-        } catch {}
-
         const an = normalizarArea(form.area);
         if (an === 'ALMACEN')        { navigate('/almacen');       return; }
         if (an === 'ADMINISTRACION') { navigate('/administracion'); return; }

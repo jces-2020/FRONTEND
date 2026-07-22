@@ -488,7 +488,7 @@ const CuadreCaja = () => {
       apiFetch("/api/caja/crear-nueva", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ turno: "diurno" })
+        body: JSON.stringify({ turno: "diurno", caja_id: cajaId })
       })
         .then(res => res.json())
         .then(data => {
@@ -788,7 +788,7 @@ const CuadreCaja = () => {
               onClick={handleRetiro}
               disabled={loading}
             >Retirar</button>
-            {/* <button
+            <button
               style={{ 
                 background: COLORS.secondary, 
                 color: COLORS.white, 
@@ -805,7 +805,7 @@ const CuadreCaja = () => {
               }}
               onClick={handleCrearNuevaCaja}
               disabled={loading}
-            >Crear Nueva Caja</button> */}
+            >Crear Nueva Caja</button>
             {error && <div style={{ marginTop: '8px', color: COLORS.error, fontWeight: 600, fontFamily: FONTS.body }}>{error}</div>}
             {success && <div style={{ marginTop: '8px', color: COLORS.success, fontWeight: 600, fontFamily: FONTS.body }}>{success}</div>}
           </div>
