@@ -12,6 +12,7 @@ const CuadreCaja = () => {
   const [busqueda, setBusqueda] = useState("");
   const [retiro, setRetiro] = useState("");
   const [baseCaja, setBaseCaja] = useState(0);
+  const [cajaId, setCajaId] = useState(null);
   const [baseCajaAnimada, setBaseCajaAnimada] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -36,6 +37,7 @@ const CuadreCaja = () => {
     totalesPorTipo: data?.totales_por_tipo || {},
     comprobantes: Array.isArray(data?.comprobantes) ? data.comprobantes : [],
     cantidadEnCaja: Number(data?.cantidad_en_caja || 0),
+    cajaId: data?.caja_id || null,
     retiros: Array.isArray(data?.retiros) ? data.retiros : [],
   });
 
@@ -60,6 +62,7 @@ const CuadreCaja = () => {
     setTotalesPorTipo(data.totalesPorTipo);
     setComprobantes(data.comprobantes);
     setBaseCaja(data.cantidadEnCaja);
+    setCajaId(data.cajaId);
     setRetiros(data.retiros);
 
     if (desdeStream) {
@@ -238,7 +241,7 @@ const CuadreCaja = () => {
     apiFetch("/api/caja/retiro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ monto: Number(retiro), usuario }),
+      body: JSON.stringify({ monto: Number(retiro), usuario, caja_id: cajaId }),
     })
       .then(res => res.json())
       .then(data => {
