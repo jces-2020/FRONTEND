@@ -464,15 +464,19 @@ const CuadreCaja = () => {
       </html>`;
 
     const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:none;visibility:hidden;';
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;border:none;';
     document.body.appendChild(iframe);
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     doc.open();
     doc.write(html);
     doc.close();
     setTimeout(() => {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch {
+        window.open('', '_blank', 'noopener,noreferrer');
+      }
       setTimeout(() => document.body.removeChild(iframe), 1200);
     }, 300);
   };
