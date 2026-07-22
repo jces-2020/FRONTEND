@@ -55,6 +55,20 @@ const CuadreCaja = () => {
     timeoutPulsoRef.current = setTimeout(() => setPulsoRealtime(false), 850);
   };
 
+  const resetearArqueoLocal = (nextCajaId = null) => {
+    setTotales({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
+    setTotalesAnimados({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
+    setTotalesPorTipo({});
+    setComprobantes([]);
+    setBaseCaja(0);
+    setBaseCajaAnimada(0);
+    setCajaId(nextCajaId);
+    setRetiros([]);
+    setRetiro("");
+    setError("");
+    setSuccess("");
+  };
+
   const aplicarCuadreCaja = (rawData, options = {}) => {
     const { desdeStream = false } = options;
     const data = normalizarCuadreData(rawData);
@@ -493,16 +507,10 @@ const CuadreCaja = () => {
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            setSuccess(data.message || "Nueva caja creada exitosamente");
-            // Recargar cuadre con la nueva caja (cantidad = 0, sin retiros)
-            setTimeout(() => {
-              apiFetch("/api/caja/cuadre")
-                .then(res => res.json())
-                .then(cuadreData => {
-                  aplicarCuadreCaja(cuadreData);
-                  setSuccess("");
-                });
-            }, 1500);
+            const nuevaCajaId = data?.nueva_caja?.id_caja || null;
+            resetearArqueoLocal(nuevaCajaId);
+            setSuccess("Nuevo turno iniciado. El arqueo quedó en cero.");
+            setTimeout(() => setSuccess(""), 3500);
           } else {
             setError(data.message || "Error al crear nueva caja");
           }
