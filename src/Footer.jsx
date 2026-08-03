@@ -19,6 +19,7 @@ function Footer() {
   }, []);
 
   if (!showFooter) return null;
+  return null; // Footer deshabilitado temporalmente
 
   return (
     <footer
