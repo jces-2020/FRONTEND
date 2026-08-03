@@ -683,6 +683,28 @@ const Carrito = () => {
         </table>
       </div>
 
+      {carritoLocal.length > 0 && (
+        <div
+          className="cart-entry-soft"
+          style={{
+            marginTop: 14,
+            padding: '12px 16px',
+            borderRadius: 12,
+            textAlign: 'center',
+            fontFamily: FONTS.body,
+            fontWeight: 600,
+            fontSize: 14,
+            border: totalBruto > 1000 ? '1px solid #86efac' : '1px solid #fdba74',
+            background: totalBruto > 1000 ? 'linear-gradient(120deg, #ecfdf5, #d1fae5)' : 'linear-gradient(120deg, #fff7ed, #ffedd5)',
+            color: totalBruto > 1000 ? '#166534' : '#9a3412',
+          }}
+        >
+          {totalBruto > 1000
+            ? 'Usted superó los S/ 1000, se le otorgará el envío.'
+            : 'Usted no supera los S/ 1000, acérquese a recoger sus productos mientras la tienda lo prepara.'}
+        </div>
+      )}
+
       {showCortesDrawer && corteEnEdicion && (
         <CortesDrawer
           producto={{ ...corteEnEdicion, precio_unitario: corteEnEdicion.precio_m2 ?? corteEnEdicion.precio_unitario }}
