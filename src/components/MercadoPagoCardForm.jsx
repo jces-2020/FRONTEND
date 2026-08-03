@@ -191,6 +191,22 @@ export default function MercadoPagoCardForm({
   useEffect(() => {
     const storedEmail = localStorage.getItem('cliente_correo') || '';
     if (storedEmail) setPayerEmail(storedEmail);
+
+    const jwt = localStorage.getItem('auth_token');
+    if (!jwt) return;
+    fetch('/api/clientes/me', { headers: { Authorization: `Bearer ${jwt}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const cliente = data?.cliente;
+        if (!cliente) return;
+        if (cliente.correo) setPayerEmail(cliente.correo);
+        const docDigits = String(cliente.documento || '').replace(/\D/g, '');
+        if (docDigits) {
+          setIdentificationType(docDigits.length === 11 ? 'RUC' : 'DNI');
+          setIdentificationNumber(docDigits.slice(0, 12));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
