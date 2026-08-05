@@ -5,7 +5,7 @@ import MercadoPagoWallet from './MercadoPagoWallet';
 import MercadoPagoOtros from './MercadoPagoOtros';
 
 const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-31db4b36-66c5-4017-a197-d65775a236d4';
-const USE_TEST_MODE = true;
+const USE_TEST_MODE = false;
 const SHOW_METHODS = true;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TEST_CARD_DETAILS = {

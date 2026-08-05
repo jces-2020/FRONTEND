@@ -2,7 +2,7 @@
 import { COLORS, FONTS } from '../colors';
 
 const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-31db4b36-66c5-4017-a197-d65775a236d4';
-const USE_TEST_MODE = true;
+const USE_TEST_MODE = false;
 const TEST_YAPE_PHONE = '111111111';
 const TEST_YAPE_OTP = '123456';
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -147,6 +147,10 @@ export default function MercadoPagoYape({
         setIsProcessing(false);
         return;
       }
+      const jwt = localStorage.getItem('auth_token');
+      if (!jwt) throw new Error('Se cerró su sesión, vuelva a ingresar.');
+      const emailCliente = payerEmail.trim() || localStorage.getItem('cliente_correo') || '';
+
       const payloadYape = {
         carrito_id: carritoId,
         cliente_id: clienteId,
@@ -161,7 +165,7 @@ export default function MercadoPagoYape({
 
       const res = await fetch('/api/pagos/procesar_pago', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
         body: JSON.stringify(payloadYape)
       });
       if (res.status === 401) { handleExpiredSession(); return; }
@@ -348,12 +352,13 @@ export default function MercadoPagoYape({
           {errors.yapeOtp && <ErrorNotice message={errors.yapeOtp} />}
         </div>
 
-        {/* Info test */}
-        <div style={{ background: 'linear-gradient(135deg, rgba(0,20,50,0.95), rgba(0,35,70,0.98))', border: '1px solid rgba(128,194,220,0.5)', borderRadius: 10, padding: '8px 12px', fontSize: 11, color: '#cbe8ff', fontFamily: FONTS.body, lineHeight: 1.5, boxShadow: '0 0 14px rgba(128,194,220,0.2), 0 4px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(128,194,220,0.12)' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#80C2DC', color: '#00233f', fontSize: 11, fontWeight: 800, marginRight: 7, verticalAlign: 'middle' }}>i</span>
-          <strong style={{ color: '#d9f0ff' }}>Test:</strong>{' '}
-          <span style={{ color: '#cbe8ff' }}>cel. 111111111 / OTP: 123456</span>
-        </div>
+        {USE_TEST_MODE && (
+          <div style={{ background: 'linear-gradient(135deg, rgba(0,20,50,0.95), rgba(0,35,70,0.98))', border: '1px solid rgba(128,194,220,0.5)', borderRadius: 10, padding: '8px 12px', fontSize: 11, color: '#cbe8ff', fontFamily: FONTS.body, lineHeight: 1.5, boxShadow: '0 0 14px rgba(128,194,220,0.2), 0 4px 14px rgba(0,0,0,0.35), inset 0 1px 0 rgba(128,194,220,0.12)' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: '#80C2DC', color: '#00233f', fontSize: 11, fontWeight: 800, marginRight: 7, verticalAlign: 'middle' }}>i</span>
+            <strong style={{ color: '#d9f0ff' }}>Test:</strong>{' '}
+            <span style={{ color: '#cbe8ff' }}>cel. 111111111 / OTP: 123456</span>
+          </div>
+        )}
 
         {/* ── BOTÓN CON EFECTOS ── */}
         <button
