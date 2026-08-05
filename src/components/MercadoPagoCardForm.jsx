@@ -273,8 +273,8 @@ export default function MercadoPagoCardForm({
       if (expirationDate !== TEST_CARD_DETAILS.expiration) nextErrors.expirationDate = 'Fecha de expiración inválida';
       if (cvvDigits !== TEST_CARD_DETAILS.cvv) nextErrors.securityCode = 'CVV inválido';
       if (name.toUpperCase() !== TEST_CARD_DETAILS.name) nextErrors.cardholderName = 'Titular inválido';
-      const idDigits = identificationNumber.replace(/\D/g, '');
-      if (identificationType !== 'DNI' || idDigits !== TEST_CARD_DETAILS.dni) nextErrors.identificationNumber = 'DNI inválido';
+      const identificationError = getIdentificationError(identificationType, identificationNumber);
+      if (identificationError) nextErrors.identificationNumber = identificationError;
       return nextErrors;
     }
     if (cardDigits.length < 13 || cardDigits.length > 19) nextErrors.cardNumber = 'Ingresa una tarjeta válida';
