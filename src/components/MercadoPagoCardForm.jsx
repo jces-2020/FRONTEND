@@ -216,6 +216,18 @@ export default function MercadoPagoCardForm({
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
   }, [onPaymentError]);
 
+  // Script antifraude de Mercado Pago: genera window.MP_DEVICE_SESSION_ID,
+  // requerido por su motor de riesgo (PolicyAgent) para evaluar el pago.
+  useEffect(() => {
+    if (USE_TEST_MODE) return;
+    if (document.getElementById('mp-security-script')) return;
+    const script = document.createElement('script');
+    script.id = 'mp-security-script';
+    script.src = 'https://www.mercadopago.com/v2/security.js';
+    script.setAttribute('view', 'checkout');
+    document.body.appendChild(script);
+  }, []);
+
   useEffect(() => {
     const bin = cardNumber.replace(/\D/g, '').slice(0, 6);
     if (USE_TEST_MODE) {
@@ -352,6 +364,7 @@ export default function MercadoPagoCardForm({
         installments: selectedInstallment || 1,
         payer_email: emailCliente,
         payer_identification: { type: identificationType || 'DNI', number: identificationNumber.replace(/\D/g, '') },
+        device_id: window.MP_DEVICE_SESSION_ID || null,
       };
       const res = await fetch('/api/pagos/procesar_pago', {
         method: 'POST',
