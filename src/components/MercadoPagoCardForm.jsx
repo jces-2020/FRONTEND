@@ -375,6 +375,7 @@ export default function MercadoPagoCardForm({
       const data = await res.json();
       if (!data.success) {
         const errorMessage = data.error || data.message || JSON.stringify(data);
+        if (data.pending) throw new Error(errorMessage);
         const causeDetails = Array.isArray(data.cause)
           ? data.cause.map((c) => typeof c === 'object' ? (c.message || c.description || JSON.stringify(c)) : String(c)).filter(Boolean).join(' | ')
           : data.cause;
