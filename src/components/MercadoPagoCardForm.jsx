@@ -177,21 +177,28 @@ export default function MercadoPagoCardForm({
       .catch(() => {});
   }, []);
 
+  // onPaymentError llega como función nueva en cada render del padre (Carrito.jsx
+  // la define inline). Se lee vía ref para que este efecto NO dependa de su
+  // identidad: si dependiera de ella, cada re-render del padre reinicializaría
+  // el SDK y remontaría los Secure Fields, perdiendo lo que el usuario ya escribió.
+  const onPaymentErrorRef = useRef(onPaymentError);
+  useEffect(() => { onPaymentErrorRef.current = onPaymentError; }, [onPaymentError]);
+
   useEffect(() => {
     if (USE_TEST_MODE) return;
     const script = document.createElement('script');
     script.src = 'https://sdk.mercadopago.com/js/v2';
     script.async = true;
     script.onload = () => {
-      if (!window.MercadoPago) { onPaymentError('No se pudo cargar Mercado Pago SDK'); return; }
+      if (!window.MercadoPago) { onPaymentErrorRef.current('No se pudo cargar Mercado Pago SDK'); return; }
       const mpInstance = new window.MercadoPago(MP_PUBLIC_KEY, { locale: 'es-PE' });
       setMp(mpInstance);
       setMpLoaded(true);
     };
-    script.onerror = () => onPaymentError('No se pudo cargar Mercado Pago SDK');
+    script.onerror = () => onPaymentErrorRef.current('No se pudo cargar Mercado Pago SDK');
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
-  }, [onPaymentError]);
+  }, []);
 
   // Script antifraude de Mercado Pago: genera window.MP_DEVICE_SESSION_ID,
   // requerido por su motor de riesgo (PolicyAgent) para evaluar el pago.
@@ -325,11 +332,27 @@ export default function MercadoPagoCardForm({
         } catch {}
       }
       if (!fieldsReady) throw new Error('Los campos de la tarjeta aún no están listos, intenta de nuevo.');
-      const tokenResult = await mp.fields.createCardToken({
-        cardholderName: cardholderName.trim(),
-        identificationType,
-        identificationNumber: identificationNumber.replace(/\D/g, ''),
-      });
+      let tokenResult;
+      try {
+        tokenResult = await mp.fields.createCardToken({
+          cardholderName: cardholderName.trim(),
+          identificationType,
+          identificationNumber: identificationNumber.replace(/\D/g, ''),
+        });
+      } catch (tokenErr) {
+        // mp.fields.createCardToken rechaza con un array de errores de validación
+        // ({field, message}), no con un Error — se traduce a un mensaje legible.
+        if (Array.isArray(tokenErr) && tokenErr.length > 0) {
+          const emptyFields = new Set(
+            tokenErr.filter((e) => e?.cause === 'invalid_value').map((e) => e.field)
+          );
+          if (emptyFields.size > 0) {
+            throw new Error('Completa los datos de la tarjeta (número, vencimiento y CVV).');
+          }
+          throw new Error(tokenErr[0]?.message || 'Revisa los datos de la tarjeta.');
+        }
+        throw tokenErr instanceof Error ? tokenErr : new Error('No se pudo procesar la tarjeta.');
+      }
       const tokenId = tokenResult?.id || tokenResult?.card_token?.id;
       if (!tokenId) throw new Error('Error al crear Card Token');
       let paymentMethodToUse = paymentMethod;
