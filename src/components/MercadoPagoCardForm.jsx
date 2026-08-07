@@ -5,6 +5,7 @@ import MercadoPagoWallet from './MercadoPagoWallet';
 import MercadoPagoOtros from './MercadoPagoOtros';
 
 const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-31db4b36-66c5-4017-a197-d65775a236d4';
+const IS_SANDBOX = MP_PUBLIC_KEY.startsWith('TEST-');
 const USE_TEST_MODE = false;
 const SHOW_METHODS = true;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -110,7 +111,8 @@ const cardNumberDisplayStyle = (hasError) => ({
 const getIdentificationError = (identificationType, identificationNumber) => {
   const digits = identificationNumber.replace(/\D/g, '');
   if (!digits) return 'Ingresa tu número de documento';
-  if (identificationType === 'DNI' && digits.length !== 8) return 'El DNI debe tener 8 dígitos';
+  if (identificationType === 'DNI' && !IS_SANDBOX && digits.length !== 8) return 'El DNI debe tener 8 dígitos';
+  if (identificationType === 'DNI' && IS_SANDBOX && (digits.length < 8 || digits.length > 12)) return 'Documento de prueba inválido';
   if (identificationType === 'RUC' && digits.length !== 11) return 'El RUC debe tener 11 dígitos';
   if (identificationType === 'CE' && (digits.length < 8 || digits.length > 12)) return 'El CE debe tener entre 8 y 12 dígitos';
   return '';
