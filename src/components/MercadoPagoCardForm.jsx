@@ -356,13 +356,20 @@ export default function MercadoPagoCardForm({
         paymentMethodToUse = pmResponse.results?.[0] || null;
       }
       if (!paymentMethodToUse) throw new Error('No se pudo identificar la tarjeta');
+      // El issuer del bin lookup es solo un default; el emisor real y valido
+      // para esta tarjeta/ambiente se obtiene con getIssuers (flujo oficial).
+      let issuerId = paymentMethodToUse.issuer?.id?.toString() || null;
+      try {
+        const issuers = await mp.getIssuers({ paymentMethodId: paymentMethodToUse.id, bin: cardNumberValue.substring(0, 6) });
+        if (Array.isArray(issuers) && issuers.length > 0) issuerId = String(issuers[0].id);
+      } catch {}
       const body = {
         token: tokenId,
         carrito_id: carritoId,
         cliente_id: clienteIdLS,
         amount: total,
         payment_method_id: paymentMethodToUse.id,
-        issuer_id: paymentMethodToUse.issuer?.id?.toString() || null,
+        issuer_id: issuerId,
         installments: selectedInstallment || 1,
         payer_email: emailCliente,
         payer_identification: { type: identificationType || 'DNI', number: identificationNumber.replace(/\D/g, '') },
