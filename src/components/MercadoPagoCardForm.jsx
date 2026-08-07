@@ -9,13 +9,6 @@ const IS_SANDBOX = MP_PUBLIC_KEY.startsWith('TEST-');
 const USE_TEST_MODE = false;
 const SHOW_METHODS = true;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TEST_CARD_DETAILS = {
-  number: '4009175332806176',
-  expiration: '11/30',
-  cvv: '123',
-  name: 'APRO',
-  dni: '12345678',
-};
 const WATERMARK_LOGO = '/V.png';
 
 const inputStyle = (hasError) => ({
@@ -118,27 +111,6 @@ const getIdentificationError = (identificationType, identificationNumber) => {
   return '';
 };
 
-const getExpirationError = (expirationDate) => {
-  if (!/^\d{2}\/\d{2}$/.test(expirationDate)) return 'Usa el formato MM/AA';
-  const [monthText, yearText] = expirationDate.split('/');
-  const month = Number(monthText);
-  const year = Number(`20${yearText}`);
-  if (month < 1 || month > 12) return 'Mes inválido';
-  const now = new Date();
-  const expiry = new Date(year, month, 0, 23, 59, 59, 999);
-  if (expiry < now) return 'La tarjeta está vencida';
-  return '';
-};
-
-const getLocalPaymentMethodFromBin = (bin) => {
-  if (!bin || bin.length < 1) return null;
-  if (/^4/.test(bin)) return { id: 'visa', name: 'Visa', issuer: { id: 'visa' } };
-  if (/^5[1-5]/.test(bin) || /^2(?:2[2-9]|[3-6]\d|7[01])/.test(bin)) return { id: 'master', name: 'Mastercard', issuer: { id: 'master' } };
-  if (/^3[47]/.test(bin)) return { id: 'amex', name: 'American Express', issuer: { id: 'amex' } };
-  if (/^6(?:011|5)/.test(bin) || /^64[4-9]/.test(bin)) return { id: 'discover', name: 'Discover', issuer: { id: 'discover' } };
-  return { id: 'card', name: 'Tarjeta', issuer: { id: 'card' } };
-};
-
 export default function MercadoPagoCardForm({
   carritoId, clienteId, total, items = [],
   onPaymentSuccess, onPaymentError, onLoading,
@@ -148,9 +120,12 @@ export default function MercadoPagoCardForm({
   const [mp, setMp] = useState(null);
   const [paymentSuccess, setPaymentSuccess] = useState(null);
   const [payerEmail, setPayerEmail] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expirationDate, setExpirationDate] = useState('');
-  const [securityCode, setSecurityCode] = useState('');
+  const [currentBin, setCurrentBin] = useState('');
+  const [fieldsReady, setFieldsReady] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const cardNumberFieldRef = useRef(null);
+  const expirationDateFieldRef = useRef(null);
+  const securityCodeFieldRef = useRef(null);
   const [cardholderName, setCardholderName] = useState('');
   const [identificationType, setIdentificationType] = useState('DNI');
   const [identificationNumber, setIdentificationNumber] = useState('');
@@ -202,21 +177,28 @@ export default function MercadoPagoCardForm({
       .catch(() => {});
   }, []);
 
+  // onPaymentError llega como función nueva en cada render del padre (Carrito.jsx
+  // la define inline). Se lee vía ref para que este efecto NO dependa de su
+  // identidad: si dependiera de ella, cada re-render del padre reinicializaría
+  // el SDK y remontaría los Secure Fields, perdiendo lo que el usuario ya escribió.
+  const onPaymentErrorRef = useRef(onPaymentError);
+  useEffect(() => { onPaymentErrorRef.current = onPaymentError; }, [onPaymentError]);
+
   useEffect(() => {
     if (USE_TEST_MODE) return;
     const script = document.createElement('script');
     script.src = 'https://sdk.mercadopago.com/js/v2';
     script.async = true;
     script.onload = () => {
-      if (!window.MercadoPago) { onPaymentError('No se pudo cargar Mercado Pago SDK'); return; }
+      if (!window.MercadoPago) { onPaymentErrorRef.current('No se pudo cargar Mercado Pago SDK'); return; }
       const mpInstance = new window.MercadoPago(MP_PUBLIC_KEY, { locale: 'es-PE' });
       setMp(mpInstance);
       setMpLoaded(true);
     };
-    script.onerror = () => onPaymentError('No se pudo cargar Mercado Pago SDK');
+    script.onerror = () => onPaymentErrorRef.current('No se pudo cargar Mercado Pago SDK');
     document.body.appendChild(script);
     return () => { if (document.body.contains(script)) document.body.removeChild(script); };
-  }, [onPaymentError]);
+  }, []);
 
   // Script antifraude de Mercado Pago: genera window.MP_DEVICE_SESSION_ID,
   // requerido por su motor de riesgo (PolicyAgent) para evaluar el pago.
@@ -230,29 +212,67 @@ export default function MercadoPagoCardForm({
     document.body.appendChild(script);
   }, []);
 
+  // Secure Fields: los datos de tarjeta se capturan dentro de iframes de MP
+  // (nunca en el DOM de la página), cumpliendo PCI-DSS. Se montan una sola vez
+  // y quedan ocultos (display:none) al cambiar de método de pago, sin desmontarse.
   useEffect(() => {
-    const bin = cardNumber.replace(/\D/g, '').slice(0, 6);
-    if (USE_TEST_MODE) {
-      if (bin.length < 1) { setPaymentMethod(null); setDetectingCard(false); return; }
-      setDetectingCard(true);
-      setPaymentMethod(getLocalPaymentMethodFromBin(bin));
-      setDetectingCard(false);
-      return;
-    }
-    if (!mpLoaded || !mp) return;
-    if (bin.length < 6) { setPaymentMethod(null); setDetectingCard(false); return; }
+    if (!mp) return;
+    const cardNumberField = mp.fields.create('cardNumber', {
+      placeholder: '•••• •••• •••• ••••',
+      style: { color: '#ffffff', fontSize: '26px', fontFamily: FONTS.heading, placeholderColor: 'rgba(255,255,255,0.45)' },
+    });
+    const expirationDateField = mp.fields.create('expirationDate', {
+      placeholder: '12/30',
+      mode: 'short',
+      style: { color: '#ffffff', fontSize: '16px', fontFamily: FONTS.body, placeholderColor: 'rgba(255,255,255,0.45)' },
+    });
+    const securityCodeField = mp.fields.create('securityCode', {
+      placeholder: '123',
+      style: { color: '#ffffff', fontSize: '16px', fontFamily: FONTS.body, placeholderColor: 'rgba(255,255,255,0.45)' },
+    });
+
+    cardNumberField.mount('mp-cardNumber');
+    expirationDateField.mount('mp-expirationDate');
+    securityCodeField.mount('mp-securityCode');
+
+    cardNumberFieldRef.current = cardNumberField;
+    expirationDateFieldRef.current = expirationDateField;
+    securityCodeFieldRef.current = securityCodeField;
+
+    const onFieldError = (key) => (e) => {
+      setFieldErrors((prev) => ({ ...prev, [key]: e?.message || 'Revisa el dato de la tarjeta' }));
+    };
+    const onFieldValid = (key) => () => {
+      setFieldErrors((prev) => { if (!prev[key]) return prev; const next = { ...prev }; delete next[key]; return next; });
+    };
+    cardNumberField.on('error', onFieldError('cardNumber'));
+    cardNumberField.on('validityChange', onFieldValid('cardNumber'));
+    expirationDateField.on('error', onFieldError('expirationDate'));
+    expirationDateField.on('validityChange', onFieldValid('expirationDate'));
+    securityCodeField.on('error', onFieldError('securityCode'));
+    securityCodeField.on('validityChange', onFieldValid('securityCode'));
+    cardNumberField.on('binChange', (data) => {
+      const bin = (typeof data === 'string' ? data : data?.bin) || '';
+      setCurrentBin(bin);
+    });
+
+    setFieldsReady(true);
+  }, [mp]);
+
+  useEffect(() => {
+    if (!mp || currentBin.length < 6) { setPaymentMethod(null); setDetectingCard(false); return; }
     let cancelled = false;
     const detectPaymentMethod = async () => {
       try {
         setDetectingCard(true);
-        const pmResponse = await mp.getPaymentMethods({ bin });
+        const pmResponse = await mp.getPaymentMethods({ bin: currentBin });
         if (!cancelled) setPaymentMethod(pmResponse.results?.[0] || null);
       } catch { if (!cancelled) setPaymentMethod(null); }
       finally { if (!cancelled) setDetectingCard(false); }
     };
     detectPaymentMethod();
     return () => { cancelled = true; };
-  }, [cardNumber, mp, mpLoaded]);
+  }, [currentBin, mp]);
 
   useEffect(() => { setErrors({}); }, [showYape, showWallet, showOtros]);
 
@@ -265,39 +285,14 @@ export default function MercadoPagoCardForm({
     });
   };
 
-  const formatCardNumber = (value) => {
-    const digits = value.replace(/\D/g, '').slice(0, 19);
-    return digits.replace(/(.{4})/g, '$1 ').trim();
-  };
-
-  const formatExpirationDate = (value) => {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    if (digits.length <= 2) return digits;
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  };
-
   const validateCardForm = () => {
     const nextErrors = {};
-    const cardDigits = cardNumber.replace(/\D/g, '');
-    const cvvDigits = securityCode.replace(/\D/g, '');
     const name = cardholderName.trim();
     if (!emailRegex.test(payerEmail.trim())) nextErrors.payerEmail = 'Ingresa un correo válido';
-    if (USE_TEST_MODE) {
-      if (cardDigits !== TEST_CARD_DETAILS.number) nextErrors.cardNumber = 'Número de tarjeta inválido';
-      if (expirationDate !== TEST_CARD_DETAILS.expiration) nextErrors.expirationDate = 'Fecha de expiración inválida';
-      if (cvvDigits !== TEST_CARD_DETAILS.cvv) nextErrors.securityCode = 'CVV inválido';
-      if (name.toUpperCase() !== TEST_CARD_DETAILS.name) nextErrors.cardholderName = 'Titular inválido';
-      const identificationError = getIdentificationError(identificationType, identificationNumber);
-      if (identificationError) nextErrors.identificationNumber = identificationError;
-      return nextErrors;
-    }
-    if (cardDigits.length < 13 || cardDigits.length > 19) nextErrors.cardNumber = 'Ingresa una tarjeta válida';
-    const expirationError = getExpirationError(expirationDate);
-    if (expirationError) nextErrors.expirationDate = expirationError;
-    if (!/^\d{3,4}$/.test(cvvDigits)) nextErrors.securityCode = 'El CVV debe tener 3 o 4 dígitos';
     if (name.length < 2 || !/^[A-Za-zÁÉÍÓÚÑáéíóúñ\s]+$/.test(name)) nextErrors.cardholderName = 'Ingresa un nombre válido';
     const identificationError = getIdentificationError(identificationType, identificationNumber);
     if (identificationError) nextErrors.identificationNumber = identificationError;
+    if (Object.keys(fieldErrors).length > 0) nextErrors.cardNumber = 'Revisa los datos de la tarjeta';
     return nextErrors;
   };
 
@@ -336,23 +331,33 @@ export default function MercadoPagoCardForm({
           if (emailCliente) setPayerEmail(emailCliente);
         } catch {}
       }
-      const cardNumberValue = cardNumber.replace(/\s/g, '');
-      const [month, year] = expirationDate.split('/');
-      const tokenData = {
-        cardNumber: cardNumberValue,
-        cardholderName: cardholderName.trim(),
-        cardExpirationMonth: month.trim(),
-        cardExpirationYear: `20${year.trim()}`,
-        securityCode: securityCode.replace(/\D/g, ''),
-        identificationType,
-        identificationNumber: identificationNumber.replace(/\D/g, ''),
-      };
-      const tokenResult = await mp.createCardToken(tokenData);
+      if (!fieldsReady) throw new Error('Los campos de la tarjeta aún no están listos, intenta de nuevo.');
+      let tokenResult;
+      try {
+        tokenResult = await mp.fields.createCardToken({
+          cardholderName: cardholderName.trim(),
+          identificationType,
+          identificationNumber: identificationNumber.replace(/\D/g, ''),
+        });
+      } catch (tokenErr) {
+        // mp.fields.createCardToken rechaza con un array de errores de validación
+        // ({field, message}), no con un Error — se traduce a un mensaje legible.
+        if (Array.isArray(tokenErr) && tokenErr.length > 0) {
+          const emptyFields = new Set(
+            tokenErr.filter((e) => e?.cause === 'invalid_value').map((e) => e.field)
+          );
+          if (emptyFields.size > 0) {
+            throw new Error('Completa los datos de la tarjeta (número, vencimiento y CVV).');
+          }
+          throw new Error(tokenErr[0]?.message || 'Revisa los datos de la tarjeta.');
+        }
+        throw tokenErr instanceof Error ? tokenErr : new Error('No se pudo procesar la tarjeta.');
+      }
       const tokenId = tokenResult?.id || tokenResult?.card_token?.id;
       if (!tokenId) throw new Error('Error al crear Card Token');
       let paymentMethodToUse = paymentMethod;
-      if (!paymentMethodToUse) {
-        const pmResponse = await mp.getPaymentMethods({ bin: cardNumberValue.substring(0, 6) });
+      if (!paymentMethodToUse && currentBin.length >= 6) {
+        const pmResponse = await mp.getPaymentMethods({ bin: currentBin });
         paymentMethodToUse = pmResponse.results?.[0] || null;
       }
       if (!paymentMethodToUse) throw new Error('No se pudo identificar la tarjeta');
@@ -360,9 +365,12 @@ export default function MercadoPagoCardForm({
       // para esta tarjeta/ambiente se obtiene con getIssuers (flujo oficial).
       let issuerId = paymentMethodToUse.issuer?.id?.toString() || null;
       try {
-        const issuers = await mp.getIssuers({ paymentMethodId: paymentMethodToUse.id, bin: cardNumberValue.substring(0, 6) });
+        const issuers = await mp.getIssuers({ paymentMethodId: paymentMethodToUse.id, bin: currentBin });
         if (Array.isArray(issuers) && issuers.length > 0) issuerId = String(issuers[0].id);
       } catch {}
+      const nameParts = cardholderName.trim().split(/\s+/);
+      const payerFirstName = nameParts[0] || '';
+      const payerLastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
       const body = {
         token: tokenId,
         carrito_id: carritoId,
@@ -372,8 +380,17 @@ export default function MercadoPagoCardForm({
         issuer_id: issuerId,
         installments: selectedInstallment || 1,
         payer_email: emailCliente,
+        payer_first_name: payerFirstName,
+        payer_last_name: payerLastName,
         payer_identification: { type: identificationType || 'DNI', number: identificationNumber.replace(/\D/g, '') },
         device_id: window.MP_DEVICE_SESSION_ID || null,
+        items: items.map((it) => ({
+          id: it.id || it.producto_id || '',
+          title: it.nombre || it.title || 'Producto VIDRIOBRAS',
+          description: it.descripcion || it.nombre || it.title || 'Producto VIDRIOBRAS',
+          quantity: it.cantidad || it.quantity || 1,
+          unit_price: it.precio_unitario || it.unit_price || 0,
+        })),
       };
       const res = await fetch('/api/pagos/procesar_pago', {
         method: 'POST',
@@ -403,7 +420,7 @@ export default function MercadoPagoCardForm({
   };
 
   // Estado base del botón Pagar — se calcula antes del return
-  const btnDisabled = isProcessing || !mpLoaded;
+  const btnDisabled = isProcessing || !mpLoaded || !fieldsReady;
   const btnBaseStyle = {
     width: '100%',
     padding: '13px 16px',
@@ -554,23 +571,10 @@ export default function MercadoPagoCardForm({
       }}>
 
         {/* ── Panel izquierdo ── */}
-        {showYape ? (
-          <MercadoPagoYape carritoId={carritoId} clienteId={clienteId} total={total}
-            onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
-            onLoading={onLoading} onBack={() => setShowYape(false)} />
-        ) : showWallet ? (
-          <MercadoPagoWallet carritoId={carritoId} clienteId={clienteId} total={total} items={items}
-            onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
-            onLoading={onLoading} onBack={() => setShowWallet(false)} />
-        ) : showOtros ? (
-          <div style={{ display: 'grid', minWidth: 0, gap: 12, padding: 16, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.92) 0%,rgba(232,244,249,0.92) 100%)', border: '1px solid rgba(189,224,239,0.95)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85),0 14px 28px rgba(15,23,42,0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', animation: 'glassPaymentIn .26s ease' }}>
-            <div style={{ fontFamily: FONTS.heading, color: COLORS.secondaryDark, fontSize: 20, lineHeight: 1 }}>Otros métodos</div>
-            <MercadoPagoOtros carritoId={carritoId} clienteId={clienteId} total={total}
-              onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
-              onLoading={onLoading} onBack={() => setShowOtros(false)} embedded />
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} noValidate style={{ display: 'grid', minWidth: 0, gap: 12, padding: 16, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.92) 0%,rgba(232,244,249,0.92) 100%)', border: '1px solid rgba(189,224,239,0.95)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85),0 14px 28px rgba(15,23,42,0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', animation: 'glassPaymentIn .26s ease' }}>
+        {/* El formulario de tarjeta queda siempre montado (display:none si no
+            está activo) para no desmontar los iframes de Secure Fields de MP. */}
+        <div style={{ display: 'contents' }}>
+          <form onSubmit={handleSubmit} noValidate style={{ display: (showYape || showWallet || showOtros) ? 'none' : 'grid', minWidth: 0, gap: 12, padding: 16, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.92) 0%,rgba(232,244,249,0.92) 100%)', border: '1px solid rgba(189,224,239,0.95)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85),0 14px 28px rgba(15,23,42,0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', animation: 'glassPaymentIn .26s ease' }}>
             <div style={{ fontFamily: FONTS.heading, color: COLORS.secondaryDark, fontSize: 20, lineHeight: 1 }}>Tarjeta</div>
 
             {/* Fila correo / doc / num-doc */}
@@ -629,11 +633,11 @@ export default function MercadoPagoCardForm({
               </div>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ fontSize: 11, opacity: 0.78, fontFamily: FONTS.body, marginBottom: 6, letterSpacing: 1 }}>NÚMERO DE TARJETA</div>
-                <input className="mp-card-input" id="cardNumber" type="text" inputMode="numeric"
-                  placeholder="4509 9535 6623 3704" maxLength={23} required value={cardNumber}
-                  onChange={(e) => { setCardNumber(formatCardNumber(e.target.value)); clearError('cardNumber'); }}
-                  style={{ ...cardNumberDisplayStyle(Boolean(errors.cardNumber)), fontSize: isMobile ? 20 : (isTablet ? 24 : 30), letterSpacing: isMobile ? 1.2 : 2.4, padding: isMobile ? '10px 12px' : '12px 14px' }} />
-                {errors.cardNumber && <ErrorNotice message={errors.cardNumber} />}
+                {/* Secure Field de MP montado por mp.fields.create('cardNumber').mount() —
+                    el número de tarjeta nunca pasa por el DOM/JS de esta página (PCI-DSS). */}
+                <div id="mp-cardNumber" style={{ ...cardNumberDisplayStyle(Boolean(fieldErrors.cardNumber)), height: isMobile ? 44 : 54 }} />
+                {fieldErrors.cardNumber && <ErrorNotice message={fieldErrors.cardNumber} />}
+                {errors.cardNumber && !fieldErrors.cardNumber && <ErrorNotice message={errors.cardNumber} />}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 220px', gap: 16, position: 'relative', alignItems: 'end', zIndex: 1 }}>
                 <div>
@@ -646,22 +650,16 @@ export default function MercadoPagoCardForm({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <div>
                     <div style={{ fontSize: 11, opacity: 0.78, fontFamily: FONTS.body, marginBottom: 6, letterSpacing: 1 }}>VENCE</div>
-                    <input className="mp-card-input" id="expirationDate" type="text" inputMode="numeric"
-                      placeholder="12/30" maxLength={5} required value={expirationDate}
-                      onChange={(e) => { setExpirationDate(formatExpirationDate(e.target.value)); clearError('expirationDate'); }}
-                      style={cardInputStyle(Boolean(errors.expirationDate))} />
+                    <div id="mp-expirationDate" style={{ ...cardInputStyle(Boolean(fieldErrors.expirationDate)), height: 26 }} />
                   </div>
                   <div>
                     <div style={{ fontSize: 11, opacity: 0.78, fontFamily: FONTS.body, marginBottom: 6, letterSpacing: 1 }}>CVV</div>
-                    <input className="mp-card-input" id="securityCode" type="text" inputMode="numeric"
-                      placeholder="123" maxLength={4} required value={securityCode}
-                      onChange={(e) => { setSecurityCode(e.target.value.replace(/\D/g, '').slice(0, 4)); clearError('securityCode'); }}
-                      style={cardInputStyle(Boolean(errors.securityCode))} />
+                    <div id="mp-securityCode" style={{ ...cardInputStyle(Boolean(fieldErrors.securityCode)), height: 26 }} />
                   </div>
                 </div>
               </div>
-              {(errors.expirationDate || errors.securityCode) && (
-                <ErrorNotice message={errors.expirationDate || errors.securityCode} style={{ marginTop: -4 }} />
+              {(fieldErrors.expirationDate || fieldErrors.securityCode) && (
+                <ErrorNotice message={fieldErrors.expirationDate || fieldErrors.securityCode} style={{ marginTop: -4 }} />
               )}
             </div>
 
@@ -696,7 +694,26 @@ export default function MercadoPagoCardForm({
               </button>
             </div>
           </form>
-        )}
+
+          {showYape && (
+            <MercadoPagoYape carritoId={carritoId} clienteId={clienteId} total={total}
+              onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
+              onLoading={onLoading} onBack={() => setShowYape(false)} />
+          )}
+          {showWallet && (
+            <MercadoPagoWallet carritoId={carritoId} clienteId={clienteId} total={total} items={items}
+              onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
+              onLoading={onLoading} onBack={() => setShowWallet(false)} />
+          )}
+          {showOtros && (
+            <div style={{ display: 'grid', minWidth: 0, gap: 12, padding: 16, borderRadius: 20, background: 'linear-gradient(135deg,rgba(255,255,255,0.92) 0%,rgba(232,244,249,0.92) 100%)', border: '1px solid rgba(189,224,239,0.95)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85),0 14px 28px rgba(15,23,42,0.08)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', animation: 'glassPaymentIn .26s ease' }}>
+              <div style={{ fontFamily: FONTS.heading, color: COLORS.secondaryDark, fontSize: 20, lineHeight: 1 }}>Otros métodos</div>
+              <MercadoPagoOtros carritoId={carritoId} clienteId={clienteId} total={total}
+                onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
+                onLoading={onLoading} onBack={() => setShowOtros(false)} embedded />
+            </div>
+          )}
+        </div>
 
         {/* ── Panel derecho: Total + Métodos ── */}
         <div style={{ display: 'grid', gap: 12, alignContent: 'start', minWidth: 0 }}>
