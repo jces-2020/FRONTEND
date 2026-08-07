@@ -5,6 +5,7 @@ import MercadoPagoWallet from './MercadoPagoWallet';
 import MercadoPagoOtros from './MercadoPagoOtros';
 
 const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-31db4b36-66c5-4017-a197-d65775a236d4';
+const IS_SANDBOX = MP_PUBLIC_KEY.startsWith('TEST-');
 const USE_TEST_MODE = false;
 const SHOW_METHODS = true;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -110,7 +111,8 @@ const cardNumberDisplayStyle = (hasError) => ({
 const getIdentificationError = (identificationType, identificationNumber) => {
   const digits = identificationNumber.replace(/\D/g, '');
   if (!digits) return 'Ingresa tu número de documento';
-  if (identificationType === 'DNI' && digits.length !== 8) return 'El DNI debe tener 8 dígitos';
+  if (identificationType === 'DNI' && !IS_SANDBOX && digits.length !== 8) return 'El DNI debe tener 8 dígitos';
+  if (identificationType === 'DNI' && IS_SANDBOX && (digits.length < 8 || digits.length > 12)) return 'Documento de prueba inválido';
   if (identificationType === 'RUC' && digits.length !== 11) return 'El RUC debe tener 11 dígitos';
   if (identificationType === 'CE' && (digits.length < 8 || digits.length > 12)) return 'El CE debe tener entre 8 y 12 dígitos';
   return '';
@@ -354,13 +356,20 @@ export default function MercadoPagoCardForm({
         paymentMethodToUse = pmResponse.results?.[0] || null;
       }
       if (!paymentMethodToUse) throw new Error('No se pudo identificar la tarjeta');
+      // El issuer del bin lookup es solo un default; el emisor real y valido
+      // para esta tarjeta/ambiente se obtiene con getIssuers (flujo oficial).
+      let issuerId = paymentMethodToUse.issuer?.id?.toString() || null;
+      try {
+        const issuers = await mp.getIssuers({ paymentMethodId: paymentMethodToUse.id, bin: cardNumberValue.substring(0, 6) });
+        if (Array.isArray(issuers) && issuers.length > 0) issuerId = String(issuers[0].id);
+      } catch {}
       const body = {
         token: tokenId,
         carrito_id: carritoId,
         cliente_id: clienteIdLS,
         amount: total,
         payment_method_id: paymentMethodToUse.id,
-        issuer_id: paymentMethodToUse.issuer?.id?.toString() || null,
+        issuer_id: issuerId,
         installments: selectedInstallment || 1,
         payer_email: emailCliente,
         payer_identification: { type: identificationType || 'DNI', number: identificationNumber.replace(/\D/g, '') },
@@ -375,6 +384,7 @@ export default function MercadoPagoCardForm({
       const data = await res.json();
       if (!data.success) {
         const errorMessage = data.error || data.message || JSON.stringify(data);
+        if (data.pending) throw new Error(errorMessage);
         const causeDetails = Array.isArray(data.cause)
           ? data.cause.map((c) => typeof c === 'object' ? (c.message || c.description || JSON.stringify(c)) : String(c)).filter(Boolean).join(' | ')
           : data.cause;

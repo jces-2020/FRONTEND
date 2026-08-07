@@ -149,16 +149,21 @@ export default function MercadoPagoYape({
       }
       const jwt = localStorage.getItem('auth_token');
       if (!jwt) throw new Error('Se cerró su sesión, vuelva a ingresar.');
+      if (!mp) throw new Error('Mercado Pago SDK no está listo, intenta de nuevo.');
       const emailCliente = payerEmail.trim() || localStorage.getItem('cliente_correo') || '';
 
+      const yapeToken = await mp.yape({ otp: yapeOtp, phoneNumber: yapePhone }).create();
+      const tokenId = yapeToken?.id;
+      if (!tokenId) throw new Error('No se pudo generar el token de Yape, verifica el OTP.');
+
       const payloadYape = {
+        token: tokenId,
         carrito_id: carritoId,
         cliente_id: clienteId,
         amount: Number(total),
         payment_method_id: 'yape',
         payer_email: emailCliente,
         installments: 1,
-        // TOKEN BACKEND DESHABILITADO: no enviamos token de Mercado Pago
         yape_phone: yapePhone,
         yape_otp: yapeOtp
       };
