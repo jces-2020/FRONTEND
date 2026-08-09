@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { COLORS } from './colors';
 import { IconUser, IconShoppingCart, IconList, IconSearch, IconX } from '@tabler/icons-react';
-import { animate } from 'animejs';
 import MenuDesplegable from './MenuDesplegable';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
 import { useCartStore } from './stores/cartStore';
@@ -19,16 +18,28 @@ function Navbar() {
   useEffect(() => {
     if (!logoBgRef.current) return;
 
-    const animation = animate({
-      targets: logoBgRef.current,
-      backgroundPosition: ['0% 50%', '100% 50%'],
-      duration: 9000,
-      easing: 'linear',
-      direction: 'alternate',
-      loop: true,
+    let animation = null;
+    let cancelled = false;
+
+    import('animejs').then((mod) => {
+      if (cancelled || !logoBgRef.current) return;
+      animation = mod.animate({
+        targets: logoBgRef.current,
+        backgroundPosition: ['0% 50%', '100% 50%'],
+        duration: 9000,
+        easing: 'linear',
+        direction: 'alternate',
+        loop: true,
+      });
+    }).catch(() => {
+      // no interfiere si animejs no carga
     });
 
-    return () => animation.pause();
+    return () => {
+      cancelled = true;
+      if (animation?.pause) animation.pause();
+      if (animation?.cancel) animation.cancel();
+    };
   }, []);
 
   return (

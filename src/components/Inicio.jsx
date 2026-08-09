@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { animate } from 'animejs';
 import { useNavigate } from 'react-router-dom';
 import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
 import '../App.css';
@@ -496,16 +495,28 @@ function Inicio() {
   useEffect(() => {
     if (!heroBgRef.current) return;
 
-    const animation = animate({
-      targets: heroBgRef.current,
-      backgroundPosition: ['0% 50%', '100% 50%'],
-      duration: 12000,
-      easing: 'linear',
-      direction: 'alternate',
-      loop: true,
+    let animation = null;
+    let cancelled = false;
+
+    import('animejs').then((mod) => {
+      if (cancelled || !heroBgRef.current) return;
+      animation = mod.animate({
+        targets: heroBgRef.current,
+        backgroundPosition: ['0% 50%', '100% 50%'],
+        duration: 12000,
+        easing: 'linear',
+        direction: 'alternate',
+        loop: true,
+      });
+    }).catch(() => {
+      // si fallara la importación, no bloquea la app
     });
 
-    return () => animation.pause();
+    return () => {
+      cancelled = true;
+      if (animation?.pause) animation.pause();
+      if (animation?.cancel) animation.cancel();
+    };
   }, []);
 
   return (
