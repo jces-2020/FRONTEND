@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { animate } from 'animejs';
 import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
 import '../App.css';
 
@@ -449,11 +450,27 @@ function Inicio() {
   const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
+  const heroBgRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/servicios/random')
       .then(res => res.json())
       .then(data => { if (data.success) setServicios(data.data); });
+  }, []);
+
+  // Animación con animejs: el fondo (incluida la capa amarilla) detrás del logo "V" se desliza de arriba a abajo en loop
+  useEffect(() => {
+    if (!heroBgRef.current) return;
+
+    const anim = animate(heroBgRef.current, {
+      translateY: [-22, 22],
+      duration: 3000,
+      loop: true,
+      alternate: true,
+      ease: 'inOutSine',
+    });
+
+    return () => anim.pause();
   }, []);
 
   useEffect(() => {
@@ -489,35 +506,7 @@ function Inicio() {
     );
   };
 
-  const heroBgRef = useRef(null);
   const s = servicios;
-
-  useEffect(() => {
-    if (!heroBgRef.current) return;
-
-    let animation = null;
-    let cancelled = false;
-
-    import('animejs').then((mod) => {
-      if (cancelled || !heroBgRef.current) return;
-      animation = mod.animate({
-        targets: heroBgRef.current,
-        backgroundPosition: ['0% 50%', '100% 50%'],
-        duration: 12000,
-        easing: 'linear',
-        direction: 'alternate',
-        loop: true,
-      });
-    }).catch(() => {
-      // si fallara la importación, no bloquea la app
-    });
-
-    return () => {
-      cancelled = true;
-      if (animation?.pause) animation.pause();
-      if (animation?.cancel) animation.cancel();
-    };
-  }, []);
 
   return (
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
@@ -535,79 +524,79 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        <div
-          style={{
-            position: 'absolute',
-            top: '-5%',
-            right: 0,
-            width: '58%',
-            height: '108%',
-            transform: 'translateX(-100px)',
-            backgroundImage: `linear-gradient(
-              40deg,
-              hsl(50deg 100% 50%) 0%,
-              hsl(33deg 78% 45%) 15%,
-              hsl(0deg 72% 34%) 53%,
-              hsl(1deg 19% 54%) 80%,
-              hsl(197deg 57% 68%) 94%,
-              hsl(198deg 55% 85%) 99%,
-              hsl(0deg 0% 100%) 100%
-            )`,
-            opacity: 0.35,
-            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            filter: 'blur(240px)',
-            zIndex: 0,
-          }}
-        />
+        {/* Contenedor animado con animejs: agrupa las 3 capas de degradado (incluida la amarilla) que quedan detrás del logo "V" y las hace deslizar suavemente de arriba a abajo */}
+        <div ref={heroBgRef} style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
+          <div
+            style={{
+              position: 'absolute',
+              top: '-5%',
+              right: 0,
+              width: '58%',
+              height: '108%',
+              transform: 'translateX(-100px)',
+              backgroundImage: `linear-gradient(
+                40deg,
+                hsl(50deg 100% 50%) 0%,
+                hsl(33deg 78% 45%) 15%,
+                hsl(0deg 72% 34%) 53%,
+                hsl(1deg 19% 54%) 80%,
+                hsl(197deg 57% 68%) 94%,
+                hsl(198deg 55% 85%) 99%,
+                hsl(0deg 0% 100%) 100%
+              )`,
+              opacity: 0.35,
+              clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+              filter: 'blur(240px)',
+              zIndex: 0,
+            }}
+          />
 
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '48%',
-            height: '100%',
-            transform: 'translateX(-40px)',
-            backgroundImage: `linear-gradient(
-              40deg,
-              hsl(50deg 100% 50%) 0%,
-              hsl(33deg 78% 45%) 15%,
-              hsl(0deg 72% 34%) 53%,
-              hsl(1deg 19% 54%) 80%,
-              hsl(197deg 57% 68%) 94%,
-              hsl(198deg 55% 85%) 99%,
-              hsl(0deg 0% 100%) 100%
-            )`,
-            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            zIndex: 1,
-          }}
-        />
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '48%',
+              height: '100%',
+              transform: 'translateX(-40px)',
+              backgroundImage: `linear-gradient(
+                40deg,
+                hsl(50deg 100% 50%) 0%,
+                hsl(33deg 78% 45%) 15%,
+                hsl(0deg 72% 34%) 53%,
+                hsl(1deg 19% 54%) 80%,
+                hsl(197deg 57% 68%) 94%,
+                hsl(198deg 55% 85%) 99%,
+                hsl(0deg 0% 100%) 100%
+              )`,
+              clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+              zIndex: 1,
+            }}
+          />
 
-        <div
-          ref={heroBgRef}
-          style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            width: '48%',
-            height: '100%',
-            backgroundImage: `linear-gradient(
-              150deg,
-              hsl(0deg 72% 34%) 0%,
-              hsl(30deg 76% 43%) 15%,
-              hsl(46deg 89% 50%) 38%,
-              hsl(48deg 100% 71%) 62%,
-              hsl(47deg 100% 88%) 80%,
-              hsl(199deg 55% 96%) 92%,
-              hsl(198deg 55% 82%) 99%,
-              hsl(197deg 57% 68%) 100%
-            )`,
-            backgroundSize: '220% 220%',
-            backgroundRepeat: 'no-repeat',
-            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 30% 100%)',
-            zIndex: 2,
-          }}
-        />
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '48%',
+              height: '100%',
+              backgroundImage: `linear-gradient(
+                150deg,
+                hsl(0deg 72% 34%) 0%,
+                hsl(30deg 76% 43%) 15%,
+                hsl(46deg 89% 50%) 38%,
+                hsl(48deg 100% 71%) 62%,
+                hsl(47deg 100% 88%) 80%,
+                hsl(199deg 55% 96%) 92%,
+                hsl(198deg 55% 82%) 99%,
+                hsl(197deg 57% 68%) 100%
+              )`,
+              clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 30% 100%)',
+              zIndex: 2,
+            }}
+          />
+        </div>
 
         <img
           src="/R.png"
