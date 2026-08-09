@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { animate } from 'animejs';
 import { useNavigate } from 'react-router-dom';
 import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
 import '../App.css';
@@ -489,7 +490,23 @@ function Inicio() {
     );
   };
 
+  const heroBgRef = useRef(null);
   const s = servicios;
+
+  useEffect(() => {
+    if (!heroBgRef.current) return;
+
+    const animation = animate({
+      targets: heroBgRef.current,
+      backgroundPosition: ['0% 50%', '100% 50%'],
+      duration: 12000,
+      easing: 'linear',
+      direction: 'alternate',
+      loop: true,
+    });
+
+    return () => animation.pause();
+  }, []);
 
   return (
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
@@ -556,6 +573,7 @@ function Inicio() {
         />
 
         <div
+          ref={heroBgRef}
           style={{
             position: 'absolute',
             top: 0,
@@ -573,6 +591,8 @@ function Inicio() {
               hsl(198deg 55% 82%) 99%,
               hsl(197deg 57% 68%) 100%
             )`,
+            backgroundSize: '220% 220%',
+            backgroundRepeat: 'no-repeat',
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 30% 100%)',
             zIndex: 2,
           }}
