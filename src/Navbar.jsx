@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { COLORS } from './colors';
 import { IconUser, IconShoppingCart, IconList, IconSearch, IconX } from '@tabler/icons-react';
+import { animate } from 'animejs';
 import MenuDesplegable from './MenuDesplegable';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
 import { useCartStore } from './stores/cartStore';
@@ -10,9 +11,25 @@ import BrandIconButton from './components/UI/BrandIconButton';
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const logoBgRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const cartCount = useCartStore((s) => s.items.length);
+
+  useEffect(() => {
+    if (!logoBgRef.current) return;
+
+    const animation = animate({
+      targets: logoBgRef.current,
+      backgroundPosition: ['0% 50%', '100% 50%'],
+      duration: 9000,
+      easing: 'linear',
+      direction: 'alternate',
+      loop: true,
+    });
+
+    return () => animation.pause();
+  }, []);
 
   return (
     <>
@@ -22,14 +39,16 @@ function Navbar() {
       >
         <div className="flex items-center justify-between px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
           <div className="flex items-center flex-shrink-0">
-            <Link to="/">
-              <img
-                src="/LOGO.svg"
-                alt="Vidriobras Logo"
-                className="h-10 w-auto sm:h-14 lg:h-16 object-contain rounded cursor-pointer"
-                style={{ background: 'transparent', padding: 0 }}
-              />
-            </Link>
+            <div className="navbar-logo-bg rounded-2xl overflow-hidden" ref={logoBgRef}>
+              <Link to="/" className="block p-0">
+                <img
+                  src="/LOGO.svg"
+                  alt="Vidriobras Logo"
+                  className="h-10 w-auto sm:h-14 lg:h-16 object-contain rounded cursor-pointer"
+                  style={{ background: 'transparent', padding: 0 }}
+                />
+              </Link>
+            </div>
           </div>
 
           {location.pathname !== '/' && (
