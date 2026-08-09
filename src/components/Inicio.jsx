@@ -450,7 +450,9 @@ function Inicio() {
   const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
-  const heroBgRef = useRef(null);
+  const bgTopRef = useRef(null);
+  const bgBottomRef = useRef(null);
+  const logoRef = useRef(null);
 
   useEffect(() => {
     fetch('/api/servicios/random')
@@ -458,19 +460,33 @@ function Inicio() {
       .then(data => { if (data.success) setServicios(data.data); });
   }, []);
 
-  // Animación con animejs: el fondo (incluida la capa amarilla) detrás del logo "V" se desliza de arriba a abajo en loop
+  // Animación de entrada con animejs:
+  // - La capa superior del fondo (aura + degradado medio) baja deslizándose desde arriba
+  // - La capa inferior del fondo (degradado amarillo/rojo principal) sube deslizándose desde abajo
+  // - Cuando ambas se encuentran en el centro, aparece el logo "V"
   useEffect(() => {
-    if (!heroBgRef.current) return;
+    if (!bgTopRef.current || !bgBottomRef.current) return;
 
-    const anim = animate(heroBgRef.current, {
-      translateY: [-22, 22],
-      duration: 3000,
-      loop: true,
-      alternate: true,
-      ease: 'inOutSine',
+    animate(bgTopRef.current, {
+      translateY: ['-120%', '0%'],
+      duration: 900,
+      ease: 'outExpo',
     });
 
-    return () => anim.pause();
+    animate(bgBottomRef.current, {
+      translateY: ['120%', '0%'],
+      duration: 900,
+      ease: 'outExpo',
+    }).then(() => {
+      if (logoRef.current) {
+        animate(logoRef.current, {
+          opacity: [0, 1],
+          scale: [0.6, 1],
+          duration: 600,
+          ease: 'outBack',
+        });
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -524,8 +540,8 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Contenedor animado con animejs: agrupa las 3 capas de degradado (incluida la amarilla) que quedan detrás del logo "V" y las hace deslizar suavemente de arriba a abajo */}
-        <div ref={heroBgRef} style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
+        {/* Grupo superior: baja deslizándose desde arriba */}
+        <div ref={bgTopRef} style={{ position: 'absolute', inset: 0, transform: 'translateY(-120%)', willChange: 'transform' }}>
           <div
             style={{
               position: 'absolute',
@@ -573,7 +589,10 @@ function Inicio() {
               zIndex: 1,
             }}
           />
+        </div>
 
+        {/* Grupo inferior: sube deslizándose desde abajo (contiene la capa amarilla principal) */}
+        <div ref={bgBottomRef} style={{ position: 'absolute', inset: 0, transform: 'translateY(120%)', willChange: 'transform' }}>
           <div
             style={{
               position: 'absolute',
@@ -598,9 +617,7 @@ function Inicio() {
           />
         </div>
 
-        <img
-          src="/R.png"
-          alt="Logo R"
+        <div
           className="absolute w-[300px] md:w-[500px] lg:w-[700px] z-10"
           style={{
             top: '55%',
@@ -609,7 +626,14 @@ function Inicio() {
             minWidth: 300,
             maxWidth: 800,
           }}
-        />
+        >
+          <img
+            ref={logoRef}
+            src="/R.png"
+            alt="Logo R"
+            style={{ width: '100%', display: 'block', opacity: 0 }}
+          />
+        </div>
 
         <div className="relative z-20 max-w-2xl lg:max-w-3xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
           <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
