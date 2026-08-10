@@ -18,6 +18,7 @@ import Obras from './components/OBRAS/GestionObras';
 import PanelCliente from './components/PanelCliente';
 import DemoDisenoBarra from './components/DemoDisenoBarra';
 import AccesoQR from './components/AccesoQR';
+import PreviewComprobante from './components/PreviewComprobante';
 import { useEffect } from 'react';
 
 function AppLayout() {
@@ -115,6 +116,7 @@ function AppLayout() {
           <Route path="/user" element={<PanelCliente />} />
           <Route path="/panelcliente" element={<PanelCliente />} />
           <Route path="/demo-barra" element={<DemoDisenoBarra />} />
+          <Route path="/dev/comprobante" element={<PreviewComprobante />} />
           <Route path="/acceso" element={<AccesoQR />} />
         </Routes>
       </main>
