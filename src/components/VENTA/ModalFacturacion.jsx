@@ -207,7 +207,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
     const cargarClienteSesion = async () => {
       const nombreActual = normalizarNombre(clienteActual?.nombre);
       const documentoActual = soloDigitos(clienteActual?.documento);
-      const correoActual = normalizarCorreo(clienteActual?.correo) || generarCorreoTemporalDesdeNombre(nombreActual);
+      const correoActual = normalizarCorreo(clienteActual?.correo);
 
       let nombre = nombreActual || normalizarNombre(localStorage.getItem('cliente_nombre'));
       let correo = correoActual || normalizarCorreo(localStorage.getItem('cliente_correo'));
@@ -243,6 +243,8 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
         actual: documento,
       };
       setDocumentosSesion(docs);
+
+      if (!correo) correo = generarCorreoTemporalDesdeNombre(nombre);
 
       setForm((prev) => {
         const tipo = documento ? tipoPorDocumento(documento) : prev.tipo_comprobante;
