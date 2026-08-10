@@ -184,6 +184,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
   const [modalCredenciales, setModalCredenciales] = useState(null);
   const [credencialParaImprimir, setCredencialParaImprimir] = useState(null);
   const emisionEnCursoRef = useRef(false);
+  const direccionInputRef = useRef(null);
 
   const isMobile = viewportWidth < 768;
 
@@ -1353,11 +1354,13 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                   <label style={{ ...labelStyle, color: '#2e4a60' }}>Producto origen / Dirección completa</label>
                   <div style={inputWithIconWrapStyle}>
                     <span style={inputIconStyle}><IconMapPin size={14} stroke={1} /></span>
-                    <input 
-                      name="direccion" 
-                      required 
-                      value={form.direccion} 
-                      onChange={handleChange} 
+                    <input
+                      ref={direccionInputRef}
+                      name="direccion"
+                      required
+                      value={form.direccion}
+                      onChange={handleChange}
+                      autoComplete="off"
                       style={{...fieldStyle, background: '#fbfdff', paddingLeft: 38}}
                     />
                   </div>
@@ -1370,6 +1373,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                     longitud={form.longitud}
                     onChange={(u) => setForm((prev) => ({ ...prev, ...u }))}
                     apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                    inputRef={direccionInputRef}
                   />
                 </div>
 

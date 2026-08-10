@@ -18,7 +18,7 @@ function loadGoogleMapsScript(apiKey) {
       delete window[callbackName];
     };
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&v=weekly`;
     script.async = true;
     script.defer = true;
     script.onerror = () => reject(new Error('No se pudo cargar Google Maps'));
@@ -28,11 +28,12 @@ function loadGoogleMapsScript(apiKey) {
   return googleMapsPromise;
 }
 
-const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, apiKey }) => {
+const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, apiKey, inputRef }) => {
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const geocoderRef = useRef(null);
+  const autocompleteRef = useRef(null);
   const skipForwardGeocodeRef = useRef(false);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -62,25 +63,21 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     if (mapRef.current.getZoom() < 16) mapRef.current.setZoom(16);
   };
 
+  const reverseGeocodeClient = (lat, lng) => new Promise((resolve) => {
+    if (!geocoderRef.current) { resolve(null); return; }
+    geocoderRef.current.geocode({ location: { lat, lng } }, (results, status) => {
+      resolve(status === 'OK' && results?.[0] ? results[0].formatted_address : null);
+    });
+  });
+
   const handleCoordsPicked = async (lat, lng) => {
     setGeoNotice('');
-    try {
-      const res = await fetch('/api/reverse-geocode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng }),
-      });
-      const data = await res.json();
-      if (!data?.success) {
-        setGeoNotice(data?.message || 'No se pudo obtener la dirección desde Google Maps.');
-      }
-      const direccionResuelta = data?.success ? data.direccion : direccion;
-      skipForwardGeocodeRef.current = true;
-      onChangeRef.current({ direccion: direccionResuelta || direccion || '', referencia, latitud: lat, longitud: lng });
-    } catch {
-      skipForwardGeocodeRef.current = true;
-      onChangeRef.current({ direccion: direccion || '', referencia, latitud: lat, longitud: lng });
+    const direccionResuelta = await reverseGeocodeClient(lat, lng);
+    if (!direccionResuelta) {
+      setGeoNotice('No se pudo obtener la dirección para este punto.');
     }
+    skipForwardGeocodeRef.current = true;
+    onChangeRef.current({ direccion: direccionResuelta || direccion || '', referencia, latitud: lat, longitud: lng });
   };
 
   useEffect(() => {
@@ -110,6 +107,33 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     geocoderRef.current = new window.google.maps.Geocoder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapsReady]);
+
+  // Conecta el autocompletado de Google (lista de búsquedas) al input real de dirección
+  useEffect(() => {
+    if (!mapsReady || !inputRef?.current || autocompleteRef.current || !window.google?.maps?.places) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+      componentRestrictions: { country: 'pe' },
+      fields: ['formatted_address', 'geometry'],
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place?.geometry?.location) {
+        setGeoNotice('Selecciona una dirección de la lista de sugerencias.');
+        return;
+      }
+      setGeoNotice('');
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      moveMarkerTo(lat, lng);
+      skipForwardGeocodeRef.current = true;
+      onChangeRef.current({ direccion: place.formatted_address || direccion, referencia, latitud: lat, longitud: lng });
+    });
+
+    autocompleteRef.current = autocomplete;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapsReady, inputRef]);
 
   // Geocodifica hacia adelante cuando el usuario escribe la direccion manualmente
   useEffect(() => {
