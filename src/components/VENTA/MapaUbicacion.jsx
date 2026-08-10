@@ -71,6 +71,9 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
         body: JSON.stringify({ lat, lng }),
       });
       const data = await res.json();
+      if (!data?.success) {
+        setGeoNotice(data?.message || 'No se pudo obtener la dirección desde Google Maps.');
+      }
       const direccionResuelta = data?.success ? data.direccion : direccion;
       skipForwardGeocodeRef.current = true;
       onChangeRef.current({ direccion: direccionResuelta || direccion || '', referencia, latitud: lat, longitud: lng });
@@ -118,11 +121,14 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     const timer = setTimeout(() => {
       geocoderRef.current.geocode({ address: texto, region: 'pe' }, (results, status) => {
         if (status === 'OK' && results?.[0]) {
+          setGeoNotice('');
           const loc = results[0].geometry.location;
           const lat = loc.lat();
           const lng = loc.lng();
           moveMarkerTo(lat, lng);
           onChangeRef.current({ direccion, referencia, latitud: lat, longitud: lng });
+        } else if (status !== 'ZERO_RESULTS') {
+          setGeoNotice(`No se pudo ubicar la dirección en el mapa (${status}).`);
         }
       });
     }, 800);
