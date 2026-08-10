@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { COLORS, FONTS } from '../../colors';
 import { IconAlarm, IconDownload, IconExclamationMark, IconMail, IconMapPin, IconNotes, IconPencil, IconSquareAsterisk, IconUserFilled } from '@tabler/icons-react';
 import QRCodeLib from 'qrcode';
+import MapaUbicacion from './MapaUbicacion';
 
 const WATERMARK_LOGO = '/LOGO.svg';
 const TEMP_ACCESS_STORAGE_PREFIX = 'venta_servicio_temp_access:';
@@ -153,7 +154,10 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
     departamento: 'Junín',
     distrito: 'Huancayo',
     ubigeo: '120101',
-    correo: ''
+    correo: '',
+    referencia: '',
+    latitud: null,
+    longitud: null
   });
   
   const [departamentos, setDepartamentos] = useState(['Junín']);
@@ -708,7 +712,14 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
           correo: form.correo
         },
         productos: productosPayload,
-        totales
+        totales,
+        ubicacion: {
+          cliente_id: localStorage.getItem('cliente_id') || null,
+          direccion: form.direccion,
+          referencia: form.referencia || '',
+          latitud: form.latitud,
+          longitud: form.longitud
+        }
       };
 
       const response = await fetch('/api/facturacion/emitir', {
@@ -1351,6 +1362,15 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                     />
                   </div>
                   {renderFieldNotice('direccion')}
+
+                  <MapaUbicacion
+                    direccion={form.direccion}
+                    referencia={form.referencia}
+                    latitud={form.latitud}
+                    longitud={form.longitud}
+                    onChange={(u) => setForm((prev) => ({ ...prev, ...u }))}
+                    apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                  />
                 </div>
 
                 {/* SECCIÓN: UBICACIÓN */}
