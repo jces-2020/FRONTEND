@@ -65,7 +65,7 @@ const ErrorNotice = ({ message }) => (
 );
 
 export default function MercadoPagoYape({
-  carritoId, clienteId, total, onPaymentSuccess, onPaymentError, onLoading, onBack
+  carritoId, clienteId, total, items = [], onPaymentSuccess, onPaymentError, onLoading, onBack
 }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [mpLoaded, setMpLoaded] = useState(USE_TEST_MODE);
@@ -156,6 +156,11 @@ export default function MercadoPagoYape({
       const tokenId = yapeToken?.id;
       if (!tokenId) throw new Error('No se pudo generar el token de Yape, verifica el OTP.');
 
+      const nombreCliente = (localStorage.getItem('cliente_nombre') || '').trim();
+      const nameParts = nombreCliente.split(/\s+/).filter(Boolean);
+      const payerFirstName = nameParts[0] || '';
+      const payerLastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+
       const payloadYape = {
         token: tokenId,
         carrito_id: carritoId,
@@ -163,9 +168,18 @@ export default function MercadoPagoYape({
         amount: Number(total),
         payment_method_id: 'yape',
         payer_email: emailCliente,
+        payer_first_name: payerFirstName,
+        payer_last_name: payerLastName,
         installments: 1,
         yape_phone: yapePhone,
-        yape_otp: yapeOtp
+        yape_otp: yapeOtp,
+        items: items.map((it) => ({
+          id: it.id || it.producto_id || '',
+          title: it.nombre || it.title || 'Producto VIDRIOBRAS',
+          description: it.descripcion || it.nombre || it.title || 'Producto VIDRIOBRAS',
+          quantity: it.cantidad || it.quantity || 1,
+          unit_price: it.precio_unitario || it.unit_price || 0,
+        })),
       };
 
       const res = await fetch('/api/pagos/procesar_pago', {

@@ -696,7 +696,7 @@ export default function MercadoPagoCardForm({
           </form>
 
           {showYape && (
-            <MercadoPagoYape carritoId={carritoId} clienteId={clienteId} total={total}
+            <MercadoPagoYape carritoId={carritoId} clienteId={clienteId} total={total} items={items}
               onPaymentSuccess={onPaymentSuccess} onPaymentError={onPaymentError}
               onLoading={onLoading} onBack={() => setShowYape(false)} />
           )}
