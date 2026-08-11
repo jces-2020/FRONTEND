@@ -1190,7 +1190,7 @@ const Obras = () => {
       const isServicio = String(n.tipo || '').toUpperCase() === 'SERVICIO';
       const endpoint = isServicio
         ? `/api/admin/notificaciones/${n.id}`
-        : `/api/admin/pedidos/${n.carrito_id}`;
+        : `/api/admin/pedidos/${n.carrito_id}?notif_id=${encodeURIComponent(n.id)}`;
       const r = await fetch(endpoint, { method:'DELETE', headers:authHeaders() });
       const j = await r.json();
       if (r.status === 409) {
