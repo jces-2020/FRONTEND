@@ -7,7 +7,7 @@ import MapaUbicacion from './MapaUbicacion';
 const WATERMARK_LOGO = '/LOGO.svg';
 const TEMP_ACCESS_STORAGE_PREFIX = 'venta_servicio_temp_access:';
 
-const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyle, menuZIndex = 20, onOpenChange, menuMaxHeight = 180, prefixIcon = null }) => {
+const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyle, menuZIndex = 20, onOpenChange, menuMaxHeight = 180, prefixIcon = null, direction = 'down' }) => {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -81,7 +81,9 @@ const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyl
       <div
         style={{
           position: 'absolute',
-          top: 'calc(100% + 8px)',
+          ...(direction === 'up'
+            ? { bottom: 'calc(100% + 8px)', top: 'auto' }
+            : { top: 'calc(100% + 8px)', bottom: 'auto' }),
           left: 0,
           right: 0,
           background: 'rgba(255,255,255,0.98)',
@@ -89,10 +91,10 @@ const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyl
           boxShadow: '0 14px 26px rgba(32, 91, 127, 0.18)',
           overflow: 'hidden',
           overflowY: open ? 'auto' : 'hidden',
-          transformOrigin: 'top center',
+          transformOrigin: direction === 'up' ? 'bottom center' : 'top center',
           transition: 'opacity 0.22s ease, transform 0.22s ease, max-height 0.22s ease',
           opacity: open ? 1 : 0,
-          transform: open ? 'translateY(0) scaleY(1)' : 'translateY(-8px) scaleY(0.92)',
+          transform: open ? 'translateY(0) scaleY(1)' : `translateY(${direction === 'up' ? 8 : -8}px) scaleY(0.92)`,
           maxHeight: open ? menuMaxHeight : 0,
           pointerEvents: open ? 'auto' : 'none',
           scrollbarWidth: 'thin',
@@ -160,8 +162,6 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
     longitud: null
   });
   
-  const [departamentos, setDepartamentos] = useState(['Junín']);
-  const [provinciasDisponibles, setProvinciasDisponibles] = useState(['Huancayo']);
   const [distritosDisponibles, setDistritosDisponibles] = useState(['Huancayo']);
   const [ubigeoData, setUbigeoData] = useState(null);
   
@@ -184,6 +184,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
   const [modalCredenciales, setModalCredenciales] = useState(null);
   const [credencialParaImprimir, setCredencialParaImprimir] = useState(null);
   const emisionEnCursoRef = useRef(false);
+  const direccionInputRef = useRef(null);
 
   const isMobile = viewportWidth < 768;
 
@@ -273,16 +274,13 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
         if (data.success && data.data) {
           setUbigeoData(data.data);
           const defaults = data.data.defaults || {};
-          const departamentosApi = data.data.departamentos || ['Junín'];
-          const departamentoInicial = defaults.departamento || departamentosApi[0] || 'Junín';
-          const provinciasJunin = data.data.provincias_por_departamento?.[departamentoInicial] || ['Huancayo'];
-          const provinciaInicial = defaults.provincia || provinciasJunin[0] || 'Huancayo';
+          // Entregas solo en Huancayo: departamento y provincia quedan fijos.
+          const departamentoInicial = 'Junín';
+          const provinciaInicial = 'Huancayo';
           const distritosIni = data.data.distritos_por_provincia?.[provinciaInicial] || ['Huancayo'];
           const distritoInicial = defaults.distrito || distritosIni[0] || 'Huancayo';
-          const ubigeoInicial = defaults.ubigeo || data.data.ubigeos?.[`${departamentoInicial}|${provinciaInicial}|${distritoInicial}`] || '120101';
+          const ubigeoInicial = data.data.ubigeos?.[`${departamentoInicial}|${provinciaInicial}|${distritoInicial}`] || defaults.ubigeo || '120101';
 
-          setDepartamentos(departamentosApi);
-          setProvinciasDisponibles(provinciasJunin);
           setDistritosDisponibles(distritosIni);
           setForm((prev) => ({
             ...prev,
@@ -420,6 +418,16 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
     return JSON.stringify(safeProductos, null, 2);
   }, [productosLocales]);
 
+  const normalizarTexto = (valor) => String(valor || '')
+    .toUpperCase()
+    .trim()
+    .replace(/[ÁÀÄÂ]/g, 'A')
+    .replace(/[ÉÈËÊ]/g, 'E')
+    .replace(/[ÍÌÏÎ]/g, 'I')
+    .replace(/[ÓÒÖÔ]/g, 'O')
+    .replace(/[ÚÙÜÛ]/g, 'U')
+    .replace(/Ñ/g, 'N');
+
   const resolverUbigeo = (departamento, provincia, distrito) => {
     return ubigeoData?.ubigeos?.[`${departamento}|${provincia}|${distrito}`] || form.ubigeo || '120101';
   };
@@ -436,35 +444,6 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
           documento: value === 'factura' ? '' : (documentosSesion.dni || prev.documento),
         };
       });
-    }
-    else if (name === 'departamento') {
-      const srcProvincias = ubigeoData?.provincias_por_departamento || {};
-      const srcDistritos = ubigeoData?.distritos_por_provincia || {};
-      const nuevasProvincias = srcProvincias[value] || [];
-      const nuevaProvincia = nuevasProvincias[0] || value;
-      const nuevosDistritos = srcDistritos[nuevaProvincia] || [];
-      const nuevoDistrito = nuevosDistritos[0] || nuevaProvincia;
-      const nuevoUbigeo = resolverUbigeo(value, nuevaProvincia, nuevoDistrito);
-      
-      setProvinciasDisponibles(nuevasProvincias);
-      setDistritosDisponibles(nuevosDistritos);
-      
-      setForm((prev) => ({ 
-        ...prev, 
-        [name]: value,
-        provincia: nuevaProvincia,
-        distrito: nuevoDistrito,
-        ubigeo: nuevoUbigeo
-      }));
-    } 
-    else if (name === 'provincia') {
-      const srcDistritos = ubigeoData?.distritos_por_provincia || {};
-      const nuevosDistritos = srcDistritos[value] || [];
-      const nuevoDistrito = nuevosDistritos[0] || value;
-      const nuevoUbigeo = resolverUbigeo(form.departamento, value, nuevoDistrito);
-      
-      setDistritosDisponibles(nuevosDistritos);
-      setForm((prev) => ({ ...prev, [name]: value, distrito: nuevoDistrito, ubigeo: nuevoUbigeo }));
     }
     else if (name === 'distrito') {
       const nuevoUbigeo = resolverUbigeo(form.departamento, form.provincia, value);
@@ -1353,11 +1332,13 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                   <label style={{ ...labelStyle, color: '#2e4a60' }}>Producto origen / Dirección completa</label>
                   <div style={inputWithIconWrapStyle}>
                     <span style={inputIconStyle}><IconMapPin size={14} stroke={1} /></span>
-                    <input 
-                      name="direccion" 
-                      required 
-                      value={form.direccion} 
-                      onChange={handleChange} 
+                    <input
+                      ref={direccionInputRef}
+                      name="direccion"
+                      required
+                      value={form.direccion}
+                      onChange={handleChange}
+                      autoComplete="off"
                       style={{...fieldStyle, background: '#fbfdff', paddingLeft: 38}}
                     />
                   </div>
@@ -1368,8 +1349,23 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                     referencia={form.referencia}
                     latitud={form.latitud}
                     longitud={form.longitud}
-                    onChange={(u) => setForm((prev) => ({ ...prev, ...u }))}
+                    onChange={({ distritoSugerido, ...resto }) => {
+                      setForm((prev) => {
+                        let next = { ...prev, ...resto };
+                        const candidatos = Array.isArray(distritoSugerido) ? distritoSugerido : (distritoSugerido ? [distritoSugerido] : []);
+                        for (const candidato of candidatos) {
+                          const objetivo = normalizarTexto(candidato);
+                          const match = distritosDisponibles.find((d) => normalizarTexto(d) === objetivo);
+                          if (match) {
+                            next = { ...next, distrito: match, ubigeo: resolverUbigeo(prev.departamento, prev.provincia, match) };
+                            break;
+                          }
+                        }
+                        return next;
+                      });
+                    }}
                     apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                    inputRef={direccionInputRef}
                   />
                 </div>
 
@@ -1381,37 +1377,14 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                   padding: '12px 14px',
                 }}>
                   <div style={{ fontFamily: FONTS.heading, fontSize: 12, fontWeight: 700, color: '#2f556d', marginBottom: 10, letterSpacing: '0.08em' }}>UBICACIÓN</div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 10, marginBottom: 10 }}>
-                    <div>
-                      <label style={labelStyle}>Departamento</label>
-                      <AnimatedSelect
-                        name="departamento"
-                        value={form.departamento}
-                        onChange={handleChange}
-                        onOpenChange={(open) => setActiveSelect(open ? 'departamento' : '')}
-                        options={departamentos}
-                        shellStyle={getSelectShellStyle('departamento')}
-                        buttonStyle={{...fieldStyle, background: '#fbfdff'}}
-                        menuZIndex={50}
-                      />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Provincia</label>
-                      <AnimatedSelect
-                        name="provincia"
-                        value={form.provincia}
-                        onChange={handleChange}
-                        onOpenChange={(open) => setActiveSelect(open ? 'provincia' : '')}
-                        options={provinciasDisponibles}
-                        shellStyle={getSelectShellStyle('provincia')}
-                        buttonStyle={{...fieldStyle, background: '#fbfdff'}}
-                        menuZIndex={49}
-                      />
-                    </div>
-                  </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 10 }}>
+                    <div>
+                      <label style={labelStyle}>Provincia</label>
+                      <div style={{...fieldStyle, background: '#f4f8fc', display: 'flex', alignItems: 'center', color: '#5b7f98', fontWeight: 600}}>
+                        Huancayo
+                      </div>
+                    </div>
                     <div>
                       <label style={labelStyle}>Distrito</label>
                       <AnimatedSelect
@@ -1424,17 +1397,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                         buttonStyle={{...fieldStyle, background: '#fbfdff'}}
                         menuZIndex={48}
                         menuMaxHeight={132}
-                      />
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Ubigeo</label>
-                      <input 
-                        name="ubigeo" 
-                        required 
-                        value={form.ubigeo} 
-                        onChange={handleChange} 
-                        readOnly
-                        style={{...fieldStyle, background: '#f4f8fc', letterSpacing: '0.06em'}}
+                        direction="up"
                       />
                     </div>
                   </div>

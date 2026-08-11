@@ -3,6 +3,21 @@ import { IconCurrentLocation, IconMapPin } from '@tabler/icons-react';
 import { FONTS } from '../../colors';
 
 const DEFAULT_CENTER = { lat: -12.0686, lng: -75.2103 }; // Huancayo
+const HUANCAYO_BOUNDS = { south: -12.30, west: -75.35, north: -11.85, east: -74.95 };
+
+// Google suele taggear distritos como Chilca/El Tambo bajo "sublocality" en vez de
+// "locality" (que muchas veces devuelve el nombre genérico "Huancayo"). Probamos
+// varias fuentes en orden de especificidad y dejamos que el llamador elija la que matchee.
+function extractDistritoCandidatos(components) {
+  if (!Array.isArray(components)) return [];
+  const tiposPrioridad = ['sublocality_level_1', 'sublocality', 'locality', 'administrative_area_level_3'];
+  const candidatos = [];
+  tiposPrioridad.forEach((tipo) => {
+    const comp = components.find((c) => c.types?.includes(tipo));
+    if (comp?.long_name && !candidatos.includes(comp.long_name)) candidatos.push(comp.long_name);
+  });
+  return candidatos;
+}
 
 let googleMapsPromise = null;
 
@@ -18,7 +33,7 @@ function loadGoogleMapsScript(apiKey) {
       delete window[callbackName];
     };
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=${callbackName}&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}&v=weekly`;
     script.async = true;
     script.defer = true;
     script.onerror = () => reject(new Error('No se pudo cargar Google Maps'));
@@ -28,11 +43,13 @@ function loadGoogleMapsScript(apiKey) {
   return googleMapsPromise;
 }
 
-const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, apiKey }) => {
+const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, apiKey, inputRef }) => {
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const geocoderRef = useRef(null);
+  const autocompleteRef = useRef(null);
+  const boundsRef = useRef(null);
   const skipForwardGeocodeRef = useRef(false);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -62,25 +79,31 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     if (mapRef.current.getZoom() < 16) mapRef.current.setZoom(16);
   };
 
+  const reverseGeocodeClient = (lat, lng) => new Promise((resolve) => {
+    if (!geocoderRef.current) { resolve(null); return; }
+    geocoderRef.current.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === 'OK' && results?.[0]) {
+        resolve({ direccion: results[0].formatted_address, distritos: extractDistritoCandidatos(results[0].address_components) });
+      } else {
+        resolve(null);
+      }
+    });
+  });
+
   const handleCoordsPicked = async (lat, lng) => {
     setGeoNotice('');
-    try {
-      const res = await fetch('/api/reverse-geocode', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng }),
-      });
-      const data = await res.json();
-      if (!data?.success) {
-        setGeoNotice(data?.message || 'No se pudo obtener la dirección desde Google Maps.');
-      }
-      const direccionResuelta = data?.success ? data.direccion : direccion;
-      skipForwardGeocodeRef.current = true;
-      onChangeRef.current({ direccion: direccionResuelta || direccion || '', referencia, latitud: lat, longitud: lng });
-    } catch {
-      skipForwardGeocodeRef.current = true;
-      onChangeRef.current({ direccion: direccion || '', referencia, latitud: lat, longitud: lng });
+    const resultado = await reverseGeocodeClient(lat, lng);
+    if (!resultado) {
+      setGeoNotice('No se pudo obtener la dirección para este punto.');
     }
+    skipForwardGeocodeRef.current = true;
+    onChangeRef.current({
+      direccion: resultado?.direccion || direccion || '',
+      referencia,
+      latitud: lat,
+      longitud: lng,
+      distritoSugerido: resultado?.distritos || [],
+    });
   };
 
   useEffect(() => {
@@ -108,8 +131,47 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     mapRef.current = map;
     markerRef.current = marker;
     geocoderRef.current = new window.google.maps.Geocoder();
+    boundsRef.current = new window.google.maps.LatLngBounds(
+      { lat: HUANCAYO_BOUNDS.south, lng: HUANCAYO_BOUNDS.west },
+      { lat: HUANCAYO_BOUNDS.north, lng: HUANCAYO_BOUNDS.east }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapsReady]);
+
+  // Conecta el autocompletado de Google (lista de búsquedas) al input real de dirección
+  useEffect(() => {
+    if (!mapsReady || !inputRef?.current || autocompleteRef.current || !window.google?.maps?.places) return;
+
+    const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+      componentRestrictions: { country: 'pe' },
+      fields: ['formatted_address', 'geometry', 'address_components'],
+      bounds: boundsRef.current,
+      strictBounds: true,
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place?.geometry?.location) {
+        setGeoNotice('Selecciona una dirección de la lista de sugerencias.');
+        return;
+      }
+      setGeoNotice('');
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      moveMarkerTo(lat, lng);
+      skipForwardGeocodeRef.current = true;
+      onChangeRef.current({
+        direccion: place.formatted_address || direccion,
+        referencia,
+        latitud: lat,
+        longitud: lng,
+        distritoSugerido: extractDistritoCandidatos(place.address_components),
+      });
+    });
+
+    autocompleteRef.current = autocomplete;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapsReady, inputRef]);
 
   // Geocodifica hacia adelante cuando el usuario escribe la direccion manualmente
   useEffect(() => {
@@ -119,14 +181,20 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     if (texto.length < 6) return;
 
     const timer = setTimeout(() => {
-      geocoderRef.current.geocode({ address: texto, region: 'pe' }, (results, status) => {
+      geocoderRef.current.geocode({ address: texto, region: 'pe', bounds: boundsRef.current }, (results, status) => {
         if (status === 'OK' && results?.[0]) {
           setGeoNotice('');
           const loc = results[0].geometry.location;
           const lat = loc.lat();
           const lng = loc.lng();
           moveMarkerTo(lat, lng);
-          onChangeRef.current({ direccion, referencia, latitud: lat, longitud: lng });
+          onChangeRef.current({
+            direccion,
+            referencia,
+            latitud: lat,
+            longitud: lng,
+            distritoSugerido: extractDistritoCandidatos(results[0].address_components),
+          });
         } else if (status !== 'ZERO_RESULTS') {
           setGeoNotice(`No se pudo ubicar la dirección en el mapa (${status}).`);
         }
