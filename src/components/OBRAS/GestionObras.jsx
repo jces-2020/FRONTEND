@@ -703,12 +703,6 @@ function FolderCard({
                 <CantidadChip estado={cantEstado}/>
               </div>
             )}
-            {isEntrega && n.carrito_estado && (
-              <div style={{ padding:'3px 10px',borderRadius:8,
-                background:'rgba(128,194,220,.06)',border:`1px solid ${T.border}` }}>
-                <Badge label={n.carrito_estado}/>
-              </div>
-            )}
           </div>
         )}
 
@@ -1085,27 +1079,28 @@ const Obras = () => {
       items.forEach(n => { p[n.carrito_id] = SENTINEL; });
       return { ...prev, ...p };
     });
-    // Máximo 4 requests simultáneos para no saturar Supabase
-    const fetchOne = async (n) => {
-      try {
-        const r = await fetch(`/api/admin/pedidos/${n.carrito_id}/detalle`, { headers:authHeaders() });
-        if (!r.ok) return { id:n.carrito_id, total:null };
-        const j = await r.json();
-        return { id:n.carrito_id, total:j.success ? (j.total_items ?? null) : null };
-      } catch { return { id:n.carrito_id, total:null }; }
-    };
-    const CHUNK = 4;
-    const allResults = [];
+    // Endpoint liviano (1 consulta por lote) en vez de pedir el detalle completo
+    // de cada pedido. Se piden en lotes secuenciales para no trabar la página.
+    const CHUNK = 8;
     for (let i = 0; i < items.length; i += CHUNK) {
       const chunk = items.slice(i, i + CHUNK);
-      const chunkResults = await Promise.allSettled(chunk.map(fetchOne));
-      allResults.push(...chunkResults);
+      const ids = chunk.map(n => n.carrito_id).join(',');
+      try {
+        const r = await fetch(`/api/admin/pedidos/cantidades?carrito_ids=${encodeURIComponent(ids)}`, { headers:authHeaders() });
+        const j = await r.json();
+        setCantMap(prev => {
+          const p = { ...prev };
+          chunk.forEach(n => { p[n.carrito_id] = j.success ? (j.cantidades?.[n.carrito_id] ?? 0) : null; });
+          return p;
+        });
+      } catch {
+        setCantMap(prev => {
+          const p = { ...prev };
+          chunk.forEach(n => { p[n.carrito_id] = null; });
+          return p;
+        });
+      }
     }
-    setCantMap(prev => {
-      const p = {};
-      allResults.forEach(r => { if (r.status==='fulfilled') p[r.value.id] = r.value.total; });
-      return { ...prev, ...p };
-    });
   }, [authHeaders]);
 
   /* Fetch notificaciones */
@@ -1244,10 +1239,15 @@ const Obras = () => {
   /* Effects */
   useEffect(() => { fetchNotifs(); }, [fetchNotifs]);
 
-  // Fetch cantidades cuando cambian las notifs (separado para no recrear fetchNotifs)
+  // Fetch cantidades solo de lo ya paginado (visible), no de toda la lista.
+  // A medida que se hace scroll y crece visibleCount, se piden las siguientes.
   useEffect(() => {
-    if (notifs.length > 0) fetchCantidades(notifs);
-  }, [notifs, fetchCantidades]);
+    const filteredNow = busqueda.trim()
+      ? notifs.filter(n => (n.nombre||'').toLowerCase().includes(busqueda.trim().toLowerCase()))
+      : notifs;
+    const paginatedNow = filteredNow.slice(0, visibleCount);
+    if (paginatedNow.length > 0) fetchCantidades(paginatedNow);
+  }, [notifs, visibleCount, busqueda, fetchCantidades]);
 
   // SSE removed — polling only
 
