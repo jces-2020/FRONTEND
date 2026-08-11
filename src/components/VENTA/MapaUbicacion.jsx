@@ -5,10 +5,18 @@ import { FONTS } from '../../colors';
 const DEFAULT_CENTER = { lat: -12.0686, lng: -75.2103 }; // Huancayo
 const HUANCAYO_BOUNDS = { south: -12.30, west: -75.35, north: -11.85, east: -74.95 };
 
-function extractLocality(components) {
-  if (!Array.isArray(components)) return '';
-  const comp = components.find((c) => c.types?.includes('locality'));
-  return comp?.long_name || '';
+// Google suele taggear distritos como Chilca/El Tambo bajo "sublocality" en vez de
+// "locality" (que muchas veces devuelve el nombre genérico "Huancayo"). Probamos
+// varias fuentes en orden de especificidad y dejamos que el llamador elija la que matchee.
+function extractDistritoCandidatos(components) {
+  if (!Array.isArray(components)) return [];
+  const tiposPrioridad = ['sublocality_level_1', 'sublocality', 'locality', 'administrative_area_level_3'];
+  const candidatos = [];
+  tiposPrioridad.forEach((tipo) => {
+    const comp = components.find((c) => c.types?.includes(tipo));
+    if (comp?.long_name && !candidatos.includes(comp.long_name)) candidatos.push(comp.long_name);
+  });
+  return candidatos;
 }
 
 let googleMapsPromise = null;
@@ -75,7 +83,7 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     if (!geocoderRef.current) { resolve(null); return; }
     geocoderRef.current.geocode({ location: { lat, lng } }, (results, status) => {
       if (status === 'OK' && results?.[0]) {
-        resolve({ direccion: results[0].formatted_address, distrito: extractLocality(results[0].address_components) });
+        resolve({ direccion: results[0].formatted_address, distritos: extractDistritoCandidatos(results[0].address_components) });
       } else {
         resolve(null);
       }
@@ -94,7 +102,7 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
       referencia,
       latitud: lat,
       longitud: lng,
-      distritoSugerido: resultado?.distrito || '',
+      distritoSugerido: resultado?.distritos || [],
     });
   };
 
@@ -157,7 +165,7 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
         referencia,
         latitud: lat,
         longitud: lng,
-        distritoSugerido: extractLocality(place.address_components),
+        distritoSugerido: extractDistritoCandidatos(place.address_components),
       });
     });
 
@@ -185,7 +193,7 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
             referencia,
             latitud: lat,
             longitud: lng,
-            distritoSugerido: extractLocality(results[0].address_components),
+            distritoSugerido: extractDistritoCandidatos(results[0].address_components),
           });
         } else if (status !== 'ZERO_RESULTS') {
           setGeoNotice(`No se pudo ubicar la dirección en el mapa (${status}).`);

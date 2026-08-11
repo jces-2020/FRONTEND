@@ -7,7 +7,7 @@ import MapaUbicacion from './MapaUbicacion';
 const WATERMARK_LOGO = '/LOGO.svg';
 const TEMP_ACCESS_STORAGE_PREFIX = 'venta_servicio_temp_access:';
 
-const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyle, menuZIndex = 20, onOpenChange, menuMaxHeight = 180, prefixIcon = null }) => {
+const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyle, menuZIndex = 20, onOpenChange, menuMaxHeight = 180, prefixIcon = null, direction = 'down' }) => {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef(null);
 
@@ -81,7 +81,9 @@ const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyl
       <div
         style={{
           position: 'absolute',
-          top: 'calc(100% + 8px)',
+          ...(direction === 'up'
+            ? { bottom: 'calc(100% + 8px)', top: 'auto' }
+            : { top: 'calc(100% + 8px)', bottom: 'auto' }),
           left: 0,
           right: 0,
           background: 'rgba(255,255,255,0.98)',
@@ -89,10 +91,10 @@ const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyl
           boxShadow: '0 14px 26px rgba(32, 91, 127, 0.18)',
           overflow: 'hidden',
           overflowY: open ? 'auto' : 'hidden',
-          transformOrigin: 'top center',
+          transformOrigin: direction === 'up' ? 'bottom center' : 'top center',
           transition: 'opacity 0.22s ease, transform 0.22s ease, max-height 0.22s ease',
           opacity: open ? 1 : 0,
-          transform: open ? 'translateY(0) scaleY(1)' : 'translateY(-8px) scaleY(0.92)',
+          transform: open ? 'translateY(0) scaleY(1)' : `translateY(${direction === 'up' ? 8 : -8}px) scaleY(0.92)`,
           maxHeight: open ? menuMaxHeight : 0,
           pointerEvents: open ? 'auto' : 'none',
           scrollbarWidth: 'thin',
@@ -1350,11 +1352,13 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                     onChange={({ distritoSugerido, ...resto }) => {
                       setForm((prev) => {
                         let next = { ...prev, ...resto };
-                        if (distritoSugerido) {
-                          const objetivo = normalizarTexto(distritoSugerido);
+                        const candidatos = Array.isArray(distritoSugerido) ? distritoSugerido : (distritoSugerido ? [distritoSugerido] : []);
+                        for (const candidato of candidatos) {
+                          const objetivo = normalizarTexto(candidato);
                           const match = distritosDisponibles.find((d) => normalizarTexto(d) === objetivo);
                           if (match) {
                             next = { ...next, distrito: match, ubigeo: resolverUbigeo(prev.departamento, prev.provincia, match) };
+                            break;
                           }
                         }
                         return next;
@@ -1393,6 +1397,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                         buttonStyle={{...fieldStyle, background: '#fbfdff'}}
                         menuZIndex={48}
                         menuMaxHeight={132}
+                        direction="up"
                       />
                     </div>
                   </div>
