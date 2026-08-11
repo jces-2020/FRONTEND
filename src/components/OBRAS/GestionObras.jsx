@@ -821,6 +821,16 @@ function DetailPanel({ detalle, loading, error, notifInfo, onClose, isMobile=fal
           <IconChevronRight size={11}/>
           {String(notifInfo?.id || '').slice(-8).toUpperCase() || '—'}
         </div>
+        {notifInfo?.descripcion && (
+          <div style={{ marginTop:12,padding:'10px 12px',borderRadius:11,...gc }}>
+            <div style={{ fontSize:9,fontWeight:700,letterSpacing:2,color:T.textDim,fontFamily:T.fontMono,marginBottom:4 }}>
+              DESCRIPCIÓN
+            </div>
+            <div style={{ fontSize:12.5,color:T.text,lineHeight:1.4,wordBreak:'break-word' }}>
+              {notifInfo.descripcion}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Cuerpo */}
