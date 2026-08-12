@@ -6,6 +6,13 @@ import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
 
+// ─── Estadísticas del HERO (se animan contando hasta el valor final) ────────
+const heroStats = [
+  { value: 7, suffix: '+', label: 'Años de experiencia' },
+  { value: 1000, suffix: '+', label: 'Proyectos entregados' },
+  { value: 1000, suffix: '+', label: 'Clientes' },
+];
+
 // ─── Botón Neon solo bordes superior e inferior ──────────────────────────────
 const NeonButton = ({ onClick, children }) => {
   const [hovered, setHovered] = useState(false);
@@ -115,6 +122,32 @@ const QS_GUTTER = 'max(24px, calc((100vw - 1000px) / 2))';
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
   const imgHeight = isMobile ? 260 : 420;
+  const imgRef = useRef(null);
+  const hasAnimated = useRef(false);
+
+  // Anima la imagen de Vidriobras (fade + deslizamiento) cuando entra en pantalla
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          animate(el, {
+            opacity: [0, 1],
+            translateX: [-40, 0],
+            duration: 900,
+            ease: 'outExpo',
+          });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
@@ -138,6 +171,7 @@ const QuienesSomos = () => {
             }}
           >
             <img
+              ref={imgRef}
               src="/paisaje.jpg"
               alt="Vidriobras instalación"
               style={{
@@ -149,6 +183,7 @@ const QuienesSomos = () => {
                 position: 'relative',
                 zIndex: 5,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                opacity: 0,
               }}
             />
             <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #80C2DC' }}>
@@ -424,7 +459,7 @@ const TestimonioCard = ({ item }) => (
   </div>
 );
 
-const Testimonios = ({ navigate }) => (
+const Testimonios = () => (
   <div className="w-full py-20" style={{ background: 'rgba(15,15,30,0.92)' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
       <SectionEyebrow
@@ -438,9 +473,6 @@ const Testimonios = ({ navigate }) => (
           <TestimonioCard key={t.nombre} item={t} />
         ))}
       </div>
-      <div className="mt-16 text-center" style={{ marginTop: 48, textAlign: 'center' }}>
-        <NeonButton onClick={() => navigate('/contacto')}>Más información</NeonButton>
-      </div>
     </div>
   </div>
 );
@@ -450,9 +482,12 @@ function Inicio() {
   const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
-  const bgTopRef = useRef(null);
-  const bgBottomRef = useRef(null);
+  const bgShadowRef = useRef(null); // aura difuminada (sombreado del degradado de atrás)
+  const bgBackRef = useRef(null);   // degradado de atrás
+  const bgFrontRef = useRef(null);  // degradado de adelante (el amarillo principal)
   const logoRef = useRef(null);
+  const vidrioPaintRef = useRef(null);
+  const statRefs = useRef([]);
 
   useEffect(() => {
     fetch('/api/servicios/random')
@@ -460,32 +495,68 @@ function Inicio() {
       .then(data => { if (data.success) setServicios(data.data); });
   }, []);
 
-  // Animación de entrada con animejs:
-  // - La capa superior del fondo (aura + degradado medio) baja deslizándose desde arriba
-  // - La capa inferior del fondo (degradado amarillo/rojo principal) sube deslizándose desde abajo
-  // - Cuando ambas se encuentran en el centro, aparece el logo "V"
+  // Animación de entrada con animejs (secuencial, responsiva con % en vez de px fijos):
+  // 1) Cae el degradado de ATRÁS
+  // 2) Cuando termina, cae el degradado de ADELANTE (el amarillo principal)
+  // 3) Cuando termina, cae el SOMBREADO (aura difuminada) del de atrás
+  // 4) Aparece el logo "V", se pinta "VIDRIO" y cuentan los números
   useEffect(() => {
-    if (!bgTopRef.current || !bgBottomRef.current) return;
+    if (!bgBackRef.current || !bgFrontRef.current || !bgShadowRef.current) return;
 
-    animate(bgTopRef.current, {
-      translateY: ['-120%', '0%'],
-      duration: 900,
-      ease: 'outExpo',
-    });
+    const isMobile = window.innerWidth < 768;
+    const fallDistance = isMobile ? '-90%' : '-140%';
+    const fallDuration = isMobile ? 550 : 700;
 
-    animate(bgBottomRef.current, {
-      translateY: ['120%', '0%'],
-      duration: 900,
+    animate(bgBackRef.current, {
+      translateY: [fallDistance, '0%'],
+      duration: fallDuration,
       ease: 'outExpo',
     }).then(() => {
-      if (logoRef.current) {
-        animate(logoRef.current, {
-          opacity: [0, 1],
-          scale: [0.6, 1],
-          duration: 600,
-          ease: 'outBack',
+      animate(bgFrontRef.current, {
+        translateY: [fallDistance, '0%'],
+        duration: fallDuration,
+        ease: 'outExpo',
+      }).then(() => {
+        animate(bgShadowRef.current, {
+          translateY: [fallDistance, '0%'],
+          duration: fallDuration,
+          ease: 'outExpo',
+        }).then(() => {
+          // El logo "V" aparece
+          if (logoRef.current) {
+            animate(logoRef.current, {
+              opacity: [0, 1],
+              scale: [0.6, 1],
+              duration: 600,
+              ease: 'outBack',
+            });
+          }
+
+          // "VIDRIO" se pinta de negro de izquierda a derecha
+          if (vidrioPaintRef.current) {
+            animate(vidrioPaintRef.current, {
+              width: ['0%', '100%'],
+              duration: 1100,
+              ease: 'inOutQuad',
+            });
+          }
+
+          // Los números del hero cuentan hasta su valor final
+          heroStats.forEach((stat, i) => {
+            const el = statRefs.current[i];
+            if (!el) return;
+            const counter = { val: 0 };
+            animate(counter, {
+              val: stat.value,
+              duration: 1400,
+              ease: 'outQuad',
+              onUpdate: () => {
+                el.textContent = Math.round(counter.val).toLocaleString('es-PE') + stat.suffix;
+              },
+            });
+          });
         });
-      }
+      });
     });
   }, []);
 
@@ -540,82 +611,86 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Grupo superior: baja deslizándose desde arriba */}
-        <div ref={bgTopRef} style={{ position: 'absolute', inset: 0, transform: 'translateY(-120%)', willChange: 'transform' }}>
-          <div
-            style={{
-              position: 'absolute',
-              top: '-5%',
-              right: 0,
-              width: '58%',
-              height: '108%',
-              transform: 'translateX(-100px)',
-              backgroundImage: `linear-gradient(
-                40deg,
-                hsl(50deg 100% 50%) 0%,
-                hsl(33deg 78% 45%) 15%,
-                hsl(0deg 72% 34%) 53%,
-                hsl(1deg 19% 54%) 80%,
-                hsl(197deg 57% 68%) 94%,
-                hsl(198deg 55% 85%) 99%,
-                hsl(0deg 0% 100%) 100%
-              )`,
-              opacity: 0.35,
-              clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
-              filter: 'blur(240px)',
-              zIndex: 0,
-            }}
-          />
+        {/* Degradado de ATRÁS: cae primero */}
+        <div
+          ref={bgBackRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: '3%',
+            width: '48%',
+            height: '100%',
+            transform: 'translateY(-140%)',
+            backgroundImage: `linear-gradient(
+              40deg,
+              hsl(50deg 100% 50%) 0%,
+              hsl(33deg 78% 45%) 15%,
+              hsl(0deg 72% 34%) 53%,
+              hsl(1deg 19% 54%) 80%,
+              hsl(197deg 57% 68%) 94%,
+              hsl(198deg 55% 85%) 99%,
+              hsl(0deg 0% 100%) 100%
+            )`,
+            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            zIndex: 1,
+            willChange: 'transform',
+          }}
+        />
 
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '48%',
-              height: '100%',
-              transform: 'translateX(-40px)',
-              backgroundImage: `linear-gradient(
-                40deg,
-                hsl(50deg 100% 50%) 0%,
-                hsl(33deg 78% 45%) 15%,
-                hsl(0deg 72% 34%) 53%,
-                hsl(1deg 19% 54%) 80%,
-                hsl(197deg 57% 68%) 94%,
-                hsl(198deg 55% 85%) 99%,
-                hsl(0deg 0% 100%) 100%
-              )`,
-              clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
-              zIndex: 1,
-            }}
-          />
-        </div>
+        {/* Degradado de ADELANTE (amarillo principal): cae cuando termina el de atrás */}
+        <div
+          ref={bgFrontRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            width: '48%',
+            height: '100%',
+            transform: 'translateY(-140%)',
+            backgroundImage: `linear-gradient(
+              150deg,
+              hsl(0deg 72% 34%) 0%,
+              hsl(30deg 76% 43%) 15%,
+              hsl(46deg 89% 50%) 38%,
+              hsl(48deg 100% 71%) 62%,
+              hsl(47deg 100% 88%) 80%,
+              hsl(199deg 55% 96%) 92%,
+              hsl(198deg 55% 82%) 99%,
+              hsl(197deg 57% 68%) 100%
+            )`,
+            clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 30% 100%)',
+            zIndex: 2,
+            willChange: 'transform',
+          }}
+        />
 
-        {/* Grupo inferior: sube deslizándose desde abajo (contiene la capa amarilla principal) */}
-        <div ref={bgBottomRef} style={{ position: 'absolute', inset: 0, transform: 'translateY(120%)', willChange: 'transform' }}>
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '48%',
-              height: '100%',
-              backgroundImage: `linear-gradient(
-                150deg,
-                hsl(0deg 72% 34%) 0%,
-                hsl(30deg 76% 43%) 15%,
-                hsl(46deg 89% 50%) 38%,
-                hsl(48deg 100% 71%) 62%,
-                hsl(47deg 100% 88%) 80%,
-                hsl(199deg 55% 96%) 92%,
-                hsl(198deg 55% 82%) 99%,
-                hsl(197deg 57% 68%) 100%
-              )`,
-              clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 30% 100%)',
-              zIndex: 2,
-            }}
-          />
-        </div>
+        {/* Sombreado (aura difuminada) del degradado de atrás: cae al final */}
+        <div
+          ref={bgShadowRef}
+          style={{
+            position: 'absolute',
+            top: '-5%',
+            right: '10%',
+            width: '58%',
+            height: '108%',
+            transform: 'translateY(-140%)',
+            backgroundImage: `linear-gradient(
+              40deg,
+              hsl(50deg 100% 50%) 0%,
+              hsl(33deg 78% 45%) 15%,
+              hsl(0deg 72% 34%) 53%,
+              hsl(1deg 19% 54%) 80%,
+              hsl(197deg 57% 68%) 94%,
+              hsl(198deg 55% 85%) 99%,
+              hsl(0deg 0% 100%) 100%
+            )`,
+            opacity: 0.35,
+            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            filter: 'blur(clamp(90px, 18vw, 240px))',
+            zIndex: 0,
+            willChange: 'transform',
+          }}
+        />
 
         <div
           className="absolute w-[300px] md:w-[500px] lg:w-[700px] z-10"
@@ -642,8 +717,25 @@ function Inicio() {
           </p>
 
           <h1 style={{ margin: '8px 0 0', lineHeight: 0.96 }}>
-            <span style={{ display: 'block', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
-              VIDRIO
+            <span style={{ display: 'block', position: 'relative', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, letterSpacing: '-0.01em' }}>
+              {/* Boceto base: contorno de "VIDRIO" */}
+              <span style={{ color: 'transparent', WebkitTextStroke: '2px rgba(18,19,26,0.25)' }}>VIDRIO</span>
+              {/* Capa que se "pinta" de negro de izquierda a derecha */}
+              <span
+                ref={vidrioPaintRef}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  display: 'inline-block',
+                  overflow: 'hidden',
+                  width: '0%',
+                  whiteSpace: 'nowrap',
+                  color: '#12131a',
+                }}
+              >
+                VIDRIO
+              </span>
             </span>
             <span
               style={{
@@ -694,15 +786,16 @@ function Inicio() {
           </div>
 
           <div style={{ display: 'flex', gap: 22, marginTop: 34, alignItems: 'stretch' }}>
-            {[
-              { valor: '7+', label: 'Años de experiencia' },
-              { valor: '1,000+', label: 'Proyectos entregados' },
-              { valor: '1,000+', label: 'Clientes' },
-            ].map((stat, i) => (
+            {heroStats.map((stat, i) => (
               <React.Fragment key={stat.label}>
                 {i > 0 && <div style={{ width: 2, background: '#941918', opacity: 0.35 }} />}
                 <div>
-                  <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#12131a' }}>{stat.valor}</p>
+                  <p
+                    ref={(el) => (statRefs.current[i] = el)}
+                    style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#12131a' }}
+                  >
+                    0{stat.suffix}
+                  </p>
                   <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#6b7280' }}>{stat.label}</p>
                 </div>
               </React.Fragment>
@@ -748,7 +841,7 @@ function Inicio() {
       </div>
 
       {/* TESTIMONIOS / EQUIPO */}
-      <Testimonios navigate={navigate} />
+      <Testimonios />
 
     </section>
   );
