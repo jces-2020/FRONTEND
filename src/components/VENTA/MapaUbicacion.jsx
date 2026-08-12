@@ -5,6 +5,13 @@ import { FONTS } from '../../colors';
 const DEFAULT_CENTER = { lat: -12.0686, lng: -75.2103 }; // Huancayo
 const HUANCAYO_BOUNDS = { south: -12.30, west: -75.35, north: -11.85, east: -74.95 };
 
+function estaDentroDeHuancayo(lat, lng) {
+  return (
+    lat >= HUANCAYO_BOUNDS.south && lat <= HUANCAYO_BOUNDS.north &&
+    lng >= HUANCAYO_BOUNDS.west && lng <= HUANCAYO_BOUNDS.east
+  );
+}
+
 // Google suele taggear distritos como Chilca/El Tambo bajo "sublocality" en vez de
 // "locality" (que muchas veces devuelve el nombre genérico "Huancayo"). Probamos
 // varias fuentes en orden de especificidad y dejamos que el llamador elija la que matchee.
@@ -51,6 +58,9 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
   const autocompleteRef = useRef(null);
   const boundsRef = useRef(null);
   const skipForwardGeocodeRef = useRef(false);
+  const lastValidPosRef = useRef(
+    (latitud && longitud) ? { lat: Number(latitud), lng: Number(longitud) } : DEFAULT_CENTER
+  );
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -92,6 +102,12 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
 
   const handleCoordsPicked = async (lat, lng) => {
     setGeoNotice('');
+    if (!estaDentroDeHuancayo(lat, lng)) {
+      setGeoNotice('Por ahora solo entregamos en Huancayo. Elige un punto dentro de la ciudad.');
+      moveMarkerTo(lastValidPosRef.current.lat, lastValidPosRef.current.lng);
+      return;
+    }
+    lastValidPosRef.current = { lat, lng };
     const resultado = await reverseGeocodeClient(lat, lng);
     if (!resultado) {
       setGeoNotice('No se pudo obtener la dirección para este punto.');
@@ -155,9 +171,14 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
         setGeoNotice('Selecciona una dirección de la lista de sugerencias.');
         return;
       }
-      setGeoNotice('');
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
+      if (!estaDentroDeHuancayo(lat, lng)) {
+        setGeoNotice('Por ahora solo entregamos en Huancayo. Elige una dirección dentro de la ciudad.');
+        return;
+      }
+      setGeoNotice('');
+      lastValidPosRef.current = { lat, lng };
       moveMarkerTo(lat, lng);
       skipForwardGeocodeRef.current = true;
       onChangeRef.current({
@@ -183,10 +204,15 @@ const MapaUbicacion = ({ direccion, referencia, latitud, longitud, onChange, api
     const timer = setTimeout(() => {
       geocoderRef.current.geocode({ address: texto, region: 'pe', bounds: boundsRef.current }, (results, status) => {
         if (status === 'OK' && results?.[0]) {
-          setGeoNotice('');
           const loc = results[0].geometry.location;
           const lat = loc.lat();
           const lng = loc.lng();
+          if (!estaDentroDeHuancayo(lat, lng)) {
+            setGeoNotice('Por ahora solo entregamos en Huancayo. Escribe una dirección dentro de la ciudad.');
+            return;
+          }
+          setGeoNotice('');
+          lastValidPosRef.current = { lat, lng };
           moveMarkerTo(lat, lng);
           onChangeRef.current({
             direccion,
