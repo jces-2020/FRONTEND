@@ -495,32 +495,37 @@ function Inicio() {
       .then(data => { if (data.success) setServicios(data.data); });
   }, []);
 
-  // Animación de entrada con animejs (secuencial, responsiva con % en vez de px fijos):
-  // 1) Cae el degradado de ATRÁS
-  // 2) Cuando termina, cae el degradado de ADELANTE (el amarillo principal)
-  // 3) Cuando termina, cae el SOMBREADO (aura difuminada) del de atrás
+  // Animación de entrada con animejs (secuencial, responsiva con % en vez de px fijos).
+  // Coreografía (menos "robotizada": cada capa se mueve en una dirección distinta y con rebote suave):
+  // 1) Cae desde arriba el degradado de ADELANTE (el amarillo, detrás del logo)
+  // 2) Sube desde abajo el degradado que al final queda como un triangulito fino (ATRÁS)
+  // 3) El SOMBREADO (aura difuminada) se asoma saliendo hacia la izquierda, de entre las dos anteriores
   // 4) Aparece el logo "V", se pinta "VIDRIO" y cuentan los números
   useEffect(() => {
     if (!bgBackRef.current || !bgFrontRef.current || !bgShadowRef.current) return;
 
     const isMobile = window.innerWidth < 768;
-    const fallDistance = isMobile ? '-90%' : '-140%';
-    const fallDuration = isMobile ? 550 : 700;
+    const vDist = isMobile ? '90%' : '140%';
+    const wobble = isMobile ? 2 : 4;
 
-    animate(bgBackRef.current, {
-      translateY: [fallDistance, '0%'],
-      duration: fallDuration,
-      ease: 'outExpo',
+    animate(bgFrontRef.current, {
+      translateY: [`-${vDist}`, '0%'],
+      rotate: [-wobble, 0],
+      duration: isMobile ? 620 : 800,
+      ease: 'outBack',
     }).then(() => {
-      animate(bgFrontRef.current, {
-        translateY: [fallDistance, '0%'],
-        duration: fallDuration,
-        ease: 'outExpo',
+      animate(bgBackRef.current, {
+        translateY: [vDist, '0%'],
+        rotate: [wobble, 0],
+        duration: isMobile ? 560 : 720,
+        ease: 'outBack',
       }).then(() => {
         animate(bgShadowRef.current, {
-          translateY: [fallDistance, '0%'],
-          duration: fallDuration,
-          ease: 'outExpo',
+          translateX: ['42%', '0%'],
+          opacity: [0, 0.35],
+          scale: [0.92, 1],
+          duration: isMobile ? 600 : 780,
+          ease: 'outCubic',
         }).then(() => {
           // El logo "V" aparece
           if (logoRef.current) {
@@ -611,7 +616,7 @@ function Inicio() {
           position: 'relative',
         }}
       >
-        {/* Degradado de ATRÁS: cae primero */}
+        {/* Degradado de ATRÁS (queda como un triangulito fino): sube desde abajo */}
         <div
           ref={bgBackRef}
           style={{
@@ -620,7 +625,7 @@ function Inicio() {
             right: '3%',
             width: '48%',
             height: '100%',
-            transform: 'translateY(-140%)',
+            transform: 'translateY(140%)',
             backgroundImage: `linear-gradient(
               40deg,
               hsl(50deg 100% 50%) 0%,
@@ -637,7 +642,7 @@ function Inicio() {
           }}
         />
 
-        {/* Degradado de ADELANTE (amarillo principal): cae cuando termina el de atrás */}
+        {/* Degradado de ADELANTE (amarillo principal): cae primero, desde arriba */}
         <div
           ref={bgFrontRef}
           style={{
@@ -664,7 +669,7 @@ function Inicio() {
           }}
         />
 
-        {/* Sombreado (aura difuminada) del degradado de atrás: cae al final */}
+        {/* Sombreado (aura difuminada) del degradado de atrás: se asoma al final, saliendo hacia la izquierda de entre las otras dos */}
         <div
           ref={bgShadowRef}
           style={{
@@ -673,7 +678,7 @@ function Inicio() {
             right: '10%',
             width: '58%',
             height: '108%',
-            transform: 'translateY(-140%)',
+            transform: 'translateX(42%)',
             backgroundImage: `linear-gradient(
               40deg,
               hsl(50deg 100% 50%) 0%,
@@ -684,7 +689,7 @@ function Inicio() {
               hsl(198deg 55% 85%) 99%,
               hsl(0deg 0% 100%) 100%
             )`,
-            opacity: 0.35,
+            opacity: 0,
             clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
             filter: 'blur(clamp(90px, 18vw, 240px))',
             zIndex: 0,
