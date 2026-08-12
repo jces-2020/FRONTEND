@@ -1,7 +1,3 @@
-etj-rgko-cnp
-
-JHOSEP CARLOS ELESCANO SOLIS
-18:02
 import { useEffect, useRef, useState } from 'react';
 import { IconCurrentLocation, IconMapPin } from '@tabler/icons-react';
 import { FONTS } from '../../colors';
