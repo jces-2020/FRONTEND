@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { animate } from 'animejs';
-import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
+import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconMapPin, IconArrowRight, IconChevronDown } from '@tabler/icons-react';
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
@@ -150,7 +150,7 @@ const QuienesSomos = () => {
   }, []);
 
   return (
-    <section className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
+    <section id="quienes-somos" className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
       <p style={{
         margin: '0 0 28px',
         paddingLeft: QS_GUTTER,
@@ -253,85 +253,142 @@ const productosData = [
   {
     nombre: 'Aluminio',
     descripcion: 'Perfiles, ventanas y estructuras de aluminio resistentes y de acabado premium.',
-    icono: IconRulerMeasure,
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/aluminios/Aluminio_Plateado_edit_d8a3e86b.png',
+    slug: 'aluminio',
     color: '#5a8ba8',
   },
   {
     nombre: 'Vidrio',
     descripcion: 'Vidrio templado, laminado y de seguridad en distintos espesores y acabados.',
-    icono: IconShieldCheck,
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/vidrios/Espejos-01_proc_30962e6b.png',
+    slug: 'vidrio',
     color: '#941918',
   },
   {
     nombre: 'Accesorios',
     descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
-    icono: IconSparkles,
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/acc_1_proc_2deaecae.png',
+    slug: 'accesorios',
     color: '#ad7d00',
   },
 ];
 
-const ProductCard = ({ item }) => {
-  const Icono = item.icono;
+// Tarjeta de producto con efecto 3D: el producto "flota" y sigue el mouse (tilt),
+// con sombra propia para dar profundidad. Al hacer click, navega a /productos
+// filtrado por esa categoría (esto activa el resaltado rojo que ya existe en Productos.jsx).
+const ProductCard = ({ item, navigate }) => {
   const [hovered, setHovered] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const cardRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    setTilt({ x: (0.5 - py) * 16, y: (px - 0.5) * 16 });
+  };
+
+  const handleLeave = () => {
+    setHovered(false);
+    setTilt({ x: 0, y: 0 });
+  };
+
   return (
     <div
-      style={{ position: 'relative', height: 240 }}
+      ref={cardRef}
+      onClick={() => navigate(`/productos?cat=${item.slug}`)}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleLeave}
+      role="button"
+      tabIndex={0}
+      style={{ position: 'relative', height: 300, cursor: 'pointer', perspective: 900 }}
     >
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: 22,
-        background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
-      }} />
-
+      {/* Panel de fondo con degradado de marca */}
       <div
         style={{
           position: 'absolute',
-          inset: '16px 16px 28px 16px',
-          borderRadius: 18,
-          background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 100%)`,
-          transform: hovered
-            ? 'perspective(700px) rotateX(0deg) rotateY(0deg) translateY(-18px) scale(1.03)'
-            : 'perspective(700px) rotateX(7deg) rotateY(-5deg) translateY(-8px)',
+          inset: 0,
+          borderRadius: 22,
+          overflow: 'hidden',
+          background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 55%, #12131a 140%)`,
           boxShadow: hovered
-            ? `0 40px 55px -14px ${item.color}77, 0 14px 24px rgba(0,0,0,0.22)`
-            : `0 28px 40px -14px ${item.color}55, 0 8px 16px rgba(0,0,0,0.16)`,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '20px 22px',
-          transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+            ? `0 34px 55px -18px ${item.color}88, 0 14px 28px rgba(0,0,0,0.3)`
+            : `0 20px 34px -18px ${item.color}55, 0 8px 16px rgba(0,0,0,0.18)`,
+          transition: 'box-shadow 0.35s ease',
         }}
       >
-        <span style={{
-          width: 46, height: 46, borderRadius: 12,
-          background: 'rgba(255,255,255,0.18)', display: 'inline-flex',
-          alignItems: 'center', justifyContent: 'center', color: '#fff',
-        }}>
-          <Icono size={24} stroke={2} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 15%, rgba(255,255,255,0.22), transparent 55%)' }} />
+      </div>
+
+      {/* Etiqueta de categoría */}
+      <span
+        style={{
+          position: 'absolute', top: 18, left: 20, zIndex: 3,
+          padding: '5px 12px', borderRadius: 999,
+          background: 'rgba(255,255,255,0.16)', color: '#fff', fontWeight: 800,
+          fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+          backdropFilter: 'blur(4px)',
+        }}
+      >
+        {item.nombre}
+      </span>
+
+      {/* Imagen del producto flotando con efecto 3D (tilt + sombra) */}
+      <div
+        style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.07 : 1})`,
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.25s ease-out',
+          zIndex: 2,
+        }}
+      >
+        <img
+          src={item.img}
+          alt={item.nombre}
+          style={{
+            width: '72%',
+            maxHeight: '68%',
+            objectFit: 'contain',
+            filter: 'drop-shadow(0 24px 18px rgba(0,0,0,0.45))',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* Pie: descripción + call to action */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', zIndex: 3 }}>
+        <p style={{ margin: 0, color: 'rgba(255,255,255,0.92)', fontSize: '0.82rem', lineHeight: 1.5, textShadow: '0 2px 6px rgba(0,0,0,0.55)' }}>
+          {item.descripcion}
+        </p>
+        <span
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10,
+            color: '#fff', fontWeight: 800, fontSize: '0.78rem', letterSpacing: '0.04em', textTransform: 'uppercase',
+            textShadow: '0 2px 6px rgba(0,0,0,0.4)',
+          }}
+        >
+          Ver {item.nombre.toLowerCase()} <IconArrowRight size={14} stroke={2.4} />
         </span>
-        <div>
-          <h3 style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.25rem' }}>{item.nombre}</h3>
-          <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.88)', fontSize: '0.86rem', lineHeight: 1.55 }}>
-            {item.descripcion}
-          </p>
-        </div>
       </div>
     </div>
   );
 };
 
-const Productos = () => (
+const Productos = ({ navigate }) => (
   <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
       <SectionEyebrow
         label="PRODUCTOS"
         title="Lo que vendemos"
-        subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial."
+        subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial. Toca una tarjeta para ver el catálogo."
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 30 }}>
         {productosData.map((item) => (
-          <ProductCard key={item.nombre} item={item} />
+          <ProductCard key={item.nombre} item={item} navigate={navigate} />
         ))}
       </div>
     </div>
@@ -395,14 +452,18 @@ const Ubicacion = () => {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
-            <svg width="150" height="150" viewBox="0 0 600 460" style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.8s ease' }}>
-              <path
-                d="M300,40 C400,40 452,120 440,200 C470,270 440,360 360,410 C300,444 220,440 170,400 C100,360 78,280 96,210 C70,140 110,60 210,44 C240,38 270,36 300,40 Z"
-                fill="#12131a"
-                stroke="#80C2DC"
-                strokeWidth="3"
-              />
-            </svg>
+            <img
+              src="/junin-map.png"
+              alt="Mapa de la región Junín"
+              style={{
+                width: 150,
+                height: 'auto',
+                opacity: visible ? 1 : 0,
+                transform: visible ? 'scale(1)' : 'scale(0.85)',
+                transition: 'opacity 0.8s ease, transform 0.8s ease',
+                filter: 'drop-shadow(0 8px 20px rgba(128,194,220,0.45))',
+              }}
+            />
             <div>
               <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
               <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
@@ -597,10 +658,10 @@ function Inicio() {
     </>
   );
 
-  const Card = ({ serv, rotate, height }) => {
+  const Card = ({ serv, rotate, boxHeight }) => {
     const [hovered, setHovered] = useState(false);
     return (
-      <div style={{ height, position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+      <div style={{ height: boxHeight || '100%', width: '100%', position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
         <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', height: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
           <CardContent serv={serv} />
         </div>
@@ -776,16 +837,31 @@ function Inicio() {
 
           <div style={{ display: 'flex', gap: 14, marginTop: 26, flexWrap: 'wrap' }}>
             <button
-              onClick={() => navigate('/contacto')}
+              onClick={() => document.getElementById('quienes-somos')?.scrollIntoView({ behavior: 'smooth' })}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = '0 20px 38px -10px rgba(148,25,24,0.55), 0 6px 16px rgba(244,196,48,0.35)';
+                const chev = e.currentTarget.querySelector('.chev-down');
+                if (chev) chev.style.transform = 'translateY(3px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 12px 28px -8px rgba(148,25,24,0.45), 0 4px 10px rgba(244,196,48,0.25)';
+                const chev = e.currentTarget.querySelector('.chev-down');
+                if (chev) chev.style.transform = 'translateY(0)';
+              }}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(90deg, #f4c430 0%, #941918 100%)',
-                color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em',
-                textTransform: 'uppercase', boxShadow: '0 10px 26px rgba(148,25,24,0.35)',
+                color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                boxShadow: '0 12px 28px -8px rgba(148,25,24,0.45), 0 4px 10px rgba(244,196,48,0.25)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
               }}
             >
-              Cotización gratis →
+              Conócenos
+              <IconChevronDown className="chev-down" size={16} stroke={2.6} style={{ transition: 'transform 0.25s ease' }} />
             </button>
             <button
               onClick={() => navigate('/servicios')}
@@ -823,7 +899,7 @@ function Inicio() {
       <QuienesSomos />
 
       {/* PRODUCTOS */}
-      <Productos />
+      <Productos navigate={navigate} />
 
       {/* UBICACIÓN */}
       <Ubicacion />
@@ -846,12 +922,32 @@ function Inicio() {
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Card serv={s[0]} rotate="-1.5deg" height={220} />
-            <Card serv={s[1]} rotate="1.5deg" height={220} />
-            <Card serv={s[2]} rotate="1.5deg" height={220} />
-            <Card serv={s[3]} rotate="-1.5deg" height={220} />
-          </div>
+          {windowWidth < 900 ? (
+            <div style={{ display: 'grid', gap: 16 }}>
+              <Card serv={s[0]} rotate="-1deg" boxHeight={260} />
+              <Card serv={s[1]} rotate="1deg" boxHeight={170} />
+              <Card serv={s[2]} rotate="-1deg" boxHeight={170} />
+              <Card serv={s[3]} rotate="1deg" boxHeight={260} />
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 1fr',
+                gridTemplateRows: '150px 150px 170px',
+                gridTemplateAreas: `"a b" "a c" "d d"`,
+                gap: 16,
+              }}
+            >
+              {/* Vertical: ocupa el alto de 2 filas */}
+              <div style={{ gridArea: 'a' }}><Card serv={s[0]} rotate="-1deg" /></div>
+              {/* Horizontales chicas, apiladas a la derecha */}
+              <div style={{ gridArea: 'b' }}><Card serv={s[1]} rotate="1deg" /></div>
+              <div style={{ gridArea: 'c' }}><Card serv={s[2]} rotate="-1deg" /></div>
+              {/* Horizontal ancha, ocupa todo el ancho abajo */}
+              <div style={{ gridArea: 'd' }}><Card serv={s[3]} rotate="1deg" /></div>
+            </div>
+          )}
         </div>
       </div>
 
