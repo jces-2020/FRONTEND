@@ -1839,14 +1839,17 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
 
   // Dimensiones de plancha del vidrio seleccionado: se toman de detalle_producto
   // (viene embebido en /api/productos/por-nombre). Si no tiene detalle propio, 300x300 por defecto.
-  const detalleProductoSel = (() => {
-    const d = stockProductoSeleccionado?.detalle_producto;
-    return Array.isArray(d) ? (d[0] || null) : (d || null);
-  })();
-  const dimsVidrio = {
-    plancha_ancho_cm: Number(detalleProductoSel?.plancha_ancho_cm) || 300,
-    plancha_alto_cm: Number(detalleProductoSel?.plancha_alto_cm) || 300,
-  };
+  // IMPORTANTE: memoizado por valor (no objeto literal en cada render) — dimsVidrio es
+  // dependencia de optimizarVidrio; si cambiara de referencia en cada render se dispara
+  // un loop infinito de POST /api/optimizacion-cortes/calcular.
+  const detalleVidrioRaw = stockProductoSeleccionado?.detalle_producto;
+  const detalleProductoSel = Array.isArray(detalleVidrioRaw) ? (detalleVidrioRaw[0] || null) : (detalleVidrioRaw || null);
+  const planchaAnchoSel = Number(detalleProductoSel?.plancha_ancho_cm) || 300;
+  const planchaAltoSel = Number(detalleProductoSel?.plancha_alto_cm) || 300;
+  const dimsVidrio = useMemo(() => ({
+    plancha_ancho_cm: planchaAnchoSel,
+    plancha_alto_cm: planchaAltoSel,
+  }), [planchaAnchoSel, planchaAltoSel]);
   // Fallback solo para el primer render / mientras cargan los detalles reales por producto.
   const largoBarraCm = Number(distAluminioOpt?.[0]?._barraLargoCm) || 300;
 
@@ -2653,7 +2656,14 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
                         </div>
                       );
                     })
-                  : (
+                  : vidriosUnicos.length === 0 ? (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        gap: 8, padding: 40, borderRadius: 10, border: '1.5px dashed rgba(128,194,220,.3)',
+                        color: T.textLight, fontFamily: T.fontMono, fontSize: 11 }}>
+                        <IconAlertTriangle size={14} color={T.brandMid}/>
+                        No hay cortes de vidrio en esta entrega.
+                      </div>
+                    ) : (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',
                         gap: 8, padding: 40, borderRadius: 10, border: '1.5px dashed rgba(128,194,220,.3)',
                         color: T.textLight, fontFamily: T.fontMono, fontSize: 11 }}>
