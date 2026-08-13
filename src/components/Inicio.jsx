@@ -489,6 +489,16 @@ function Inicio() {
   const vidrioPaintRef = useRef(null);
   const statRefs = useRef([]);
 
+  // Al entrar/recargar la página, siempre arranca arriba del todo (para que
+  // se vea la animación de presentación del Hero), sin importar el scroll
+  // que el navegador quiera restaurar de una visita anterior.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     fetch('/api/servicios/random')
       .then(res => res.json())
@@ -512,13 +522,13 @@ function Inicio() {
       translateY: [`-${vDist}`, '0%'],
       rotate: [-wobble, 0],
       duration: isMobile ? 620 : 800,
-      ease: 'outBack',
+      ease: 'outExpo',
     }).then(() => {
       animate(bgBackRef.current, {
         translateY: [vDist, '0%'],
         rotate: [wobble, 0],
         duration: isMobile ? 560 : 720,
-        ease: 'outBack',
+        ease: 'outExpo',
       }).then(() => {
         animate(bgShadowRef.current, {
           translateX: ['42%', '0%'],
@@ -533,7 +543,7 @@ function Inicio() {
               opacity: [0, 1],
               scale: [0.6, 1],
               duration: 600,
-              ease: 'outBack',
+              ease: 'outQuad',
             });
           }
 
