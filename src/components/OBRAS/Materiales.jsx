@@ -129,7 +129,6 @@ const COLS = [
   { key:'grosor',         label:'Grosor',       center:true,  w:70  },
   { key:'categoria',      label:'Categoría',    center:false, w:110 },
   { key:'ubicacion',      label:'Ubicación',    center:true,  w:80  },
-  { key:'stock_cantidad', label:'Stock',        center:true,  w:60  },
   { key:'precio_unitario',label:'Precio Unit.', center:true,  w:110 },
   { key:'cant_cliente',   label:'Cant. cliente',center:true,  w:110 },
   { key:'subtotal',       label:'Subtotal',     center:true,  w:120 },
@@ -304,15 +303,6 @@ const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
           <span style={{ fontFamily:T.fontHead,fontWeight:700,fontSize:13,color:T.text,flex:1 }}>
             Productos disponibles
           </span>
-          {soloCortes && (
-            <span style={{
-              background:'rgba(148,25,24,.12)',color:'#941918',border:'1px solid rgba(148,25,24,.3)',
-              borderRadius:8,padding:'3px 10px',fontSize:11,fontWeight:700,fontFamily:T.fontMono,
-              letterSpacing:'.03em'
-            }}>
-              Solo cortes
-            </span>
-          )}
           {totalSeleccionados > 0 && (
             <div style={{ display:'flex',gap:8,alignItems:'center' }}>
               <span className="ml-chip ml-chip-count">
@@ -398,13 +388,6 @@ const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
                           </td>
 
                           <td style={{ textAlign:'center' }}>
-                            <span style={{ fontFamily:T.fontMono,fontWeight:700,
-                              color:(prod.stock_cantidad||0)>0?T.textMid:T.red,fontSize:12 }}>
-                              {prod.stock_cantidad||0}
-                            </span>
-                          </td>
-
-                          <td style={{ textAlign:'center' }}>
                             <span style={{ fontFamily:T.fontMono,fontWeight:700,color:T.textMid,fontSize:12 }}>
                               {formatearSoles(Number(prod.precio_unitario??prod.precio??0))}
                             </span>
@@ -440,20 +423,6 @@ const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
           </div>
         </div>
       </div>
-
-      {/* Banner solo cortes */}
-      {soloCortes && (
-        <div style={{
-          display:'flex',alignItems:'center',gap:10,
-          background:'rgba(148,25,24,.07)',border:'1px solid rgba(148,25,24,.25)',
-          borderRadius:10,padding:'10px 16px',marginBottom:16,
-        }}>
-          <IconAlertTriangle size={16} color="#941918"/>
-          <span style={{ fontFamily:T.fontBody,fontSize:12,fontWeight:600,color:'#941918' }}>
-            Esta entrega contiene solo cortes. No hay productos independientes que seleccionar. Puedes continuar directamente.
-          </span>
-        </div>
-      )}
 
       {/* ── Botón guardar ── */}
       <div style={{ display:'flex',justifyContent:'center',marginTop:22 }}>
