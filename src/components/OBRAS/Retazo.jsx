@@ -375,6 +375,7 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
   const [cargando,  setCargando]  = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [rows,      setRows]      = useState([]);
+  const [totalCortes, setTotalCortes] = useState(0);
   const [seleccion, setSeleccion] = useState({});
   const [carritoId, setCarritoId] = useState('');
 
@@ -483,7 +484,7 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
   }, []);
 
   const loadRows = useCallback(async ({ silent=false }={}) => {
-    if (!notifId) { setRows([]); setSeleccion({}); return; }
+    if (!notifId) { setRows([]); setTotalCortes(0); setSeleccion({}); return; }
     if (!silent) setCargando(true);
     try {
       const [cortesRes,catsRes] = await Promise.all([
@@ -523,6 +524,7 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
       }));
 
       const flat = [];
+      let totalCortesCount = 0;
       for (const p of (Array.isArray(cortesJson?.productos)?cortesJson.productos:[])) {
         const material = detectMat(p?.categoria||p?.producto_nombre||'');
         for (const c of (p?.cortes||[])) {
@@ -540,6 +542,8 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
           const exactIds = new Set(exactas.map(m=>String(m.id_merma)));
           const posibles = enrich.filter(m=>!exactIds.has(String(m.id_merma)))
             .sort((a,b)=>a.distance-b.distance||b.similarity-a.similarity);
+          totalCortesCount += 1;
+          if (!cands.length) continue; // sin merma candidata: no se muestra la tarjeta
           flat.push({
             key:`${c?.id_corte||p?.producto_id}-${ancho}-${alto}`,
             id_corte:c?.id_corte,
@@ -553,6 +557,7 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
           });
         }
       }
+      setTotalCortes(totalCortesCount);
       setRows(flat);
       try {
         const raw=localStorage.getItem(`retazo_seleccion_${notifId}`);
@@ -566,7 +571,7 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
         } else setSeleccion({});
       } catch { setSeleccion({}); }
     } catch(e) {
-      setRows([]); setSeleccion({});
+      setRows([]); setTotalCortes(0); setSeleccion({});
       if (!silent) showToast(String(e?.message||'No se pudieron cargar retazos'),'error');
     } finally { if (!silent) setCargando(false); }
   }, [notifId]);
@@ -609,8 +614,17 @@ const Retazo = ({ notificacion, onToast, onGuardarSuccess, tipoNotificacion='ENT
       {!cargando && !rows.length && (
         <div style={{ textAlign:'center',padding:'40px 0',color:T.textDim,
           border:`1.5px dashed ${T.border}`,borderRadius:14,background:T.brandSoft }}>
-          <div style={{ fontWeight:600,color:T.textLight,fontSize:14 }}>Sin cortes registrados</div>
-          <div style={{ fontSize:12,marginTop:4 }}>No se encontraron cortes para esta notificación.</div>
+          {totalCortes > 0 ? (
+            <>
+              <div style={{ fontWeight:600,color:T.textLight,fontSize:14 }}>Sin retazos compatibles</div>
+              <div style={{ fontSize:12,marginTop:4 }}>Ninguno de los {totalCortes} corte{totalCortes!==1?'s':''} de este pedido tiene una merma con medidas compatibles.</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontWeight:600,color:T.textLight,fontSize:14 }}>Sin cortes registrados</div>
+              <div style={{ fontSize:12,marginTop:4 }}>No se encontraron cortes para esta notificación.</div>
+            </>
+          )}
         </div>
       )}
 
