@@ -642,7 +642,7 @@ function Inicio() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
- const CardContent = ({ serv }) => (
+  const CardContent = ({ serv }) => (
     <>
       <img
         src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
@@ -922,32 +922,15 @@ function Inicio() {
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-          {windowWidth < 900 ? (
-            <div style={{ display: 'grid', gap: 16 }}>
-              <Card serv={s[0]} rotate="-1deg" boxHeight={260} />
-              <Card serv={s[1]} rotate="1deg" boxHeight={170} />
-              <Card serv={s[2]} rotate="-1deg" boxHeight={170} />
-              <Card serv={s[3]} rotate="1deg" boxHeight={260} />
-            </div>
-          ) : (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1.15fr 1fr',
-                gridTemplateRows: '150px 150px 170px',
-                gridTemplateAreas: `"a b" "a c" "d d"`,
-                gap: 16,
-              }}
-            >
-              {/* Vertical: ocupa el alto de 2 filas */}
-              <div style={{ gridArea: 'a' }}><Card serv={s[0]} rotate="-1deg" /></div>
-              {/* Horizontales chicas, apiladas a la derecha */}
-              <div style={{ gridArea: 'b' }}><Card serv={s[1]} rotate="1deg" /></div>
-              <div style={{ gridArea: 'c' }}><Card serv={s[2]} rotate="-1deg" /></div>
-              {/* Horizontal ancha, ocupa todo el ancho abajo */}
-              <div style={{ gridArea: 'd' }}><Card serv={s[3]} rotate="1deg" /></div>
-            </div>
-          )}
+          {/* Mosaico tipo masonry: cada tarjeta usa la altura natural de su propia imagen
+              (sin recorte, sin forzar cuadrados) — una puerta se ve vertical, una ventana
+              se ve horizontal, según la proporción real de la foto. */}
+          <div style={{ columnCount: windowWidth < 900 ? 1 : 2, columnGap: 16 }}>
+            <Card serv={s[0]} rotate="-1deg" />
+            <Card serv={s[1]} rotate="1deg" />
+            <Card serv={s[2]} rotate="-1deg" />
+            <Card serv={s[3]} rotate="1deg" />
+          </div>
         </div>
       </div>
 
