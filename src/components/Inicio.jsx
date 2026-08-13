@@ -642,15 +642,15 @@ function Inicio() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const CardContent = ({ serv }) => (
+ const CardContent = ({ serv }) => (
     <>
       <img
         src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
         alt={serv?.nombre}
         onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', height: 'auto', display: 'block' }}
       />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.05) 55%)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 40%, transparent 65%)' }} />
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', zIndex: 2 }}>
         <h3 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: 700, textShadow: '1px 2px 6px rgba(0,0,0,0.9)' }}>{serv?.nombre}</h3>
         <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', textShadow: '1px 1px 4px rgba(0,0,0,0.9)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{serv?.descripcion}</p>
@@ -658,11 +658,11 @@ function Inicio() {
     </>
   );
 
-  const Card = ({ serv, rotate, boxHeight }) => {
+  const Card = ({ serv, rotate }) => {
     const [hovered, setHovered] = useState(false);
     return (
-      <div style={{ height: boxHeight || '100%', width: '100%', position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-        <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', height: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
+      <div style={{ breakInside: 'avoid', marginBottom: 16, position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+        <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
           <CardContent serv={serv} />
         </div>
       </div>
@@ -923,12 +923,12 @@ function Inicio() {
             </div>
           </div>
           {windowWidth < 900 ? (
-            <div style={{ display: 'grid', gap: 16 }}>
-              <Card serv={s[0]} rotate="-1deg" boxHeight={260} />
-              <Card serv={s[1]} rotate="1deg" boxHeight={170} />
-              <Card serv={s[2]} rotate="-1deg" boxHeight={170} />
-              <Card serv={s[3]} rotate="1deg" boxHeight={260} />
-            </div>
+             <div style={{ columnCount: windowWidth < 900 ? 1 : 2, columnGap: 16 }}>
+            <Card serv={s[0]} rotate="-1deg" />
+            <Card serv={s[1]} rotate="1deg" />
+            <Card serv={s[2]} rotate="-1deg" />
+            <Card serv={s[3]} rotate="1deg" />
+          </div>
           ) : (
             <div
               style={{
