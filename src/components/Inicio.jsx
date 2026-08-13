@@ -923,12 +923,12 @@ function Inicio() {
             </div>
           </div>
           {windowWidth < 900 ? (
-             <div style={{ columnCount: windowWidth < 900 ? 1 : 2, columnGap: 16 }}>
-            <Card serv={s[0]} rotate="-1deg" />
-            <Card serv={s[1]} rotate="1deg" />
-            <Card serv={s[2]} rotate="-1deg" />
-            <Card serv={s[3]} rotate="1deg" />
-          </div>
+            <div style={{ display: 'grid', gap: 16 }}>
+              <Card serv={s[0]} rotate="-1deg" boxHeight={260} />
+              <Card serv={s[1]} rotate="1deg" boxHeight={170} />
+              <Card serv={s[2]} rotate="-1deg" boxHeight={170} />
+              <Card serv={s[3]} rotate="1deg" boxHeight={260} />
+            </div>
           ) : (
             <div
               style={{
