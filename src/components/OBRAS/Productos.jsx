@@ -1679,7 +1679,8 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
     (productos || []).forEach((producto) => {
       const categoria = (producto.categoria || '').toUpperCase();
       if (categoria.includes('ALUMIN')) aluminios.push(producto);
-      else vidrios.push(producto);
+      else if (categoria.includes('VIDRIO')) vidrios.push(producto);
+      // otras categorías (accesorios, etc.) no se cortan: no aplican a nesting de vidrio/aluminio
     });
     return { vidrios, aluminios };
   };
@@ -1836,87 +1837,91 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
     });
   }, []);
 
-  // Dimensiones reales de plancha/barra desde categoria_detalle (null = aún cargando)
-  const [dimsVidrio,   setDimsVidrio]   = useState(null);
-  const [dimsAluminio, setDimsAluminio] = useState(null);
+  // Dimensiones de plancha del vidrio seleccionado: se toman de detalle_producto
+  // (viene embebido en /api/productos/por-nombre). Si no tiene detalle propio, 300x300 por defecto.
+  const detalleProductoSel = (() => {
+    const d = stockProductoSeleccionado?.detalle_producto;
+    return Array.isArray(d) ? (d[0] || null) : (d || null);
+  })();
+  const dimsVidrio = {
+    plancha_ancho_cm: Number(detalleProductoSel?.plancha_ancho_cm) || 300,
+    plancha_alto_cm: Number(detalleProductoSel?.plancha_alto_cm) || 300,
+  };
+  // Fallback solo para el primer render / mientras cargan los detalles reales por producto.
+  const largoBarraCm = Number(distAluminioOpt?.[0]?._barraLargoCm) || 300;
 
-  useEffect(() => {
-    fetch('/api/categorias/detalles')
-      .then(r => r.json())
-      .then(d => {
-        let foundVid = false, foundAl = false;
-        if (d?.data) d.data.forEach(det => {
-          const n = (det.categoria_nombre || '').toUpperCase();
-          if (n.includes('VIDRIO')) { setDimsVidrio(det); foundVid = true; }
-          if (n.includes('ALUMIN')) { setDimsAluminio(det); foundAl = true; }
-        });
-        if (!foundVid) setDimsVidrio({ plancha_ancho_cm: 300, plancha_alto_cm: 300 });
-        if (!foundAl)  setDimsAluminio({ barra_largo_cm: 300 });
-      })
-      .catch(() => {
-        setDimsVidrio({ plancha_ancho_cm: 300, plancha_alto_cm: 300 });
-        setDimsAluminio({ barra_largo_cm: 300 });
-      });
-  }, []);
-
-  const largoBarraCm = Number(dimsAluminio?.barra_largo_cm || 300);
-
-  /* ─ optimización FFD aluminio desde backend ─ */
+  /* ─ optimización FFD aluminio desde backend: cada producto usa su propio
+     barra_largo_cm (detalle_producto), se corre una optimización por producto
+     y se concatenan las barras resultantes ─ */
   const optimizarAluminio = useCallback(() => {
-    if (!dimsAluminio) return; // esperar hasta que carguen las dims
     if (!cortesPorProducto.length) { setDistAluminioOpt(null); return; }
     const { aluminios: als } = separarPorCategoria(cortesPorProducto);
-    const productos = als.flatMap((prod) =>
-      (prod.cortes || []).flatMap((corte, ci) => {
-        const largo = Number(corte.ancho_cm || corte.alto_cm || 0);
-        if (largo <= 0) return [];
-        const qty = Math.max(1, Number(corte.cantidad || 1));
-        return Array.from({ length: qty }, (_, idx) => ({
-          id: `${corte.id_corte || prod.producto_nombre || 'al'}-${ci}-${idx}`,
-          largo,
-          cantidad: 1,
-          _fila: prod.producto_almacen_fila || '',
-          _columna: prod.producto_almacen_columna || '',
-        }));
-      })
-    );
-    if (!productos.length) { setDistAluminioOpt(null); return; }
-    const lookup = Object.fromEntries(productos.map(p => [p.id, p]));
+    if (!als.length) { setDistAluminioOpt(null); return; }
+
     setCargandoOptAluminio(true);
-    fetch('/api/optimizacion-cortes/calcular', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tipo_material: 'aluminio',
-        barra_largo: largoBarraCm,
-        productos: productos.map(({ id, largo, cantidad }) => ({ id, largo, cantidad })),
-      }),
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (!data.success || !data.barras) {
-          showToast(data.message || data.error || 'Error al optimizar aluminio', 'error');
-          return;
-        }
-        setDistAluminioOpt(data.barras.map(b => {
-          const firstSrc = b.cortes[0] ? lookup[b.cortes[0].corte_id] : null;
-          return {
-            cortes: b.cortes.map(c => {
-              const src = lookup[c.corte_id] || {};
-              return { largo_cm: c.largo, _pieceId: c.corte_id,
-                producto_almacen_fila: src._fila || '', producto_almacen_columna: src._columna || '' };
+
+    (async () => {
+      try {
+        const resultados = await Promise.all(als.map(async (prod) => {
+          const piezas = (prod.cortes || []).flatMap((corte, ci) => {
+            const largo = Number(corte.ancho_cm || corte.alto_cm || 0);
+            if (largo <= 0) return [];
+            const qty = Math.max(1, Number(corte.cantidad || 1));
+            return Array.from({ length: qty }, (_, idx) => ({
+              id: `${corte.id_corte || prod.producto_nombre || 'al'}-${ci}-${idx}`,
+              largo, cantidad: 1,
+            }));
+          });
+          if (!piezas.length) return null;
+
+          let barraLargo = 300;
+          try {
+            const rDet = await fetch(`/api/productos/por-nombre/${encodeURIComponent(prod.producto_nombre || '')}`);
+            const dDet = await rDet.json();
+            const det = dDet?.producto?.detalle_producto;
+            const detObj = Array.isArray(det) ? det[0] : det;
+            barraLargo = Number(detObj?.barra_largo_cm) || 300;
+          } catch {}
+
+          const lookup = Object.fromEntries(piezas.map(p => [p.id, p]));
+          const res = await fetch('/api/optimizacion-cortes/calcular', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tipo_material: 'aluminio',
+              barra_largo: barraLargo,
+              productos: piezas.map(({ id, largo, cantidad }) => ({ id, largo, cantidad })),
             }),
+          });
+          const data = await res.json();
+          if (!data.success || !data.barras) {
+            showToast(data.message || data.error || `Error al optimizar ${prod.producto_nombre || 'aluminio'}`, 'error');
+            return null;
+          }
+          return data.barras.map(b => ({
+            cortes: b.cortes.map(c => ({
+              largo_cm: c.largo, _pieceId: c.corte_id, _productoNombre: prod.producto_nombre,
+              producto_almacen_fila: prod.producto_almacen_fila || '',
+              producto_almacen_columna: prod.producto_almacen_columna || '',
+            })),
             usado: b.usado,
             retazo: b.retazo,
             eficiencia: b.eficiencia,
-            fila: firstSrc?._fila || '',
-            columna: firstSrc?._columna || '',
-          };
+            fila: prod.producto_almacen_fila || '',
+            columna: prod.producto_almacen_columna || '',
+            _productoNombre: prod.producto_nombre,
+            _barraLargoCm: barraLargo,
+          }));
         }));
-      })
-      .catch(() => {})
-      .finally(() => setCargandoOptAluminio(false));
-  }, [cortesPorProducto, dimsAluminio]); // eslint-disable-line react-hooks/exhaustive-deps
+
+        setDistAluminioOpt(resultados.filter(Boolean).flat());
+      } catch {
+        setDistAluminioOpt(null);
+      } finally {
+        setCargandoOptAluminio(false);
+      }
+    })();
+  }, [cortesPorProducto]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { optimizarAluminio(); }, [optimizarAluminio]);
 
@@ -2453,7 +2458,7 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
                 barra={barra}
                 idx={idx}
                 cortesAluminio={distAluminioOpt?.[idx]?.cortes || []}
-                largoBarraCm={largoBarraCm}
+                largoBarraCm={Number(distAluminioOpt?.[idx]?._barraLargoCm) || largoBarraCm}
                 svgRef={idx === 0 ? svgAluminioRef : null}
                 almacenFila={distAluminioOpt?.[idx]?.fila || ''}
                 almacenColumna={distAluminioOpt?.[idx]?.columna || ''}
