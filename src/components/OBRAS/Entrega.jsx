@@ -5,6 +5,7 @@ import {
   IconLayoutDashboard, IconScissors, IconBox, IconSettings,
   IconPower, IconPlayerPause, IconPlayerStop, IconRefresh, IconRuler,
   IconAlertTriangle, IconPlus, IconUpload, IconActivity, IconCpu, IconVideo,
+  IconLock, IconCheck, IconLoader,
 } from '@tabler/icons-react';
 import { FONTS } from '../../colors';
 import BrandToast from '../UI/BrandToast';
@@ -71,6 +72,9 @@ const CSS = `
 .mes-tab{flex:1;padding:6px 8px;border-radius:6px;font-size:11px;font-weight:600;color:#64748b;background:transparent;border:1px solid transparent;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
 .mes-tab:hover{color:#334155;background:#e2e8f0}
 .mes-tab.active{color:#0d9488;background:rgba(13,148,136,.1);border-color:rgba(13,148,136,.25)}
+.mes-tab:disabled{opacity:.45;cursor:not-allowed}
+.mes-tab-lock-icon{margin-right:4px;vertical-align:-1px}
+@keyframes mesSpin{to{transform:rotate(360deg)}}
 
 /* GAUGE */
 .mes-gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 10px}
@@ -260,6 +264,7 @@ const EntregaPedido = ({ notificacion, onBack }) => {
   const productosActionsRef = useRef(null);
   const [vistaDiseno, setVistaDiseno] = useState('VIDRIO');
   const [eficienciaPlancha, setEficienciaPlancha] = useState(0);
+  const [planchasUsadas, setPlanchasUsadas] = useState([]);
   const [annotMode, setAnnotMode] = useState(0);
   const ANNOT_LABELS = ['TODO','300','235.9','130'];
   const cycleAnnot = () => setAnnotMode(m => (m+1)%4);
@@ -358,6 +363,17 @@ const EntregaPedido = ({ notificacion, onBack }) => {
   }, [notifId, formatFecha, fechaFallback]);
 
   const [activeTab, setActiveTab] = useState('RETAZOS');
+  const [finalizandoEntrega, setFinalizandoEntrega] = useState(false);
+
+  const handleFinalizarEntrega = useCallback(async () => {
+    if (finalizandoEntrega) return;
+    setFinalizandoEntrega(true);
+    try {
+      await productosActionsRef.current?.finalizarEntrega?.();
+    } finally {
+      setFinalizandoEntrega(false);
+    }
+  }, [finalizandoEntrega]);
 
   useEffect(() => {
     if (!notifId) { setActiveTab('RETAZOS'); return; }
@@ -446,7 +462,8 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                     vistaDiseno={vistaDiseno} onEficienciaChange={setEficienciaPlancha}
                     annotMode={annotMode} highlightLabel={selectedLbl}
                     onCortePendienteChange={setPendingDim}
-                    onCortesChange={setCortesData}/>
+                    onCortesChange={setCortesData}
+                    onPlanchasUsadasChange={setPlanchasUsadas}/>
                 </div>
               </div>
 
@@ -458,10 +475,16 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                 </div>
                 <div className="mes-panel-body">
                   <div className="mes-tabs">
-                    {['RETAZOS','PRODUCTOS','CORTES'].map(t => (
-                      <button key={t} className={`mes-tab${activeTab===t?' active':''}`}
-                        onClick={() => setActiveTab(t)}>{t}</button>
-                    ))}
+                    {['RETAZOS','PRODUCTOS','CORTES'].map(t => {
+                      const isActive = activeTab === t;
+                      return (
+                        <button key={t} className={`mes-tab${isActive?' active':''}`}
+                          disabled={!isActive} title={!isActive ? 'Bloqueado' : undefined}>
+                          {!isActive && <IconLock size={10} className="mes-tab-lock-icon"/>}
+                          {t}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {activeTab === 'RETAZOS' && (
@@ -473,7 +496,7 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                   {activeTab === 'PRODUCTOS' && (
                     <Materiales onToast={showToast} notificacion={notificacion}
                       onGuardarSuccess={() => setActiveTab('CORTES')}
-                      tipoNotificacion="ENTREGA"/>
+                      tipoNotificacion="ENTREGA" planchasUsadas={planchasUsadas}/>
                   )}
                   {activeTab === 'CORTES' && (
                     <>
@@ -500,6 +523,14 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                       <div className="mes-table-actions">
                         <button className="mes-tbl-btn primary"><IconPlus size={12}/> Añadir Pieza Manualmente</button>
                         <button className="mes-tbl-btn secondary"><IconUpload size={12}/> Importar CSV</button>
+                      </div>
+                      <div className="mes-table-actions">
+                        <button className="mes-tbl-btn primary" onClick={handleFinalizarEntrega} disabled={finalizandoEntrega}
+                          style={{ flex:'unset', width:'100%', background:'rgba(13,148,136,.14)' }}>
+                          {finalizandoEntrega
+                            ? <><IconLoader size={12} style={{ animation:'mesSpin .7s linear infinite' }}/> Finalizando…</>
+                            : <><IconCheck size={12}/> Finalizar entrega</>}
+                        </button>
                       </div>
                     </>
                   )}

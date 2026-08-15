@@ -135,7 +135,7 @@ const COLS = [
 ];
 
 /* ─── MAIN ───────────────────────────────────────────────────────────────── */
-const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
+const Materiales = ({ notificacion, onToast, onGuardarSuccess, planchasUsadas = [] }) => {
   injectCSS();
 
   const formatearSoles = (monto) =>
@@ -229,6 +229,10 @@ const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
 
       if (items.length===0) { showToast('Los productos seleccionados no tienen ID válido','error'); setGuardando(false); return; }
 
+      const planchas = (planchasUsadas||[])
+        .filter(p=>p.producto_id && p.planchas>0)
+        .map(p=>({ producto_id:p.producto_id, cantidad:p.planchas }));
+
       let carrito_id = String(carritoId||'').trim();
       if (!carrito_id&&notificacion?.id) {
         try {
@@ -244,7 +248,7 @@ const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
 
       const resConfirmar=await fetch('/api/entrega/productos/confirmar',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ carrito_id,items }),
+        body:JSON.stringify({ carrito_id,items,planchas }),
       });
       const dataConfirmar=await resConfirmar.json();
 
@@ -314,6 +318,17 @@ const Materiales = ({ notificacion, onToast, onGuardarSuccess }) => {
             </div>
           )}
         </div>
+
+        {/* Planchas usadas en corte (se descuentan del stock al guardar) */}
+        {planchasUsadas.length > 0 && (
+          <div style={{ padding:'12px 18px 0', display:'flex', flexWrap:'wrap', gap:8 }}>
+            {planchasUsadas.filter(p=>p.planchas>0).map(p => (
+              <span key={p.nombre} className="ml-chip ml-chip-count" title="Se descontará del stock al guardar">
+                {p.nombre}: {p.planchas} plancha{p.planchas!==1?'s':''}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Tabla */}
         <div style={{ padding:'14px 18px 18px' }}>

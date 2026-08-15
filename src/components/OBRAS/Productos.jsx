@@ -1505,7 +1505,7 @@ const PlanchaInteractiva = ({
 };
 
 /* ─── MAIN ───────────────────────────────────────────────────────────────── */
-const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntrega, actionsRef, vistaDiseno = 'VIDRIO', onEficienciaChange, annotMode = 0, highlightLabel = null, onCortePendienteChange, onCortesChange }) => {
+const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntrega, actionsRef, vistaDiseno = 'VIDRIO', onEficienciaChange, annotMode = 0, highlightLabel = null, onCortePendienteChange, onCortesChange, onPlanchasUsadasChange }) => {
   injectCSS();
 
   const showToast = useCallback((mensaje, tipo = 'success') => {
@@ -1524,6 +1524,7 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
   const [finalizando,         setFinalizando]         = useState(false);
   const [carritoId,           setCarritoId]           = useState('');
   const [stockProductoSeleccionado, setStockProductoSeleccionado] = useState(null);
+  const [planchasUsadasPorVidrio, setPlanchasUsadasPorVidrio] = useState({});
   const [usaSnapshotCortes, setUsaSnapshotCortes] = useState(false);
   const [reporteImpresion, setReporteImpresion] = useState(null);
   const [distAluminioOpt, setDistAluminioOpt] = useState(null);
@@ -2056,6 +2057,15 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
           }),
         }));
         setPlanVidrioPorNombre(prev => ({ ...prev, [selectedVidrio]: planchasMarcadas }));
+        setPlanchasUsadasPorVidrio(prev => {
+          const next = { ...prev, [selectedVidrio]: {
+            producto_id: prodVidrio.producto_id,
+            nombre: selectedVidrio,
+            planchas: planchasMarcadas.length,
+          }};
+          onPlanchasUsadasChange?.(Object.values(next));
+          return next;
+        });
         setPlanchaDimsPorNombre(prev => ({
           ...prev,
           [selectedVidrio]: {
@@ -2367,6 +2377,12 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
       }
     }
   };
+
+  /* Expone finalizarEntrega al padre via actionsRef (definida despues de optimizarVidrio/etc) */
+  useEffect(() => {
+    if (!actionsRef) return;
+    actionsRef.current = { ...(actionsRef.current || {}), finalizarEntrega: finalizarEntregaCompleta };
+  }); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ─── RENDER ──────────────────────────────────────────────────────────── */
   return (
