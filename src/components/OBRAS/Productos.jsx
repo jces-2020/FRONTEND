@@ -1530,6 +1530,8 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
   const [planVidrioPorNombre, setPlanVidrioPorNombre] = useState({});
   const [orientacionCorte, setOrientacionCorte] = useState('auto');
   const [objetivoCorte,    setObjetivoCorte]    = useState('eficiencia');
+  const [rotarPlancha,     setRotarPlancha]     = useState('auto');
+  const [planchaDimsPorNombre, setPlanchaDimsPorNombre] = useState({});
   const [cargandoOptAluminio, setCargandoOptAluminio] = useState(false);
   const [cargandoOptVidrio,   setCargandoOptVidrio]   = useState(false);
   const [cortesNoColocados,   setCortesNoColocados]   = useState({});
@@ -2021,6 +2023,7 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
         productos,
         orientacion: orientacionCorte,
         objetivo: objetivoCorte,
+        rotar_plancha: rotarPlancha,
       }),
       signal,
     })
@@ -2053,6 +2056,14 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
           }),
         }));
         setPlanVidrioPorNombre(prev => ({ ...prev, [selectedVidrio]: planchasMarcadas }));
+        setPlanchaDimsPorNombre(prev => ({
+          ...prev,
+          [selectedVidrio]: {
+            ancho: Number(data.plancha_ancho_usado) || vidrioPlanchaAncho,
+            alto: Number(data.plancha_alto_usado) || vidrioPlanchaAlto,
+            rotada: !!data.plancha_rotada,
+          },
+        }));
         setCortesNoColocados(prev => ({ ...prev, [selectedVidrio]: [] }));
         setCortePendiente(null);
         const efGlobal = data.eficiencia_global ?? planchasMarcadas[0]?.eficiencia ?? 0;
@@ -2067,7 +2078,7 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
       })
       .catch(err => { if (err.name !== 'AbortError') showToast('Sin conexión al optimizador: ' + err.message, 'error'); })
       .finally(() => { if (!signal.aborted) setCargandoOptVidrio(false); });
-  }, [selectedVidrio, cortesPorProducto, dimsVidrio, orientacionCorte, objetivoCorte]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedVidrio, cortesPorProducto, dimsVidrio, orientacionCorte, objetivoCorte, rotarPlancha]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { optimizarVidrio(); }, [optimizarVidrio]);
 
@@ -2508,9 +2519,21 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
                   style={{ fontSize: 10, fontFamily: T.fontMono, fontWeight: 700, color: T.text,
                     border: `1px solid ${T.borderMid}`, borderRadius: 6, padding: '3px 6px',
                     background: '#fff', cursor: 'pointer' }}>
-                  <option value="eficiencia">Mayor aprovechamiento</option>
+                  <option value="eficiencia">No aprovechar sobrante (más piezas)</option>
                   <option value="menos_planchas">Menor cant. de planchas</option>
-                  <option value="retazo_util">Retazo más grande</option>
+                  <option value="retazo_util">Aprovechar sobrante (uno grande)</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 10, fontFamily: T.fontMono, color: T.textMid, fontWeight: 700 }}>
+                Plancha
+                <select value={rotarPlancha} onChange={e => setRotarPlancha(e.target.value)}
+                  style={{ fontSize: 10, fontFamily: T.fontMono, fontWeight: 700, color: T.text,
+                    border: `1px solid ${T.borderMid}`, borderRadius: 6, padding: '3px 6px',
+                    background: '#fff', cursor: 'pointer' }}>
+                  <option value="auto">Automática (mejor de las 2)</option>
+                  <option value="no">Horizontal (como está cargada)</option>
+                  <option value="si">Vertical (girada 90°)</option>
                 </select>
               </label>
               {cargandoOptVidrio && (
@@ -2620,6 +2643,8 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
                   ? planVidrioPorNombre[selectedVidrio].map((plancha, pi) => {
                       const retazo = (plancha.retazos || [])[0];
                       const totalPlanchas = planVidrioPorNombre[selectedVidrio].length;
+                      const dimsUsadas = planchaDimsPorNombre[selectedVidrio]
+                        || { ancho: vidrioPlanchaAncho, alto: vidrioPlanchaAlto, rotada: false };
                       return (
                         <div key={pi} style={{ marginBottom: pi < totalPlanchas - 1 ? 10 : 0 }}>
                           {/* Header plancha */}
@@ -2662,14 +2687,14 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
                               {Math.max(0,100-plancha.eficiencia).toFixed(0)}% retazo
                             </span>
                             <span style={{ fontSize: 9, fontFamily: T.fontMono, color: 'rgba(255,255,255,.45)' }}>
-                              {vidrioPlanchaAncho}×{vidrioPlanchaAlto} cm
+                              {dimsUsadas.ancho}×{dimsUsadas.alto} cm{dimsUsadas.rotada ? ' ↻ girada' : ''}
                             </span>
                             {retazo && (
                               <span style={{ marginLeft: 'auto', fontSize: 9, fontFamily: T.fontMono,
                                 fontWeight: 700, color: '#68D391',
                                 background: 'rgba(56,161,105,.18)', borderRadius: 4, padding: '1px 7px',
                                 border: '1px solid rgba(56,161,105,.4)' }}>
-                                Retazo {retazo.ancho}×{retazo.alto} cm ({Math.round(retazo.ancho*retazo.alto/(vidrioPlanchaAncho*vidrioPlanchaAlto)*100)}%)
+                                Retazo {retazo.ancho}×{retazo.alto} cm ({Math.round(retazo.ancho*retazo.alto/(dimsUsadas.ancho*dimsUsadas.alto)*100)}%)
                               </span>
                             )}
                             {cortePendiente && (
@@ -2684,8 +2709,8 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
                             <div style={{ flex: 1, overflow: 'hidden' }}>
                             <PlanchaInteractiva
                               plancha={plancha}
-                              planchaAncho={vidrioPlanchaAncho}
-                              planchaAlto={vidrioPlanchaAlto}
+                              planchaAncho={dimsUsadas.ancho}
+                              planchaAlto={dimsUsadas.alto}
                               planchaIdx={pi}
                               svgRef={pi === 0 ? svgVidrioRef : null}
                               cortePendiente={cortePendiente}
