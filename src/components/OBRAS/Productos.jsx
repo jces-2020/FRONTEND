@@ -1528,6 +1528,8 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
   const [reporteImpresion, setReporteImpresion] = useState(null);
   const [distAluminioOpt, setDistAluminioOpt] = useState(null);
   const [planVidrioPorNombre, setPlanVidrioPorNombre] = useState({});
+  const [orientacionCorte, setOrientacionCorte] = useState('auto');
+  const [objetivoCorte,    setObjetivoCorte]    = useState('eficiencia');
   const [cargandoOptAluminio, setCargandoOptAluminio] = useState(false);
   const [cargandoOptVidrio,   setCargandoOptVidrio]   = useState(false);
   const [cortesNoColocados,   setCortesNoColocados]   = useState({});
@@ -2012,7 +2014,14 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
     fetch('/api/optimizacion-cortes/calcular', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo_material: 'vidrio', plancha_ancho: Number(dimsVidrio.plancha_ancho_cm || 300), plancha_alto: Number(dimsVidrio.plancha_alto_cm || 300), productos }),
+      body: JSON.stringify({
+        tipo_material: 'vidrio',
+        plancha_ancho: Number(dimsVidrio.plancha_ancho_cm || 300),
+        plancha_alto: Number(dimsVidrio.plancha_alto_cm || 300),
+        productos,
+        orientacion: orientacionCorte,
+        objetivo: objetivoCorte,
+      }),
       signal,
     })
       .then(r => r.json())
@@ -2058,7 +2067,7 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
       })
       .catch(err => { if (err.name !== 'AbortError') showToast('Sin conexión al optimizador: ' + err.message, 'error'); })
       .finally(() => { if (!signal.aborted) setCargandoOptVidrio(false); });
-  }, [selectedVidrio, cortesPorProducto, dimsVidrio]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedVidrio, cortesPorProducto, dimsVidrio, orientacionCorte, objetivoCorte]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { optimizarVidrio(); }, [optimizarVidrio]);
 
@@ -2475,6 +2484,42 @@ const Productos = ({ notificacion, onToast, showHeader = true, onFinalizarEntreg
 
           {/* ══ VIDRIO ══ */}
           {vistaDiseno === 'VIDRIO' && (<div>
+            {/* Selector de orientación de corte y prioridad de optimización */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center',
+              padding: showHeader ? '0 0 10px' : '8px 12px', marginBottom: showHeader ? 0 : 4,
+              background: showHeader ? 'transparent' : T.brandSoft,
+              borderBottom: showHeader ? 'none' : `1px solid ${T.borderMid}` }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 10, fontFamily: T.fontMono, color: T.textMid, fontWeight: 700 }}>
+                Orientación
+                <select value={orientacionCorte} onChange={e => setOrientacionCorte(e.target.value)}
+                  style={{ fontSize: 10, fontFamily: T.fontMono, fontWeight: 700, color: T.text,
+                    border: `1px solid ${T.borderMid}`, borderRadius: 6, padding: '3px 6px',
+                    background: '#fff', cursor: 'pointer' }}>
+                  <option value="auto">Automática</option>
+                  <option value="horizontal">Horizontal</option>
+                  <option value="vertical">Vertical</option>
+                </select>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 10, fontFamily: T.fontMono, color: T.textMid, fontWeight: 700 }}>
+                Prioridad
+                <select value={objetivoCorte} onChange={e => setObjetivoCorte(e.target.value)}
+                  style={{ fontSize: 10, fontFamily: T.fontMono, fontWeight: 700, color: T.text,
+                    border: `1px solid ${T.borderMid}`, borderRadius: 6, padding: '3px 6px',
+                    background: '#fff', cursor: 'pointer' }}>
+                  <option value="eficiencia">Mayor aprovechamiento</option>
+                  <option value="menos_planchas">Menor cant. de planchas</option>
+                  <option value="retazo_util">Retazo más grande</option>
+                </select>
+              </label>
+              {cargandoOptVidrio && (
+                <span style={{ fontSize: 10, fontFamily: T.fontMono, color: T.textDim,
+                  display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <IconLoader size={11} style={{ animation: 'pdSpin .7s linear infinite' }}/> recalculando…
+                </span>
+              )}
+            </div>
             {showHeader && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
               <div style={{ width: 3, height: 14, borderRadius: 2, background: T.brand }}/>

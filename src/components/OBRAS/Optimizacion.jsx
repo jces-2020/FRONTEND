@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  IconLayoutDashboard, IconScissors, IconPackage, IconTool,
-  IconSettings, IconLogout, IconBell, IconUser, IconX,
+  IconScissors, IconPackage, IconTool,
+  IconLogout, IconX,
   IconCheck, IconAlertTriangle, IconRefresh, IconZoomIn,
   IconRotate, IconPlayerPlay, IconPlayerPause, IconPlayerStop,
   IconReload, IconPlus, IconUpload, IconLoader,
@@ -31,11 +31,15 @@ const CSS = `
 
 /* ── LEFT SIDEBAR ── */
 .opt-sidebar {
-  width:250px; min-width:250px; height:calc(100vh - 56px);
+  width:190px; min-width:190px; height:calc(100vh - 56px);
   background:#fff; border-right:1px solid #e2e8f0;
   display:flex; flex-direction:column;
   overflow:hidden; flex-shrink:0;
 }
+.opt-sidebar-spacer { flex:1; }
+.opt-sidebar-bottom-top { border-top:none; padding-top:10px; }
+.opt-logout-btn { border-radius:8px; }
+.opt-logout-btn:hover { background:#fef2f2; color:#dc2626; }
 @media(min-width:640px){ .opt-sidebar { height:calc(100vh - 80px); } }
 @media(min-width:1024px){ .opt-sidebar { height:calc(100vh - 88px); } }
 .opt-logo {
@@ -46,9 +50,6 @@ const CSS = `
 .opt-logo-text {
   font-size:22px; font-weight:800; letter-spacing:.04em;
   color:#0d9488;
-}
-.opt-nav {
-  flex:1; padding:10px 0; overflow-y:auto;
 }
 .opt-nav-item {
   display:flex; align-items:center; gap:10px;
@@ -123,10 +124,11 @@ const CSS = `
   font-size:18px; font-weight:700; color:#1e293b; flex-shrink:0;
 }
 
-/* Center split: two sub-columns */
+/* Center split: two sub-columns. El diseño visual es lo que hay que ver
+   con claridad, la tabla de cortes es secundaria -> mas espacio al primero. */
 .opt-center-split {
   flex:1; min-height:0; display:grid;
-  grid-template-columns:1fr 1fr; gap:12px;
+  grid-template-columns:1.8fr 1fr; gap:12px;
 }
 
 /* ── CARD ── */
@@ -148,6 +150,19 @@ const CSS = `
   justify-content:center; color:#94a3b8; transition:all .15s;
 }
 .opt-icon-btn:hover { background:#f8fafc; color:#475569; }
+
+/* Nesting settings row */
+.opt-nest-settings {
+  display:flex; gap:14px; padding:8px 14px;
+  background:#f8fafc; border-bottom:1px solid #f1f5f9; flex-shrink:0; flex-wrap:wrap;
+}
+.opt-nest-setting { display:flex; align-items:center; gap:6px; font-size:11px; color:#64748b; font-weight:600; }
+.opt-nest-setting select {
+  font-size:11px; font-weight:600; color:#1e293b;
+  border:1px solid #e2e8f0; border-radius:6px; padding:4px 6px;
+  background:#fff; cursor:pointer;
+}
+.opt-nest-setting select:focus { outline:2px solid #99f6e4; outline-offset:1px; }
 
 /* SVG panel */
 .opt-svg-wrap { flex:1; min-height:0; position:relative; overflow:hidden; }
@@ -211,7 +226,7 @@ const CSS = `
 
 /* ── RIGHT SIDEBAR ── */
 .opt-right {
-  width:350px; min-width:350px; height:100%;
+  width:270px; min-width:270px; height:100%;
   background:#f0f4f8; border-left:1px solid #e2e8f0;
   display:flex; flex-direction:column; gap:10px;
   padding:12px; overflow-y:auto; flex-shrink:0;
@@ -500,11 +515,12 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
   const [activeTab, setActiveTab]       = useState('RETASOS');
   const [cortesPorProducto, setCortes]  = useState([]);
   const [cargando, setCargando]         = useState(false);
-  const [showNotif, setShowNotif]       = useState(true);
   const [cortesData, setCortesData]     = useState(DEMO_CUTS);
   const [planchasOptimizadas, setPlanchas] = useState([]);
   const [cargandoOpt, setCargandoOpt]   = useState(false);
   const [dimensionesPlancha, setDimensionesPlancha] = useState({ ancho: 330, alto: 214 });
+  const [orientacion, setOrientacion]   = useState('auto');
+  const [objetivoOpt, setObjetivoOpt]   = useState('eficiencia');
 
   const showToast = useCallback((msg, tipo = 'success') => {
     const id = Date.now() + Math.random();
@@ -573,6 +589,8 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
         plancha_ancho: dimensionesPlancha.ancho,
         plancha_alto: dimensionesPlancha.alto,
         productos,
+        orientacion,
+        objetivo: objetivoOpt,
       }),
     })
       .then(r => r.json())
@@ -590,7 +608,7 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
       })
       .catch(err => showToast('Error conectando con optimizador: ' + err.message, 'error'))
       .finally(() => setCargandoOpt(false));
-  }, [cortesPorProducto, showToast]);
+  }, [cortesPorProducto, orientacion, objetivoOpt, showToast]);
 
   /* Derived */
   const totalCortes     = cortesData.length;
@@ -644,14 +662,6 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
     );
   }
 
-  const navItems = [
-    { icon: <IconLayoutDashboard size={17}/>, label: 'Tablero Principal' },
-    { icon: <IconScissors size={17}/>,        label: 'Mis Optimizaciones', active: true },
-    { icon: <IconPackage size={17}/>,         label: 'Inventario de Materiales' },
-    { icon: <IconTool size={17}/>,            label: 'Control de Máquina' },
-    { icon: <IconSettings size={17}/>,        label: 'Configuración' },
-  ];
-
   return (
     <div className="opt-root">
       {/* Toasts */}
@@ -673,21 +683,16 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
           <span className="opt-logo-text">OPTICUT</span>
         </div>
 
-        <nav className="opt-nav">
-          {navItems.map(item => (
-            <button key={item.label} className={`opt-nav-item${item.active ? ' active' : ''}`}>
-              <span className="opt-nav-icon">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
-          <button className="opt-nav-item" style={{ marginTop:8, borderTop:'1px solid #f1f5f9', paddingTop:14 }}
-            onClick={handleLogout}>
+        {/* Status widgets */}
+        <div className="opt-sidebar-bottom opt-sidebar-bottom-top">
+          <button className="opt-nav-item opt-logout-btn" onClick={handleLogout}>
             <span className="opt-nav-icon"><IconLogout size={17}/></span>
             Cerrar Sesión
           </button>
-        </nav>
+        </div>
 
-        {/* Status widgets */}
+        <div className="opt-sidebar-spacer"/>
+
         <div className="opt-sidebar-bottom">
           {/* Estado Máquina */}
           <div className="opt-stat-card">
@@ -737,15 +742,6 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
         <header className="opt-topbar">
           <span className="opt-topbar-title">MES Dashboard</span>
           <div className="opt-topbar-right">
-            {showNotif && (
-              <div className="opt-notif-pill">
-                <div className="opt-notif-dot"/>
-                <span>Uinors, rblocking notificaciones</span>
-                <button className="opt-notif-close" onClick={() => setShowNotif(false)}>
-                  <IconX size={10}/>
-                </button>
-              </div>
-            )}
             <div className="opt-operator">
               <span>Operario Actual: <strong>{opName}</strong></span>
               <div className="opt-avatar">{opInitials}</div>
@@ -797,6 +793,24 @@ const OptimizacionCortes = ({ notificacion, onBack, soloCortes = false, onFinali
                     <button className="opt-icon-btn"><IconRefresh size={12}/></button>
                     <button className="opt-icon-btn">···</button>
                   </div>
+                </div>
+                <div className="opt-nest-settings">
+                  <label className="opt-nest-setting">
+                    <span>Orientación de corte</span>
+                    <select value={orientacion} onChange={e => setOrientacion(e.target.value)}>
+                      <option value="auto">Automática</option>
+                      <option value="horizontal">Horizontal</option>
+                      <option value="vertical">Vertical</option>
+                    </select>
+                  </label>
+                  <label className="opt-nest-setting">
+                    <span>Prioridad</span>
+                    <select value={objetivoOpt} onChange={e => setObjetivoOpt(e.target.value)}>
+                      <option value="eficiencia">Mayor aprovechamiento</option>
+                      <option value="menos_planchas">Menor cant. de planchas</option>
+                      <option value="retazo_util">Retazo más grande</option>
+                    </select>
+                  </label>
                 </div>
                 <div className="opt-svg-wrap">
                   <div className="opt-svg-inner">
