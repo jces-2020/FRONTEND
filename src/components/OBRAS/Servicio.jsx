@@ -513,6 +513,7 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
                     abrirComprobanteServicio(productos, { tabPostPago: 'DISENO' });
                   }}
                   onGuardarSuccess={(carritoId) => {
+                    guardarTracking({ aceptoPedido: true, maxStep: Math.max(tracking.maxStep, 1) });
                     if (carritoId) {
                       setCarritoData((prev) => ({ ...prev, carrito_id: carritoId }));
                     }
