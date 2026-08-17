@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { COLORS, FONTS } from '../../colors';
 
-const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) => {
+const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onPagoConfirmado }) => {
   const [ancho, setAncho] = useState('');
   const [alto, setAlto] = useState('');
   const [precio, setPrecio] = useState('');
@@ -230,9 +230,9 @@ const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           notificacion_id: notificacionId,
-          cliente_id: notificacion?.id_cliente || notificacion?.cliente_id || null,
-          cliente_nombre: notificacion?.nombre || null,
-          cliente_correo: notificacion?.correo || null
+          cliente_id: clienteResuelto?.id_cliente || notificacion?.id_cliente || notificacion?.cliente_id || null,
+          cliente_nombre: clienteResuelto?.nombre || notificacion?.nombre || null,
+          cliente_correo: clienteResuelto?.correo || notificacion?.correo || null
         })
       });
       const dataServicio = await respServicio.json();
