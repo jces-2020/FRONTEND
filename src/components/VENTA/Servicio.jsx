@@ -349,6 +349,11 @@ export default function Servicio() {
         }
         clearPresupuestos();
         setFilas([]);
+        setDigitos('');
+        setNombreCliente('');
+        setBusquedaEstado('');
+        setBusquedaOk(false);
+        setTipoSel(null);
       } else {
         showNotice(data.message || 'Error al guardar.', 'err');
       }
