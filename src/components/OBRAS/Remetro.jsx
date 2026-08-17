@@ -856,4 +856,3 @@ const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) 
 };
 
 export default Remetro;
-

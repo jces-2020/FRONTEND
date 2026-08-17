@@ -284,7 +284,6 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
 
   const servicio     = servicios[servicioIdx] || null;
   const nombreDisplay = servicio?.nombre_servicio
-    || notificacion?.descripcion
     || notificacion?.nombre_servicio
     || 'Servicio';
   const precioDisplay = servicio?.total ? `S/. ${Number(servicio.total).toFixed(2)}` : null;
