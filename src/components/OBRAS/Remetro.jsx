@@ -267,6 +267,7 @@ const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           notificacion_id: notificacionId,
+          carrito_id: carritoId || null,
           ancho: Number(ancho) || null,
           alto: Number(alto) || null,
           serie: '',
