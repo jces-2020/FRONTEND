@@ -15,7 +15,13 @@ const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) 
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1280 : window.innerWidth
   );
-  const fechaHoy = new Date().toISOString().split('T')[0];
+  const fechaHoy = (() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  })();
   const notificacionId = notificacion?.id_notificacion || notificacion?.id || null;
   const isTablet = viewportWidth <= 1024;
   const isMobile = viewportWidth <= 760;
@@ -166,21 +172,18 @@ const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) 
             setServiciosCliente([]);
             setDescripcion(descripcionBaseNotificacion(notificacion?.descripcion));
           }
-          const fechaNotif = notificacion.fecha || fechaHoy;
-          setFechaServicio(fechaNotif < fechaHoy ? fechaHoy : fechaNotif);
+          setFechaServicio(normalizarFechaServicio(notificacion?.fecha || fechaHoy));
         } else {
           console.log('[REMETRO] Sin servicios asociados a la notificación');
           setServiciosCliente([]);
           setDescripcion(descripcionBaseNotificacion(notificacion?.descripcion));
-          const fechaNotif = notificacion.fecha || fechaHoy;
-          setFechaServicio(fechaNotif < fechaHoy ? fechaHoy : fechaNotif);
+          setFechaServicio(normalizarFechaServicio(notificacion?.fecha || fechaHoy));
         }
       } catch (error) {
         console.error('[REMETRO] Error obteniendo servicios asociados:', error);
         setServiciosCliente([]);
         setDescripcion(descripcionBaseNotificacion(notificacion?.descripcion));
-        const fechaNotif = notificacion.fecha || fechaHoy;
-        setFechaServicio(fechaNotif < fechaHoy ? fechaHoy : fechaNotif);
+        setFechaServicio(normalizarFechaServicio(notificacion?.fecha || fechaHoy));
         onToast && onToast('Error al cargar servicios del presupuesto', 'error');
       } finally {
         setCargando(false);
