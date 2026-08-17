@@ -304,13 +304,16 @@ const ProductCard = ({ item, navigate }) => {
       onMouseLeave={handleLeave}
       role="button"
       tabIndex={0}
-      style={{ position: 'relative', height: 300, cursor: 'pointer', perspective: 900 }}
+      style={{ position: 'relative', height: 320, cursor: 'pointer', perspective: 900 }}
     >
-      {/* Panel de fondo con degradado de marca */}
+      {/* Panel de fondo con degradado de marca: solo ocupa la mitad inferior, como "pedestal" */}
       <div
         style={{
           position: 'absolute',
-          inset: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: '54%',
           borderRadius: 22,
           overflow: 'hidden',
           background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 55%, #12131a 140%)`,
@@ -326,9 +329,9 @@ const ProductCard = ({ item, navigate }) => {
       {/* Etiqueta de categoría */}
       <span
         style={{
-          position: 'absolute', top: 18, left: 20, zIndex: 3,
+          position: 'absolute', top: 10, left: 14, zIndex: 3,
           padding: '5px 12px', borderRadius: 999,
-          background: 'rgba(255,255,255,0.16)', color: '#fff', fontWeight: 800,
+          background: 'rgba(18,19,26,0.55)', color: '#fff', fontWeight: 800,
           fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase',
           backdropFilter: 'blur(4px)',
         }}
@@ -336,11 +339,11 @@ const ProductCard = ({ item, navigate }) => {
         {item.nombre}
       </span>
 
-      {/* Imagen del producto flotando con efecto 3D (tilt + sombra) */}
+      {/* Imagen del producto: grande, sobresale por encima del panel (efecto 3D "flotando") */}
       <div
         style={{
-          position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.07 : 1})`,
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.08 : 1}) translateY(${hovered ? '-6px' : '0px'})`,
           transformStyle: 'preserve-3d',
           transition: 'transform 0.25s ease-out',
           zIndex: 2,
@@ -350,10 +353,11 @@ const ProductCard = ({ item, navigate }) => {
           src={item.img}
           alt={item.nombre}
           style={{
-            width: '72%',
-            maxHeight: '68%',
+            width: '90%',
+            maxHeight: '96%',
             objectFit: 'contain',
-            filter: 'drop-shadow(0 24px 18px rgba(0,0,0,0.45))',
+            marginBottom: '4%',
+            filter: 'drop-shadow(0 30px 22px rgba(0,0,0,0.5))',
             pointerEvents: 'none',
           }}
         />
@@ -420,71 +424,92 @@ const Ubicacion = () => {
 
   return (
     <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
-        <div style={{ position: 'relative', minHeight: 300 }}>
-          <img
-            src="/tienda%20anime.png"
-            alt="Local Vidriobras"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
-          />
-          <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
-        </div>
-
-        <div
-          style={{
-            position: 'relative',
-            background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
-            clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            padding: isMobile ? '48px 24px' : '56px 60px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-            UBICACIÓN
-          </p>
-          <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>
-            Lugares donde distribuimos nuestros productos
-          </h2>
-          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>
-            Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
+          <div style={{ position: 'relative', minHeight: 300 }}>
             <img
-              src="/junin-map.png"
-              alt="Mapa de la región Junín"
-              style={{
-                width: 150,
-                height: 'auto',
-                opacity: visible ? 1 : 0,
-                transform: visible ? 'scale(1)' : 'scale(0.85)',
-                transition: 'opacity 0.8s ease, transform 0.8s ease',
-                filter: 'drop-shadow(0 8px 20px rgba(128,194,220,0.45))',
-              }}
+              src="/tienda%20anime.png"
+              alt="Local Vidriobras"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
             />
-            <div>
-              <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
-              <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
-            </div>
+            <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
           </div>
 
-          <div style={{ display: 'grid', gap: 10, marginTop: 28 }}>
-            {zonasCobertura.map((z) => (
-              <div key={z.nombre} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{
-                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.12)', color: '#80C2DC',
-                }}>
-                  <IconMapPin size={15} stroke={2.1} />
-                </span>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}
-                </p>
+          <div
+            style={{
+              position: 'relative',
+              background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
+              clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
+              padding: isMobile ? '48px 24px' : '56px 60px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+              UBICACIÓN
+            </p>
+            <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>
+              Lugares donde distribuimos nuestros productos
+            </h2>
+            <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>
+              Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.
+            </p>
+
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 26, flexWrap: 'wrap' }}>
+              {/* Resplandor detrás del mapa para que esa zona no se vea vacía */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: -30,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 260,
+                  height: 260,
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(128,194,220,0.28) 0%, rgba(128,194,220,0.08) 55%, transparent 75%)',
+                  opacity: visible ? 1 : 0,
+                  transition: 'opacity 1s ease',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }}
+              />
+              <img
+                src="/junin-map.png"
+                alt="Mapa de la región Junín"
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: 215,
+                  height: 'auto',
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'scale(1)' : 'scale(0.85)',
+                  transition: 'opacity 0.8s ease, transform 0.8s ease',
+                  filter: 'drop-shadow(0 10px 26px rgba(128,194,220,0.5))',
+                }}
+              />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
+                <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'grid', gap: 10, marginTop: 28 }}>
+              {zonasCobertura.map((z) => (
+                <div key={z.nombre} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(255,255,255,0.12)', color: '#80C2DC',
+                  }}>
+                    <IconMapPin size={15} stroke={2.1} />
+                  </span>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
