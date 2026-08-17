@@ -1,9 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconSparkles, IconMapPin } from '@tabler/icons-react';
+import { animate } from 'animejs';
+import { IconShieldCheck, IconRulerMeasure, IconTruckDelivery, IconMapPin, IconArrowRight, IconChevronDown } from '@tabler/icons-react';
 import '../App.css';
 
 const DEFAULT_SERVICE_IMAGE = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial' font-size='42'>VIDRIOBRAS</text></svg>";
+
+// ─── Estadísticas del HERO (se animan contando hasta el valor final) ────────
+const heroStats = [
+  { value: 7, suffix: '+', label: 'Años de experiencia' },
+  { value: 1000, suffix: '+', label: 'Proyectos entregados' },
+  { value: 1000, suffix: '+', label: 'Clientes' },
+];
 
 // ─── Botón Neon solo bordes superior e inferior ──────────────────────────────
 const NeonButton = ({ onClick, children }) => {
@@ -114,9 +122,35 @@ const QS_GUTTER = 'max(24px, calc((100vw - 1000px) / 2))';
 const QuienesSomos = () => {
   const isMobile = window.innerWidth < 900;
   const imgHeight = isMobile ? 260 : 420;
+  const imgRef = useRef(null);
+  const hasAnimated = useRef(false);
+
+  // Anima la imagen de Vidriobras (fade + deslizamiento) cuando entra en pantalla
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          animate(el, {
+            opacity: [0, 1],
+            translateX: [-40, 0],
+            duration: 900,
+            ease: 'outExpo',
+          });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <section className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
+    <section id="quienes-somos" className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
       <p style={{
         margin: '0 0 28px',
         paddingLeft: QS_GUTTER,
@@ -137,6 +171,7 @@ const QuienesSomos = () => {
             }}
           >
             <img
+              ref={imgRef}
               src="/paisaje.jpg"
               alt="Vidriobras instalación"
               style={{
@@ -148,6 +183,7 @@ const QuienesSomos = () => {
                 position: 'relative',
                 zIndex: 5,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                opacity: 0,
               }}
             />
             <div className="vb-surface" style={{ padding: '28px 26px', borderTop: '4px solid #80C2DC' }}>
@@ -217,85 +253,146 @@ const productosData = [
   {
     nombre: 'Aluminio',
     descripcion: 'Perfiles, ventanas y estructuras de aluminio resistentes y de acabado premium.',
-    icono: IconRulerMeasure,
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/aluminios/Aluminio_Plateado_edit_d8a3e86b.png',
+    slug: 'aluminio',
     color: '#5a8ba8',
   },
   {
     nombre: 'Vidrio',
     descripcion: 'Vidrio templado, laminado y de seguridad en distintos espesores y acabados.',
-    icono: IconShieldCheck,
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/vidrios/Espejos-01_proc_30962e6b.png',
+    slug: 'vidrio',
     color: '#941918',
   },
   {
     nombre: 'Accesorios',
     descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
-    icono: IconSparkles,
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/acc_1_proc_2deaecae.png',
+    slug: 'accesorios',
     color: '#ad7d00',
   },
 ];
 
-const ProductCard = ({ item }) => {
-  const Icono = item.icono;
+// Tarjeta de producto con efecto 3D: el producto "flota" y sigue el mouse (tilt),
+// con sombra propia para dar profundidad. Al hacer click, navega a /productos
+// filtrado por esa categoría (esto activa el resaltado rojo que ya existe en Productos.jsx).
+const ProductCard = ({ item, navigate }) => {
   const [hovered, setHovered] = useState(false);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const cardRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    setTilt({ x: (0.5 - py) * 16, y: (px - 0.5) * 16 });
+  };
+
+  const handleLeave = () => {
+    setHovered(false);
+    setTilt({ x: 0, y: 0 });
+  };
+
   return (
     <div
-      style={{ position: 'relative', height: 240 }}
+      ref={cardRef}
+      onClick={() => navigate(`/productos?cat=${item.slug}`)}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleLeave}
+      role="button"
+      tabIndex={0}
+      style={{ position: 'relative', height: 320, cursor: 'pointer', perspective: 900 }}
     >
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: 22,
-        background: '#eef2f6', border: '1.5px dashed rgba(90,139,168,0.35)',
-      }} />
-
+      {/* Panel de fondo con degradado de marca: solo ocupa la mitad inferior, como "pedestal" */}
       <div
         style={{
           position: 'absolute',
-          inset: '16px 16px 28px 16px',
-          borderRadius: 18,
-          background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 100%)`,
-          transform: hovered
-            ? 'perspective(700px) rotateX(0deg) rotateY(0deg) translateY(-18px) scale(1.03)'
-            : 'perspective(700px) rotateX(7deg) rotateY(-5deg) translateY(-8px)',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: '54%',
+          borderRadius: 22,
+          overflow: 'hidden',
+          background: `linear-gradient(160deg, ${item.color} 0%, ${item.color}c8 55%, #12131a 140%)`,
           boxShadow: hovered
-            ? `0 40px 55px -14px ${item.color}77, 0 14px 24px rgba(0,0,0,0.22)`
-            : `0 28px 40px -14px ${item.color}55, 0 8px 16px rgba(0,0,0,0.16)`,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '20px 22px',
-          transition: 'transform 0.35s ease, box-shadow 0.35s ease',
+            ? `0 34px 55px -18px ${item.color}88, 0 14px 28px rgba(0,0,0,0.3)`
+            : `0 20px 34px -18px ${item.color}55, 0 8px 16px rgba(0,0,0,0.18)`,
+          transition: 'box-shadow 0.35s ease',
         }}
       >
-        <span style={{
-          width: 46, height: 46, borderRadius: 12,
-          background: 'rgba(255,255,255,0.18)', display: 'inline-flex',
-          alignItems: 'center', justifyContent: 'center', color: '#fff',
-        }}>
-          <Icono size={24} stroke={2} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 15%, rgba(255,255,255,0.22), transparent 55%)' }} />
+      </div>
+
+      {/* Etiqueta de categoría */}
+      <span
+        style={{
+          position: 'absolute', top: 10, left: 14, zIndex: 3,
+          padding: '5px 12px', borderRadius: 999,
+          background: 'rgba(18,19,26,0.55)', color: '#fff', fontWeight: 800,
+          fontSize: '0.7rem', letterSpacing: '0.08em', textTransform: 'uppercase',
+          backdropFilter: 'blur(4px)',
+        }}
+      >
+        {item.nombre}
+      </span>
+
+      {/* Imagen del producto: grande, sobresale por encima del panel (efecto 3D "flotando") */}
+      <div
+        style={{
+          position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${hovered ? 1.08 : 1}) translateY(${hovered ? '-6px' : '0px'})`,
+          transformStyle: 'preserve-3d',
+          transition: 'transform 0.25s ease-out',
+          zIndex: 2,
+        }}
+      >
+        <img
+          src={item.img}
+          alt={item.nombre}
+          style={{
+            width: '90%',
+            maxHeight: '96%',
+            objectFit: 'contain',
+            marginBottom: '4%',
+            filter: 'drop-shadow(0 30px 22px rgba(0,0,0,0.5))',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* Pie: descripción + call to action */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', zIndex: 3 }}>
+        <p style={{ margin: 0, color: 'rgba(255,255,255,0.92)', fontSize: '0.82rem', lineHeight: 1.5, textShadow: '0 2px 6px rgba(0,0,0,0.55)' }}>
+          {item.descripcion}
+        </p>
+        <span
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 10,
+            color: '#fff', fontWeight: 800, fontSize: '0.78rem', letterSpacing: '0.04em', textTransform: 'uppercase',
+            textShadow: '0 2px 6px rgba(0,0,0,0.4)',
+          }}
+        >
+          Ver {item.nombre.toLowerCase()} <IconArrowRight size={14} stroke={2.4} />
         </span>
-        <div>
-          <h3 style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.25rem' }}>{item.nombre}</h3>
-          <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.88)', fontSize: '0.86rem', lineHeight: 1.55 }}>
-            {item.descripcion}
-          </p>
-        </div>
       </div>
     </div>
   );
 };
 
-const Productos = () => (
+const Productos = ({ navigate }) => (
   <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
       <SectionEyebrow
         label="PRODUCTOS"
         title="Lo que vendemos"
-        subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial."
+        subtitle="Aluminio, vidrio y accesorios de calidad certificada para cada tipo de proyecto residencial y comercial. Toca una tarjeta para ver el catálogo."
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 30 }}>
         {productosData.map((item) => (
-          <ProductCard key={item.nombre} item={item} />
+          <ProductCard key={item.nombre} item={item} navigate={navigate} />
         ))}
       </div>
     </div>
@@ -327,67 +424,92 @@ const Ubicacion = () => {
 
   return (
     <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
-        <div style={{ position: 'relative', minHeight: 300 }}>
-          <img
-            src="/tienda%20anime.png"
-            alt="Local Vidriobras"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
-          />
-          <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
-        </div>
-
-        <div
-          style={{
-            position: 'relative',
-            background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
-            clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            padding: isMobile ? '48px 24px' : '56px 60px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-            UBICACIÓN
-          </p>
-          <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>
-            Lugares donde distribuimos nuestros productos
-          </h2>
-          <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>
-            Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap' }}>
-            <svg width="150" height="150" viewBox="0 0 600 460" style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.8s ease' }}>
-              <path
-                d="M300,40 C400,40 452,120 440,200 C470,270 440,360 360,410 C300,444 220,440 170,400 C100,360 78,280 96,210 C70,140 110,60 210,44 C240,38 270,36 300,40 Z"
-                fill="#12131a"
-                stroke="#80C2DC"
-                strokeWidth="3"
-              />
-            </svg>
-            <div>
-              <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
-              <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
-            </div>
+      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
+          <div style={{ position: 'relative', minHeight: 300 }}>
+            <img
+              src="/tienda%20anime.png"
+              alt="Local Vidriobras"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
+            />
+            <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
           </div>
 
-          <div style={{ display: 'grid', gap: 10, marginTop: 28 }}>
-            {zonasCobertura.map((z) => (
-              <div key={z.nombre} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <span style={{
-                  width: 26, height: 26, borderRadius: 8, flexShrink: 0,
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'rgba(255,255,255,0.12)', color: '#80C2DC',
-                }}>
-                  <IconMapPin size={15} stroke={2.1} />
-                </span>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}>
-                  <strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}
-                </p>
+          <div
+            style={{
+              position: 'relative',
+              background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
+              clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
+              padding: isMobile ? '48px 24px' : '56px 60px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}
+          >
+            <p style={{ margin: 0, color: '#80C2DC', fontWeight: 800, letterSpacing: '0.14em', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+              UBICACIÓN
+            </p>
+            <h2 style={{ margin: '8px 0 10px', color: '#fff', fontSize: 'clamp(1.7rem, 2.6vw, 2.3rem)', fontWeight: 900, lineHeight: 1.15 }}>
+              Lugares donde distribuimos nuestros productos
+            </h2>
+            <p style={{ margin: '0 0 28px', color: 'rgba(255,255,255,0.78)', lineHeight: 1.75, fontSize: '0.95rem', maxWidth: 420 }}>
+              Instalamos, entregamos y damos soporte técnico en toda la región. Si tu proyecto está en el Valle del Mantaro, ya estamos cerca.
+            </p>
+
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 26, flexWrap: 'wrap' }}>
+              {/* Resplandor detrás del mapa para que esa zona no se vea vacía */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: -30,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: 260,
+                  height: 260,
+                  borderRadius: '50%',
+                  background: 'radial-gradient(circle, rgba(128,194,220,0.28) 0%, rgba(128,194,220,0.08) 55%, transparent 75%)',
+                  opacity: visible ? 1 : 0,
+                  transition: 'opacity 1s ease',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }}
+              />
+              <img
+                src="/junin-map.png"
+                alt="Mapa de la región Junín"
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: 215,
+                  height: 'auto',
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'scale(1)' : 'scale(0.85)',
+                  transition: 'opacity 0.8s ease, transform 0.8s ease',
+                  filter: 'drop-shadow(0 10px 26px rgba(128,194,220,0.5))',
+                }}
+              />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
+                <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
               </div>
-            ))}
+            </div>
+
+            <div style={{ display: 'grid', gap: 10, marginTop: 28 }}>
+              {zonasCobertura.map((z) => (
+                <div key={z.nombre} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 8, flexShrink: 0,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(255,255,255,0.12)', color: '#80C2DC',
+                  }}>
+                    <IconMapPin size={15} stroke={2.1} />
+                  </span>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#fff' }}>{z.nombre}:</strong> {z.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -423,7 +545,7 @@ const TestimonioCard = ({ item }) => (
   </div>
 );
 
-const Testimonios = ({ navigate }) => (
+const Testimonios = () => (
   <div className="w-full py-20" style={{ background: 'rgba(15,15,30,0.92)' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
       <SectionEyebrow
@@ -437,9 +559,6 @@ const Testimonios = ({ navigate }) => (
           <TestimonioCard key={t.nombre} item={t} />
         ))}
       </div>
-      <div className="mt-16 text-center" style={{ marginTop: 48, textAlign: 'center' }}>
-        <NeonButton onClick={() => navigate('/contacto')}>Más información</NeonButton>
-      </div>
     </div>
   </div>
 );
@@ -449,11 +568,97 @@ function Inicio() {
   const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const navigate = useNavigate();
+  const bgShadowRef = useRef(null); // aura difuminada (sombreado del degradado de atrás)
+  const bgBackRef = useRef(null);   // degradado de atrás
+  const bgFrontRef = useRef(null);  // degradado de adelante (el amarillo principal)
+  const logoRef = useRef(null);
+  const vidrioPaintRef = useRef(null);
+  const statRefs = useRef([]);
+
+  // Al entrar/recargar la página, siempre arranca arriba del todo (para que
+  // se vea la animación de presentación del Hero), sin importar el scroll
+  // que el navegador quiera restaurar de una visita anterior.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     fetch('/api/servicios/random')
       .then(res => res.json())
       .then(data => { if (data.success) setServicios(data.data); });
+  }, []);
+
+  // Animación de entrada con animejs (secuencial, responsiva con % en vez de px fijos).
+  // Coreografía (menos "robotizada": cada capa se mueve en una dirección distinta y con rebote suave):
+  // 1) Cae desde arriba el degradado de ADELANTE (el amarillo, detrás del logo)
+  // 2) Sube desde abajo el degradado que al final queda como un triangulito fino (ATRÁS)
+  // 3) El SOMBREADO (aura difuminada) se asoma saliendo hacia la izquierda, de entre las dos anteriores
+  // 4) Aparece el logo "V", se pinta "VIDRIO" y cuentan los números
+  useEffect(() => {
+    if (!bgBackRef.current || !bgFrontRef.current || !bgShadowRef.current) return;
+
+    const isMobile = window.innerWidth < 768;
+    const vDist = isMobile ? '90%' : '140%';
+    const wobble = isMobile ? 2 : 4;
+
+    animate(bgFrontRef.current, {
+      translateY: [`-${vDist}`, '0%'],
+      rotate: [-wobble, 0],
+      duration: isMobile ? 620 : 800,
+      ease: 'outExpo',
+    }).then(() => {
+      animate(bgBackRef.current, {
+        translateY: [vDist, '0%'],
+        rotate: [wobble, 0],
+        duration: isMobile ? 560 : 720,
+        ease: 'outExpo',
+      }).then(() => {
+        animate(bgShadowRef.current, {
+          translateX: ['42%', '0%'],
+          opacity: [0, 0.35],
+          scale: [0.92, 1],
+          duration: isMobile ? 600 : 780,
+          ease: 'outCubic',
+        }).then(() => {
+          // El logo "V" aparece
+          if (logoRef.current) {
+            animate(logoRef.current, {
+              opacity: [0, 1],
+              scale: [0.6, 1],
+              duration: 600,
+              ease: 'outQuad',
+            });
+          }
+
+          // "VIDRIO" se pinta de negro de izquierda a derecha
+          if (vidrioPaintRef.current) {
+            animate(vidrioPaintRef.current, {
+              width: ['0%', '100%'],
+              duration: 1100,
+              ease: 'inOutQuad',
+            });
+          }
+
+          // Los números del hero cuentan hasta su valor final
+          heroStats.forEach((stat, i) => {
+            const el = statRefs.current[i];
+            if (!el) return;
+            const counter = { val: 0 };
+            animate(counter, {
+              val: stat.value,
+              duration: 1400,
+              ease: 'outQuad',
+              onUpdate: () => {
+                el.textContent = Math.round(counter.val).toLocaleString('es-PE') + stat.suffix;
+              },
+            });
+          });
+        });
+      });
+    });
   }, []);
 
   useEffect(() => {
@@ -468,9 +673,9 @@ function Inicio() {
         src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
         alt={serv?.nombre}
         onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        style={{ width: '100%', height: 'auto', display: 'block' }}
       />
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.05) 55%)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 40%, transparent 65%)' }} />
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', zIndex: 2 }}>
         <h3 style={{ margin: 0, color: '#fff', fontSize: '1rem', fontWeight: 700, textShadow: '1px 2px 6px rgba(0,0,0,0.9)' }}>{serv?.nombre}</h3>
         <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.85)', fontSize: '0.75rem', textShadow: '1px 1px 4px rgba(0,0,0,0.9)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{serv?.descripcion}</p>
@@ -478,11 +683,11 @@ function Inicio() {
     </>
   );
 
-  const Card = ({ serv, rotate, height }) => {
+  const Card = ({ serv, rotate }) => {
     const [hovered, setHovered] = useState(false);
     return (
-      <div style={{ height, position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-        <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', height: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
+      <div style={{ breakInside: 'avoid', marginBottom: 16, position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+        <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
           <CardContent serv={serv} />
         </div>
       </div>
@@ -507,39 +712,16 @@ function Inicio() {
           position: 'relative',
         }}
       >
+        {/* Degradado de ATRÁS (queda como un triangulito fino): sube desde abajo */}
         <div
-          style={{
-            position: 'absolute',
-            top: '-5%',
-            right: 0,
-            width: '58%',
-            height: '108%',
-            transform: 'translateX(-100px)',
-            backgroundImage: `linear-gradient(
-              40deg,
-              hsl(50deg 100% 50%) 0%,
-              hsl(33deg 78% 45%) 15%,
-              hsl(0deg 72% 34%) 53%,
-              hsl(1deg 19% 54%) 80%,
-              hsl(197deg 57% 68%) 94%,
-              hsl(198deg 55% 85%) 99%,
-              hsl(0deg 0% 100%) 100%
-            )`,
-            opacity: 0.35,
-            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
-            filter: 'blur(240px)',
-            zIndex: 0,
-          }}
-        />
-
-        <div
+          ref={bgBackRef}
           style={{
             position: 'absolute',
             top: 0,
-            right: 0,
+            right: '3%',
             width: '48%',
             height: '100%',
-            transform: 'translateX(-40px)',
+            transform: 'translateY(140%)',
             backgroundImage: `linear-gradient(
               40deg,
               hsl(50deg 100% 50%) 0%,
@@ -552,16 +734,20 @@ function Inicio() {
             )`,
             clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
             zIndex: 1,
+            willChange: 'transform',
           }}
         />
 
+        {/* Degradado de ADELANTE (amarillo principal): cae primero, desde arriba */}
         <div
+          ref={bgFrontRef}
           style={{
             position: 'absolute',
             top: 0,
             right: 0,
             width: '48%',
             height: '100%',
+            transform: 'translateY(-140%)',
             backgroundImage: `linear-gradient(
               150deg,
               hsl(0deg 72% 34%) 0%,
@@ -575,12 +761,39 @@ function Inicio() {
             )`,
             clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 30% 100%)',
             zIndex: 2,
+            willChange: 'transform',
           }}
         />
 
-        <img
-          src="/R.png"
-          alt="Logo R"
+        {/* Sombreado (aura difuminada) del degradado de atrás: se asoma al final, saliendo hacia la izquierda de entre las otras dos */}
+        <div
+          ref={bgShadowRef}
+          style={{
+            position: 'absolute',
+            top: '-5%',
+            right: '10%',
+            width: '58%',
+            height: '108%',
+            transform: 'translateX(42%)',
+            backgroundImage: `linear-gradient(
+              40deg,
+              hsl(50deg 100% 50%) 0%,
+              hsl(33deg 78% 45%) 15%,
+              hsl(0deg 72% 34%) 53%,
+              hsl(1deg 19% 54%) 80%,
+              hsl(197deg 57% 68%) 94%,
+              hsl(198deg 55% 85%) 99%,
+              hsl(0deg 0% 100%) 100%
+            )`,
+            opacity: 0,
+            clipPath: 'polygon(30% 0%, 100% 0%, 100% 100%, 0% 100%)',
+            filter: 'blur(clamp(90px, 18vw, 240px))',
+            zIndex: 0,
+            willChange: 'transform',
+          }}
+        />
+
+        <div
           className="absolute w-[300px] md:w-[500px] lg:w-[700px] z-10"
           style={{
             top: '55%',
@@ -589,7 +802,14 @@ function Inicio() {
             minWidth: 300,
             maxWidth: 800,
           }}
-        />
+        >
+          <img
+            ref={logoRef}
+            src="/R.png"
+            alt="Logo R"
+            style={{ width: '100%', display: 'block', opacity: 0 }}
+          />
+        </div>
 
         <div className="relative z-20 max-w-2xl lg:max-w-3xl" style={{ padding: '0 16px 0 16px', marginLeft: 'clamp(16px, 6vw, 64px)' }}>
           <div style={{ width: 56, height: 4, borderRadius: 4, background: 'linear-gradient(90deg, #80C2DC, #941918)', marginBottom: 12 }} />
@@ -598,8 +818,25 @@ function Inicio() {
           </p>
 
           <h1 style={{ margin: '8px 0 0', lineHeight: 0.96 }}>
-            <span style={{ display: 'block', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, color: '#12131a', letterSpacing: '-0.01em' }}>
-              VIDRIO
+            <span style={{ display: 'block', position: 'relative', fontSize: 'clamp(3rem, 9vw, 6.6rem)', fontWeight: 900, letterSpacing: '-0.01em' }}>
+              {/* Boceto base: contorno de "VIDRIO" */}
+              <span style={{ color: 'transparent', WebkitTextStroke: '2px rgba(18,19,26,0.25)' }}>VIDRIO</span>
+              {/* Capa que se "pinta" de negro de izquierda a derecha */}
+              <span
+                ref={vidrioPaintRef}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  display: 'inline-block',
+                  overflow: 'hidden',
+                  width: '0%',
+                  whiteSpace: 'nowrap',
+                  color: '#12131a',
+                }}
+              >
+                VIDRIO
+              </span>
             </span>
             <span
               style={{
@@ -625,16 +862,31 @@ function Inicio() {
 
           <div style={{ display: 'flex', gap: 14, marginTop: 26, flexWrap: 'wrap' }}>
             <button
-              onClick={() => navigate('/contacto')}
+              onClick={() => document.getElementById('quienes-somos')?.scrollIntoView({ behavior: 'smooth' })}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.boxShadow = '0 20px 38px -10px rgba(148,25,24,0.55), 0 6px 16px rgba(244,196,48,0.35)';
+                const chev = e.currentTarget.querySelector('.chev-down');
+                if (chev) chev.style.transform = 'translateY(3px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 12px 28px -8px rgba(148,25,24,0.45), 0 4px 10px rgba(244,196,48,0.25)';
+                const chev = e.currentTarget.querySelector('.chev-down');
+                if (chev) chev.style.transform = 'translateY(0)';
+              }}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '13px 26px', borderRadius: 999, border: 'none', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', gap: 10,
+                padding: '14px 30px', borderRadius: 999, border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(90deg, #f4c430 0%, #941918 100%)',
-                color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.04em',
-                textTransform: 'uppercase', boxShadow: '0 10px 26px rgba(148,25,24,0.35)',
+                color: '#fff', fontWeight: 800, fontSize: '0.85rem', letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                boxShadow: '0 12px 28px -8px rgba(148,25,24,0.45), 0 4px 10px rgba(244,196,48,0.25)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
               }}
             >
-              Cotización gratis →
+              Conócenos
+              <IconChevronDown className="chev-down" size={16} stroke={2.6} style={{ transition: 'transform 0.25s ease' }} />
             </button>
             <button
               onClick={() => navigate('/servicios')}
@@ -650,15 +902,16 @@ function Inicio() {
           </div>
 
           <div style={{ display: 'flex', gap: 22, marginTop: 34, alignItems: 'stretch' }}>
-            {[
-              { valor: '7+', label: 'Años de experiencia' },
-              { valor: '1,000+', label: 'Proyectos entregados' },
-              { valor: '1,000+', label: 'Clientes' },
-            ].map((stat, i) => (
+            {heroStats.map((stat, i) => (
               <React.Fragment key={stat.label}>
                 {i > 0 && <div style={{ width: 2, background: '#941918', opacity: 0.35 }} />}
                 <div>
-                  <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#12131a' }}>{stat.valor}</p>
+                  <p
+                    ref={(el) => (statRefs.current[i] = el)}
+                    style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#12131a' }}
+                  >
+                    0{stat.suffix}
+                  </p>
                   <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#6b7280' }}>{stat.label}</p>
                 </div>
               </React.Fragment>
@@ -671,7 +924,7 @@ function Inicio() {
       <QuienesSomos />
 
       {/* PRODUCTOS */}
-      <Productos />
+      <Productos navigate={navigate} />
 
       {/* UBICACIÓN */}
       <Ubicacion />
@@ -694,17 +947,20 @@ function Inicio() {
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <Card serv={s[0]} rotate="-1.5deg" height={220} />
-            <Card serv={s[1]} rotate="1.5deg" height={220} />
-            <Card serv={s[2]} rotate="1.5deg" height={220} />
-            <Card serv={s[3]} rotate="-1.5deg" height={220} />
+          {/* Mosaico tipo masonry: cada tarjeta usa la altura natural de su propia imagen
+              (sin recorte, sin forzar cuadrados) — una puerta se ve vertical, una ventana
+              se ve horizontal, según la proporción real de la foto. */}
+          <div style={{ columnCount: windowWidth < 900 ? 1 : 2, columnGap: 16 }}>
+            <Card serv={s[0]} rotate="-1deg" />
+            <Card serv={s[1]} rotate="1deg" />
+            <Card serv={s[2]} rotate="-1deg" />
+            <Card serv={s[3]} rotate="1deg" />
           </div>
         </div>
       </div>
 
       {/* TESTIMONIOS / EQUIPO */}
-      <Testimonios navigate={navigate} />
+      <Testimonios />
 
     </section>
   );
