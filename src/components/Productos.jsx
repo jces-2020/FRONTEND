@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useSearchParams } from "react-router-dom";
 import { IconPlus, IconSearch, IconChevronLeft, IconChevronRight, IconArrowRight } from "@tabler/icons-react";
 import { animate, stagger, spring } from 'animejs';
 import CorteModal from './Cortes/CorteModal';
@@ -9,6 +10,19 @@ import { buildApiUrl } from '../config';
 
 const DEFAULT_IMG = "https://via.placeholder.com/400x400?text=Sin+Imagen";
 const IMG = p => p?.IMG_P?.startsWith('http') ? p.IMG_P : DEFAULT_IMG;
+
+// Mismos colores de marca usados en las tarjetas de "Lo que vendemos" del Inicio
+const CATEGORY_COLORS = [
+  { keys: ['aluminio'], color: '#5a8ba8' },
+  { keys: ['vidrio', 'espejo', 'cristal', 'mampara'], color: '#941918' },
+  { keys: ['accesorio'], color: '#ad7d00' },
+];
+const norm = (s) => (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const getCategoryColor = (categoria) => {
+  const n = norm(categoria);
+  const found = CATEGORY_COLORS.find(c => c.keys.some(k => n.includes(k)));
+  return found ? found.color : '#941918';
+};
 
 /* ══════════════════════════════════════════════════════════════════
    HOOK — animar un grupo de elementos cuando aparecen
@@ -721,6 +735,9 @@ const DetallePanel = ({ p, onClose, onAdd, blocked }) => {
   );
 };
 const Productos = () => {
+  const [searchParams] = useSearchParams();
+  const catFromUrl = searchParams.get('cat');
+  const [catPreselected, setCatPreselected] = useState(false);
   const [productos, setProductos] = useState([]);
   const [cats, setCats] = useState([]);
   const [search, setSearch] = useState('');
@@ -750,6 +767,21 @@ const Productos = () => {
   const ensureCartId = useCartStore(s => s.ensureCartId);
 
   useEffect(() => { localStorage.setItem('carrito_id', ensureCartId()); }, [ensureCartId]);
+
+  // Si venimos desde el Inicio con ?cat=aluminio|vidrio|accesorios, preseleccionamos
+  // esa categoría automáticamente (esto activa el resaltado rojo ya existente en .ctt.sel)
+  useEffect(() => {
+    if (!catFromUrl || cats.length === 0 || catPreselected) return;
+    const target = norm(catFromUrl);
+    const match = cats.find(c => norm(c.categoria).includes(target) || target.includes(norm(c.categoria)));
+    if (match) {
+      setCatSel(match.categoria);
+      setCatPreselected(true);
+      setTimeout(() => {
+        document.querySelector('.ctt.sel')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 250);
+    }
+  }, [catFromUrl, cats, catPreselected]);
 
   const fetchProductos = useCallback(async () => {
     setLoading(true);
@@ -790,7 +822,7 @@ const Productos = () => {
       });
     });
   }, []);
-
+  
   const applyRealtimeProductChanges = useCallback((changes = []) => {
     if (!Array.isArray(changes) || !changes.length) return;
 
@@ -1065,20 +1097,27 @@ const Productos = () => {
         @keyframes spring-in{0%{opacity:0;transform:scale(0.5) translateY(20px)}60%{opacity:1;transform:scale(1.08)}100%{opacity:1;transform:scale(1) translateY(0)}}
 
         /* ── HERO ── */
-        .hero{position:relative;height:clamp(300px,52vw,560px);overflow:hidden;background:#0f172a}
-        .hl{position:absolute;inset:0;transition:opacity .85s ease}
-        .hl img{width:100%;height:100%;object-fit:cover;animation:heroIn .85s ease-out}
-        .hg{position:absolute;inset:0;background:linear-gradient(to right,rgba(10,18,35,.76) 0%,rgba(10,18,35,.26) 62%,transparent 100%)}
-        .ht{position:absolute;left:clamp(24px,6vw,80px);bottom:clamp(32px,7vw,70px);z-index:5}
-        .hey{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:10px}
-        .hh1{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,58px);font-weight:900;color:#fff;margin:0 0 22px;line-height:1.08;letter-spacing:-.02em;max-width:480px}
-        .hbtn{background:var(--r);color:#fff;border:none;padding:13px 30px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 8px 28px rgba(148,25,24,.4);transition:transform .2s,box-shadow .2s}
-        .hbtn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(148,25,24,.5)}
-        .hnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,.42);background:rgba(255,255,255,.12);backdrop-filter:blur(10px);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .2s;z-index:10}
-        .hnav:hover{background:rgba(255,255,255,.26);transform:translateY(-50%) scale(1.1)}
-        .hdots{position:absolute;bottom:18px;right:24px;display:flex;gap:7px;z-index:10}
-        .hdot{height:8px;border:none;border-radius:999px;cursor:pointer;padding:0;background:rgba(255,255,255,.36);transition:all .3s}
-        .hdot.on{width:28px;background:#fff}.hdot:not(.on){width:8px}
+        .hero{position:relative;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(20px,4vw,48px);min-height:clamp(340px,46vw,500px);overflow:hidden;background:linear-gradient(180deg,#f8fafc 0%,#eef2f6 100%);padding:32px clamp(20px,5vw,60px)}
+        .ht{position:relative;z-index:5;display:flex;flex-direction:column;align-items:flex-start}
+        .hey{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--sf);margin-bottom:10px}
+        .hh1{font-family:'Playfair Display',serif;font-size:clamp(28px,4.2vw,52px);font-weight:800;color:var(--dk);margin:0 0 22px;line-height:1.08;letter-spacing:-.02em;max-width:420px}
+        .hbtn{color:#fff;border:none;padding:13px 30px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 10px 26px -8px rgba(15,23,42,.35);transition:transform .2s,box-shadow .2s}
+        .hbtn:hover{transform:translateY(-2px);box-shadow:0 16px 34px -8px rgba(15,23,42,.4)}
+        .hdots{display:flex;gap:7px;margin-top:26px}
+        .hdot{height:8px;border:none;border-radius:999px;cursor:pointer;padding:0;background:rgba(15,23,42,.18);transition:all .3s}
+        .hdot.on{width:28px;background:var(--r)}.hdot:not(.on){width:8px}
+        .hstage{position:relative;height:clamp(260px,34vw,420px);perspective:1400px}
+        .hl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:opacity .55s ease,transform .55s cubic-bezier(.22,1,.36,1);transform-style:preserve-3d}
+        .hl-card{position:relative;width:100%;height:100%;border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 30px 55px -20px rgba(15,23,42,.4);overflow:hidden}
+        .hl-glow{position:absolute;inset:0;background:radial-gradient(circle at 28% 18%,rgba(255,255,255,.28),transparent 55%)}
+        .hl-img{position:relative;z-index:1;max-width:70%;max-height:74%;object-fit:contain;filter:drop-shadow(0 22px 20px rgba(0,0,0,.42))}
+        .hnav{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;border:1.5px solid rgba(15,23,42,.12);background:rgba(255,255,255,.85);backdrop-filter:blur(8px);color:var(--dk);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .2s;z-index:10;box-shadow:0 6px 18px rgba(15,23,42,.14)}
+        .hnav:hover{background:#fff;transform:translateY(-50%) scale(1.08)}
+        @media(max-width:820px){
+          .hero{grid-template-columns:1fr;min-height:auto;padding-top:28px}
+          .ht{align-items:center;text-align:center}
+          .hh1{max-width:100%}
+        }
 
         /* ── CAT TILES ── */
         .ctt{position:relative;border-radius:14px;overflow:hidden;cursor:pointer;background:#e2e8f0}
@@ -1260,9 +1299,8 @@ const Productos = () => {
         /* ── Tablet (≤768px) ── */
         @media(max-width:768px){
           /* hero */
-          .hero{height:clamp(260px,55vw,400px)}
+          .hstage{height:clamp(220px,52vw,340px)}
           .hh1{font-size:clamp(22px,5.5vw,38px)}
-          .ht{left:20px;bottom:28px}
 
           /* cat tiles */
           .ctt{height:clamp(110px,18vw,170px)!important}
@@ -1306,11 +1344,10 @@ const Productos = () => {
         /* ── Mobile (≤480px) ── */
         @media(max-width:480px){
           /* hero */
-          .hero{height:clamp(220px,72vw,340px)}
+          .hstage{height:clamp(190px,60vw,280px)}
           .hh1{font-size:clamp(18px,7vw,30px);margin-bottom:14px}
           .hbtn{padding:10px 22px;font-size:12px}
           .hnav{width:36px;height:36px}
-          .ht{left:14px;bottom:20px}
 
           /* cat tiles */
           .ctt{height:clamp(90px,24vw,140px)!important}
@@ -1376,21 +1413,48 @@ const Productos = () => {
       {/* ══ HERO ══ */}
       {cats.length > 0 && (
         <div className="hero">
-          {cats.map((c, i) => (
-            <div key={c.categoria} className="hl" style={{ opacity: i === heroIdx ? 1 : 0, pointerEvents: i === heroIdx ? 'auto' : 'none' }}>
-              <img src={c.IMG_P?.startsWith('http') ? c.IMG_P : DEFAULT_IMG} alt={c.categoria}
-                onError={e => { e.target.onerror = null; e.target.src = DEFAULT_IMG; }} />
-              <div className="hg" />
-            </div>
-          ))}
           <div className="ht">
             <div className="hey">Categoría destacada</div>
             <h1 className="hh1">{cats[heroIdx]?.categoria}</h1>
-            <button className="hbtn" onClick={() => setCatSel(cats[heroIdx]?.categoria)}>Explorar categoría</button>
+            <button
+              className="hbtn"
+              style={{ background: getCategoryColor(cats[heroIdx]?.categoria) }}
+              onClick={() => setCatSel(cats[heroIdx]?.categoria)}
+            >
+              Explorar categoría
+            </button>
+            <div className="hdots">{cats.map((_, i) => <button key={i} className={`hdot ${i === heroIdx ? 'on' : ''}`} onClick={() => setHeroIdx(i)} />)}</div>
           </div>
-          <button className="hnav" style={{ left: 20 }} onClick={() => setHeroIdx(i => i === 0 ? cats.length - 1 : i - 1)}><IconChevronLeft size={20} stroke={2} /></button>
-          <button className="hnav" style={{ right: 20 }} onClick={() => setHeroIdx(i => (i + 1) % cats.length)}><IconChevronRight size={20} stroke={2} /></button>
-          <div className="hdots">{cats.map((_, i) => <button key={i} className={`hdot ${i === heroIdx ? 'on' : ''}`} onClick={() => setHeroIdx(i)} />)}</div>
+
+          <div className="hstage">
+            {cats.map((c, i) => {
+              const color = getCategoryColor(c.categoria);
+              const active = i === heroIdx;
+              return (
+                <div
+                  key={c.categoria}
+                  className="hl"
+                  style={{
+                    opacity: active ? 1 : 0,
+                    pointerEvents: active ? 'auto' : 'none',
+                    transform: active ? 'rotateY(0deg) scale(1)' : `rotateY(${i > heroIdx ? -14 : 14}deg) scale(0.92)`,
+                  }}
+                >
+                  <div className="hl-card" style={{ background: `linear-gradient(160deg, ${color} 0%, ${color}c8 55%, #12131a 150%)` }}>
+                    <div className="hl-glow" />
+                    <img
+                      className="hl-img"
+                      src={c.IMG_P?.startsWith('http') ? c.IMG_P : DEFAULT_IMG}
+                      alt={c.categoria}
+                      onError={e => { e.target.onerror = null; e.target.src = DEFAULT_IMG; }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <button className="hnav" style={{ left: 10 }} onClick={() => setHeroIdx(i => i === 0 ? cats.length - 1 : i - 1)}><IconChevronLeft size={19} stroke={2.2} /></button>
+            <button className="hnav" style={{ right: 10 }} onClick={() => setHeroIdx(i => (i + 1) % cats.length)}><IconChevronRight size={19} stroke={2.2} /></button>
+          </div>
         </div>
       )}
 
