@@ -357,11 +357,7 @@ const Remetro = ({ notificacion, onToast, onGuardarSuccess, onPagoConfirmado }) 
       return;
     }
 
-    // TODO: MODO PRUEBA — descomentar las dos líneas de abajo y eliminar las de abajo cuando el diseño esté listo
-    // setModalMetodoPago(true);
-
-    // MODO PRUEBA: salta directo a DISEÑO sin pago ni comprobante
-    onGuardarSuccess && onGuardarSuccess(null);
+    setModalMetodoPago(true);
   };
 
   const servicioActivo = serviciosCliente[servicioActivoIndex] || null;

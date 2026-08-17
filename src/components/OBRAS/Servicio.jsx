@@ -172,7 +172,21 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
   const [tabPendientePostPago, setTabPendientePostPago] = useState('');
   const [tracking, setTracking] = useState({ aceptoPedido: false, maxStep: 0 });
   const [disenoData, setDisenoData] = useState(null);
+  const [clienteResuelto, setClienteResuelto] = useState(null);
   const permitirInstalacion = tracking.maxStep >= 5 || activeTab === 'INSTALACION';
+
+  // La notificacion de tipo SERVICIO no trae documento/cliente_id propios:
+  // se resuelve via notificacion.venta_id -> venta.cliente_id -> cliente,
+  // para poder mostrar DNI/RUC real en el comprobante.
+  useEffect(() => {
+    if (!notifId) { setClienteResuelto(null); return; }
+    let cancelado = false;
+    fetch(`/api/presupuestos/notificacion/${notifId}/servicios`)
+      .then(r => r.json())
+      .then(d => { if (!cancelado && d?.cliente) setClienteResuelto(d.cliente); })
+      .catch(() => {});
+    return () => { cancelado = true; };
+  }, [notifId]);
 
   useEffect(() => {
     if (!notifId) { setActiveTab('REMETRO'); return; }
@@ -580,10 +594,10 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
         <ModalFacturacion
           productos={productosFacturacion}
           clienteActual={{
-            nombre: notificacion?.nombre || '',
-            documento: notificacion?.documento || '',
-            correo: notificacion?.correo || '',
-            cliente_id: notificacion?.cliente_id || notificacion?.id_cliente || carritoData?.cliente_id || ''
+            nombre: clienteResuelto?.nombre || notificacion?.nombre || '',
+            documento: clienteResuelto?.documento || notificacion?.documento || '',
+            correo: clienteResuelto?.correo || notificacion?.correo || '',
+            cliente_id: clienteResuelto?.id_cliente || notificacion?.cliente_id || notificacion?.id_cliente || carritoData?.cliente_id || ''
           }}
           autoCloseOnComprobante={true}
           onComprobanteGenerado={() => showToast('Comprobante generado correctamente', 'success')}
