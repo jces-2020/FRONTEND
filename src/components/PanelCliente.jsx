@@ -631,26 +631,8 @@ const PanelCliente = ({ onLogout }) => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!clienteId) return;
-    const authToken = token || localStorage.getItem("auth_token");
-    if (!authToken) return;
-
-    let cancelled = false;
-    let timerId = null;
-
-    const tick = async () => {
-      if (cancelled) return;
-      await recargarBarraProgreso(clienteId, authToken);
-      if (cancelled) return;
-      await recargarBarraProgresoServicio(clienteId);
-      // El grafico se refresca por realtime; evitamos pegarle cada pocos segundos.
-      if (!cancelled) timerId = setTimeout(tick, 15000);
-    };
-
-    timerId = setTimeout(tick, 15000);
-    return () => { cancelled = true; clearTimeout(timerId); };
-  }, [clienteId, token]);
+  // Actualizacion de barras via SSE (evento "notificaciones_changed" mas abajo);
+  // sin polling recurrente para no sobrecargar el servidor.
 
   const logout = () => {
     ["auth_token","cliente_id","cliente_correo","cliente_nombre","cliente_numero","cliente_documento","carrito_id"]
