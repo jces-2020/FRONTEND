@@ -396,47 +396,49 @@ const PanelCliente = ({ onLogout }) => {
       return;
     }
     try {
-      const raw = localStorage.getItem("servicio_instalado_temp");
-      if (raw) {
-        const temp = JSON.parse(raw);
-        const markerClienteId      = String(temp?.cliente_id || "").trim();
-        const clienteIdNormalizado = String(cId || "").trim();
-        if (markerClienteId === clienteIdNormalizado && Number(temp?.until || 0) > Date.now()) {
-          const temporal = { carrito_id: "temporal", estado: "Instalado", progreso: 100, mostrar_barra: true };
-          setProgresoServicio({ estado: "Instalado", progreso: 100, mostrar: true });
-          setProgresoServicioLista([temporal]);
-          return;
-        }
-        if (Number(temp?.until || 0) <= Date.now()) localStorage.removeItem("servicio_instalado_temp");
-      }
-    } catch (e) { console.warn("[PanelCliente] Error leyendo estado temporal de servicio:", e); }
-    try {
       const res = await fetch(`/api/barra_progreso/servicio/${cId}`);
-      if (!res.ok) {
-        setProgresoServicio({ estado: null, progreso: 0, mostrar: false });
-        setProgresoServicioLista([]);
-        return;
+      let items = [];
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          items = Array.isArray(data.items) && data.items.length
+            ? data.items
+            : (data.mostrar_barra ? [{
+                carrito_id: data.carrito_id || null,
+                estado: data.estado || null,
+                progreso: data.progreso || 0,
+                mostrar_barra: true,
+              }] : []);
+        }
       }
-      const data = await res.json();
-      if (data.success) {
-        const items = Array.isArray(data.items) && data.items.length
-          ? data.items
-          : (data.mostrar_barra ? [{
-              carrito_id: data.carrito_id || null,
-              estado: data.estado || null,
-              progreso: data.progreso || 0,
-              mostrar_barra: true,
-            }] : []);
 
-        const principal = items[0] || null;
-        setProgresoServicioLista(items);
-        setProgresoServicio(principal
-          ? { estado: principal.estado || null, progreso: principal.progreso || 0, mostrar: !!principal.mostrar_barra }
-          : { estado: null, progreso: 0, mostrar: false });
-      } else {
-        setProgresoServicio({ estado: null, progreso: 0, mostrar: false });
-        setProgresoServicioLista([]);
-      }
+      // Marcador temporal solo pisa el carrito_id que realmente se finalizo
+      // (que puede ya no estar en 'items' por la limpieza del backend), sin
+      // afectar otros servicios en curso del mismo cliente.
+      try {
+        const raw = localStorage.getItem("servicio_instalado_temp");
+        if (raw) {
+          const temp = JSON.parse(raw);
+          const markerClienteId = String(temp?.cliente_id || "").trim();
+          const clienteIdNormalizado = String(cId || "").trim();
+          if (markerClienteId === clienteIdNormalizado && Number(temp?.until || 0) > Date.now()) {
+            const markerCarritoId = temp?.carrito_id ? String(temp.carrito_id).trim() : null;
+            const temporal = { carrito_id: markerCarritoId || "temporal", estado: "Instalado", progreso: 100, mostrar_barra: true };
+            const yaPresente = markerCarritoId && items.some((i) => i.carrito_id === markerCarritoId);
+            items = yaPresente
+              ? items.map((i) => (i.carrito_id === markerCarritoId ? temporal : i))
+              : [...items, temporal];
+          } else if (Number(temp?.until || 0) <= Date.now()) {
+            localStorage.removeItem("servicio_instalado_temp");
+          }
+        }
+      } catch (e) { console.warn("[PanelCliente] Error leyendo estado temporal de servicio:", e); }
+
+      const principal = items[0] || null;
+      setProgresoServicioLista(items);
+      setProgresoServicio(principal
+        ? { estado: principal.estado || null, progreso: principal.progreso || 0, mostrar: !!principal.mostrar_barra }
+        : { estado: null, progreso: 0, mostrar: false });
     } catch (err) {
       setProgresoServicio({ estado: null, progreso: 0, mostrar: false });
       setProgresoServicioLista([]);
@@ -1655,4 +1657,3 @@ const PanelCliente = ({ onLogout }) => {
 };
 
 export default PanelCliente;
-
