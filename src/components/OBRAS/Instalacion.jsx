@@ -274,6 +274,7 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
           const until = Date.now() + (10 * 60 * 1000);
           const markerData = {
             cliente_id: String(cliente_id).trim(), // Asegurar formato consistente
+            carrito_id: carrito_id ? String(carrito_id).trim() : null,
             until
           };
           console.log('[INSTALACION] Guardando marker en localStorage:', markerData);
