@@ -570,11 +570,11 @@ const zoomBtn = {
 
 // ──────────────────── Mining Section ───────────────────────────
 const MINING_OPTIONS = [
-  { id:'rfm',          label:'Segmentación RFM',      icon:'🎯', desc:'Clasifica clientes: Campeones, Leales, En Riesgo, Perdidos' },
-  { id:'forecast',     label:'Predicción de Ventas',   icon:'📈', desc:'Regresión lineal para proyectar ventas futuras' },
-  { id:'clustering',   label:'Clustering de Clientes', icon:'🔵', desc:'K-Means: agrupa clientes por comportamiento de compra' },
-  { id:'correlaciones',label:'Correlaciones',          icon:'🔗', desc:'Relación entre ingresos, gastos y pedidos por mes' },
-  { id:'anomalias',    label:'Detección de Anomalías', icon:'⚠️', desc:'Detecta gastos e ingresos inusuales (Z-score > 2σ)' },
+  { id:'rfm',          label:'Clientes por Valor',      icon:'🎯', desc:'Clasifica a tus clientes en Campeones, Leales, En Riesgo o Perdidos según cuánto y qué tan seguido compran' },
+  { id:'forecast',     label:'Predicción de Ventas',    icon:'📈', desc:'Proyecta cómo podrían ir tus ventas en los próximos meses, según la tendencia actual' },
+  { id:'clustering',   label:'Grupos de Clientes',      icon:'🔵', desc:'Agrupa a tus clientes en categorías según su comportamiento de compra (alto, medio o bajo valor)' },
+  { id:'correlaciones',label:'Ingresos vs Gastos',      icon:'🔗', desc:'Muestra cómo se relacionan tus ingresos, gastos y cantidad de ventas mes a mes' },
+  { id:'anomalias',    label:'Montos Inusuales',        icon:'⚠️', desc:'Encuentra gastos o ingresos que se salen mucho de lo habitual, para que los revises' },
 ];
 
 function MiningSection({ ETL_API, ETL_PREFIX }) {
@@ -678,7 +678,7 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
           {result.detalle?.length > 0 && (
             <>
               <div style={{fontSize:'0.72rem',fontWeight:700,color:'#4a90b8',marginTop:16,marginBottom:8,textTransform:'uppercase',letterSpacing:'0.4px'}}>
-                Detalle por cliente (Top 50)
+                Detalle por cliente
               </div>
               <MiningTable data={result.detalle}/>
             </>
