@@ -518,6 +518,7 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
               {activeTab === 'REMETRO' && (
                 <Remetro
                   notificacion={notificacion}
+                  clienteResuelto={clienteResuelto}
                   onToast={showToast}
                   onPagoConfirmado={({ carritoId, productos }) => {
                     guardarTracking({ aceptoPedido: true, maxStep: Math.max(tracking.maxStep, 1) });
