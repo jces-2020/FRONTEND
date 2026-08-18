@@ -329,16 +329,9 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
       categoria: 'SERVICIO'
     };
 
-    // Sumar el precio del servicio a la caja activa
-    try {
-      await fetch('/api/caja/sumar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ monto: precioFinal })
-      });
-    } catch (_) {
-      // No bloquear el flujo si falla la actualización de caja
-    }
+    // No sumar aca a caja: /api/servicio/remetro/guardar ya registro la venta,
+    // y caja.subtotal solo debe reflejar ventas con comprobante emitido
+    // (se actualiza al emitir boleta/factura). Sumar aca duplicaba el monto.
 
     if (onPagoConfirmado) {
       onPagoConfirmado({ carritoId: carritoId || null, productos: [productoServicio] });
