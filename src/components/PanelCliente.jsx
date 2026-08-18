@@ -9,6 +9,7 @@ import {
   IconAlertCircle, IconReceipt, IconTrash, IconCalendarEvent, IconCalendarWeek,
 } from "@tabler/icons-react";
 import CompletaDatosGoogle from "./CompletaDatosGoogle";
+import { supabase } from "../lib/supabaseClient";
 
 const CARD = {
   background: "#ffffff",
@@ -34,6 +35,10 @@ const PanelCliente = ({ onLogout }) => {
   const [progresoServicio, setProgresoServicio] = useState({ estado: null, progreso: 0, mostrar: false });
   const [progresoPedidoLista, setProgresoPedidoLista] = useState([]);
   const [progresoServicioLista, setProgresoServicioLista] = useState([]);
+  const progresoPedidoListaRef = useRef([]);
+  const progresoServicioListaRef = useRef([]);
+  useEffect(() => { progresoPedidoListaRef.current = progresoPedidoLista; }, [progresoPedidoLista]);
+  useEffect(() => { progresoServicioListaRef.current = progresoServicioLista; }, [progresoServicioLista]);
   const navigate = useNavigate();
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState("");
@@ -587,38 +592,41 @@ const PanelCliente = ({ onLogout }) => {
     };
   }, [clienteId, token]);
 
+  // Realtime nativo de Supabase para la barra de progreso (pedido + servicio).
+  // 'venta' filtra por cliente_id (columna real); 'carrito_compras' no tiene
+  // cliente_id, asi que se filtra en el cliente contra los carrito_id ya
+  // cargados (progresoPedidoListaRef/progresoServicioListaRef).
   useEffect(() => {
-    if (!clienteId) return;
-    if (typeof window === 'undefined' || typeof window.EventSource === 'undefined') return;
-
+    if (!clienteId || !supabase) return;
     const authToken = token || localStorage.getItem("auth_token");
-    const API_BASE = (import.meta.env.VITE_API_URL || "https://api.vidriobras.com").replace(/\/$/, "");
-    const es = new EventSource(`${API_BASE}/api/realtime/notificaciones`);
 
-    const onChanged = (evt) => {
-      try {
-        const payload = JSON.parse(evt.data || "{}");
-        if (payload?.initial) return;
-        const changes = Array.isArray(payload?.changes) ? payload.changes : [];
-        const relevant = changes.some((c) => {
-          const r = c?.record;
-          return String(r?.id_cliente || r?.cliente_id || "") === String(clienteId);
-        });
-        if (!relevant) return;
-        // Pequeño delay para que carrito_compras ya esté actualizado
-        setTimeout(async () => {
-          await recargarBarraProgreso(clienteId, authToken);
-          await recargarBarraProgresoServicio(clienteId);
-        }, 350);
-      } catch { /* ignorar payload malformed */ }
-    };
+    const channel = supabase
+      .channel(`barra_progreso_${clienteId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "venta", filter: `cliente_id=eq.${clienteId}` },
+        () => {
+          recargarBarraProgreso(clienteId, authToken);
+          recargarBarraProgresoServicio(clienteId);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "carrito_compras" },
+        (payload) => {
+          const cid = payload.new?.id_carrito;
+          if (!cid) return;
+          if (progresoPedidoListaRef.current.some((i) => i.carrito_id === cid)) {
+            recargarBarraProgreso(clienteId, authToken);
+          }
+          if (progresoServicioListaRef.current.some((i) => i.carrito_id === cid)) {
+            recargarBarraProgresoServicio(clienteId);
+          }
+        }
+      )
+      .subscribe();
 
-    es.addEventListener("notificaciones_changed", onChanged);
-
-    return () => {
-      es.removeEventListener("notificaciones_changed", onChanged);
-      es.close();
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [clienteId, token]);
 
   useEffect(() => {
