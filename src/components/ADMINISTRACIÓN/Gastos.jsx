@@ -188,7 +188,7 @@ const Gastos = ({ onToast }) => {
                   <tr>
                     <td>${v.metodo || '-'}</td>
                     <td>${v.fecha_venta || '-'}</td>
-                    <td>S/ ${parseFloat(v.total || 0).toFixed(2)}</td>
+                    <td>S/ ${parseFloat(v.monto || 0).toFixed(2)}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -250,6 +250,7 @@ const Gastos = ({ onToast }) => {
         <input
           type="date"
           value={fecha}
+          max={getFechaLocalISO()}
           onChange={e => setFecha(e.target.value)}
           style={{
             padding: windowWidth < 640 ? '8px 10px' : '10px 12px',
@@ -743,7 +744,7 @@ const Gastos = ({ onToast }) => {
                             fontWeight: 600,
                             color: COLORS.success
                           }}>
-                            S/ {parseFloat(v.total || 0).toFixed(2)}
+                            S/ {parseFloat(v.monto || 0).toFixed(2)}
                           </td>
                         </tr>
                       ))
