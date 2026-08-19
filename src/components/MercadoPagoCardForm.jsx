@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { IconEye } from '@tabler/icons-react';
 import { COLORS, FONTS } from '../colors';
 import MercadoPagoYape from './MercadoPagoYape';
 import MercadoPagoWallet from './MercadoPagoWallet';
@@ -129,6 +130,7 @@ export default function MercadoPagoCardForm({
   const [cardholderName, setCardholderName] = useState('');
   const [identificationType, setIdentificationType] = useState('DNI');
   const [identificationNumber, setIdentificationNumber] = useState('');
+  const [showIdentificationNumber, setShowIdentificationNumber] = useState(false);
   const [showDocDropdown, setShowDocDropdown] = useState(false);
   const docDropdownRef = useRef(null);
   const [paymentMethod, setPaymentMethod] = useState(null);
@@ -405,7 +407,8 @@ export default function MercadoPagoCardForm({
         const causeDetails = Array.isArray(data.cause)
           ? data.cause.map((c) => typeof c === 'object' ? (c.message || c.description || JSON.stringify(c)) : String(c)).filter(Boolean).join(' | ')
           : data.cause;
-        throw new Error(`Pago rechazado: ${causeDetails ? `${errorMessage} (${causeDetails})` : errorMessage}`);
+        console.error('[MP] Pago rechazado - detalle técnico:', errorMessage, causeDetails || '');
+        throw new Error('Pago rechazado. Revise bien su método de pago.');
       }
       setPaymentSuccess(data);
       await new Promise((resolve) => setTimeout(resolve, 2400));
@@ -609,11 +612,18 @@ export default function MercadoPagoCardForm({
               </div>
               <div style={{ gridColumn: isTablet ? '1 / -1' : 'auto' }}>
                 <label style={labelStyle}>Número de documento</label>
-                <input id="identificationNumber" type="text" inputMode="numeric"
-                  placeholder={identificationType === 'RUC' ? '20123456789' : '12345678'}
-                  required value={identificationNumber}
-                  onChange={(e) => { setIdentificationNumber(e.target.value.replace(/\D/g, '').slice(0, 12)); clearError('identificationNumber'); }}
-                  style={inputStyle(Boolean(errors.identificationNumber))} />
+                <div style={{ position: 'relative' }}>
+                  <input id="identificationNumber" type={showIdentificationNumber ? 'text' : 'password'} inputMode="numeric"
+                    placeholder={identificationType === 'RUC' ? '20123456789' : '12345678'}
+                    required value={identificationNumber}
+                    onChange={(e) => { setIdentificationNumber(e.target.value.replace(/\D/g, '').slice(0, 12)); clearError('identificationNumber'); }}
+                    style={{ ...inputStyle(Boolean(errors.identificationNumber)), paddingRight: 40 }} />
+                  <button type="button" onClick={() => setShowIdentificationNumber((p) => !p)}
+                    aria-label={showIdentificationNumber ? 'Ocultar número de documento' : 'Mostrar número de documento'}
+                    style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: showIdentificationNumber ? COLORS.secondaryDark : COLORS.gray[400], display: 'flex' }}>
+                    <IconEye size={18} stroke={2} />
+                  </button>
+                </div>
                 {errors.identificationNumber && <ErrorNotice message={errors.identificationNumber} />}
               </div>
             </div>
