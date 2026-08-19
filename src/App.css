@@ -19,6 +19,13 @@ html, body {
 /* Altura del navbar para uso en el menú desplegable */
 :root {
   --navbar-height: 64px; /* Ajusta este valor si cambias el alto del navbar */
+  --vb-navbar-h: 56px; /* debe coincidir con el pt-14/sm:pt-20/lg:pt-[88px] de <main> en App.jsx */
+}
+@media (min-width: 640px) {
+  :root { --vb-navbar-h: 80px; }
+}
+@media (min-width: 1024px) {
+  :root { --vb-navbar-h: 88px; }
 }
 
 /* Scroll por bloques (solo activo en Inicio, ver toggle de clase en Inicio.jsx) */
@@ -28,6 +35,8 @@ html.vb-snap-scroll {
 .vb-snap-section {
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  scroll-margin-top: var(--vb-navbar-h);
+  min-height: calc(100vh - var(--vb-navbar-h));
 }
 @keyframes vb-bounce {
   0%, 100% { transform: translateX(-50%) translateY(0); }

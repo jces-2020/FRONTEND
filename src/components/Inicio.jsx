@@ -57,24 +57,39 @@ const NeonButton = ({ onClick, children }) => {
   );
 };
 
-// ─── Botón flotante para bajar al siguiente bloque de pantalla completa ────
-const ScrollDownButton = ({ targetId, dark }) => (
-  <button
-    onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' })}
-    aria-label="Ver siguiente sección"
-    style={{
-      position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-      width: 44, height: 44, borderRadius: '50%', zIndex: 5,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      border: `2px solid ${dark ? 'rgba(255,255,255,0.6)' : '#941918'}`,
-      background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.85)',
-      color: dark ? '#fff' : '#941918',
-      cursor: 'pointer', animation: 'vb-bounce 1.8s ease-in-out infinite',
-    }}
-  >
-    <IconChevronDown size={22} stroke={2.4} />
-  </button>
-);
+// ─── Botón flotante (fijo al viewport) para bajar al siguiente bloque ──────
+// Fijo en vez de absoluto: así siempre queda visible pegado al borde inferior
+// de la pantalla, sin importar si el bloque activo mide más de 100vh.
+const SNAP_SECTIONS = ['hero', 'quienes-somos', 'productos', 'ubicacion', 'proyectos', 'testimonios'];
+const SNAP_DARK_SECTIONS = new Set(['ubicacion', 'testimonios']);
+
+const ScrollDownButton = ({ activeId }) => {
+  const activeIdx = SNAP_SECTIONS.indexOf(activeId);
+  const nextId = activeIdx >= 0 ? SNAP_SECTIONS[activeIdx + 1] : null;
+  if (!nextId) return null; // última sección: no hay a dónde bajar
+
+  const dark = SNAP_DARK_SECTIONS.has(activeId);
+
+  return (
+    <button
+      onClick={() => document.getElementById(nextId)?.scrollIntoView({ behavior: 'smooth' })}
+      aria-label="Ver siguiente sección"
+      style={{
+        position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+        width: 44, height: 44, borderRadius: '50%', zIndex: 40,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: `2px solid ${dark ? 'rgba(255,255,255,0.6)' : '#941918'}`,
+        background: dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)',
+        color: dark ? '#fff' : '#941918',
+        boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
+        cursor: 'pointer', animation: 'vb-bounce 1.8s ease-in-out infinite',
+        transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
+      }}
+    >
+      <IconChevronDown size={22} stroke={2.4} />
+    </button>
+  );
+};
 
 // ─── Eyebrow reutilizable (mismo patrón visual en todas las secciones) ──────
 const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
@@ -172,7 +187,7 @@ const QuienesSomos = () => {
     <section
       id="quienes-somos"
       className="w-full py-20 vb-snap-section"
-      style={{ background: '#ffffff', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+      style={{ background: '#ffffff', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
     >
       <p style={{
         margin: '0 0 28px',
@@ -267,9 +282,16 @@ const QuienesSomos = () => {
           </div>
         </div>
       </div>
-      <ScrollDownButton targetId="productos" />
     </section>
   );
+};
+
+// ─── NUESTROS PROYECTOS (grilla fija: costados altos + centro apilado) ──────
+const proyectosGrid = {
+  izquierda: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/07fc8b591ac74042aa5a9571ea3ba014.jpg' },
+  derecha: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/servicio/1d031c22-f456-4523-932d-48fac2ea1e16_1774456546832.jpg' },
+  centroArriba: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/5dea6494e327447d8775792235d27170.jpg' },
+  centroAbajo: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/94ca9d6fe6e24884803172b4f482c6bf.jpg' },
 };
 
 // ─── PRODUCTOS ───────────────────────────────────────────────────────────────
@@ -291,7 +313,7 @@ const productosData = [
   {
     nombre: 'Accesorios',
     descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
-    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/acc_1_proc_2deaecae.png',
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/JHG_edit_9bc147b2.png',
     slug: 'accesorios',
     color: '#ad7d00',
   },
@@ -376,11 +398,12 @@ const ProductCard = ({ item, navigate }) => {
         <img
           src={item.img}
           alt={item.nombre}
+          onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
           style={{
             width: '90%',
             maxHeight: '96%',
             objectFit: 'contain',
-            marginBottom: '4%',
+            marginBottom: 46,
             filter: 'drop-shadow(0 30px 22px rgba(0,0,0,0.5))',
             pointerEvents: 'none',
           }}
@@ -410,7 +433,7 @@ const Productos = ({ navigate }) => (
   <section
     id="productos"
     className="w-full px-4 sm:px-6 lg:px-12 py-20 vb-snap-section"
-    style={{ background: '#ffffff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+    style={{ background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
   >
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
       <SectionEyebrow
@@ -424,7 +447,6 @@ const Productos = ({ navigate }) => (
         ))}
       </div>
     </div>
-    <ScrollDownButton targetId="ubicacion" />
   </section>
 );
 
@@ -456,15 +478,15 @@ const Ubicacion = () => {
       id="ubicacion"
       ref={ref}
       className="w-full vb-snap-section"
-      style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+      style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
     >
-      <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
           <div style={{ position: 'relative', minHeight: 300 }}>
             <img
               src="/tienda%20anime.png"
               alt="Local Vidriobras"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'right center', display: 'block', filter: 'brightness(0.85)' }}
             />
             <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
           </div>
@@ -524,7 +546,7 @@ const Ubicacion = () => {
               />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
-                <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
+                <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en Huancayo</p>
               </div>
             </div>
 
@@ -547,7 +569,6 @@ const Ubicacion = () => {
           </div>
         </div>
       </div>
-      <ScrollDownButton targetId="proyectos" dark />
     </section>
   );
 };
@@ -584,7 +605,7 @@ const Testimonios = () => (
   <div
     id="testimonios"
     className="w-full py-20 vb-snap-section"
-    style={{ background: 'rgba(15,15,30,0.92)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+    style={{ background: 'rgba(15,15,30,0.92)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
   >
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
       <SectionEyebrow
@@ -604,8 +625,8 @@ const Testimonios = () => (
 
 // ─── Componente principal ───────────────────────────────────────────────────
 function Inicio() {
-  const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [activeSection, setActiveSection] = useState('hero');
   const navigate = useNavigate();
   const bgShadowRef = useRef(null); // aura difuminada (sombreado del degradado de atrás)
   const bgBackRef = useRef(null);   // degradado de atrás
@@ -626,10 +647,25 @@ function Inicio() {
     return () => document.documentElement.classList.remove('vb-snap-scroll');
   }, []);
 
+  // Detecta qué bloque de pantalla completa está en pantalla, para saber
+  // hacia dónde debe apuntar el botón flotante de "bajar".
   useEffect(() => {
-    fetch('/api/servicios/random')
-      .then(res => res.json())
-      .then(data => { if (data.success) setServicios(data.data); });
+    const elements = SNAP_SECTIONS
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const mostVisible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (mostVisible) setActiveSection(mostVisible.target.id);
+      },
+      { threshold: [0.35, 0.5, 0.65] }
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   // Animación de entrada con animejs (secuencial, responsiva con % en vez de px fijos).
@@ -708,13 +744,15 @@ function Inicio() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const CardContent = ({ serv }) => (
+  const CardContent = ({ serv, fill }) => (
     <>
       <img
         src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
         alt={serv?.nombre}
         onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
-        style={{ width: '100%', height: 'auto', display: 'block' }}
+        style={fill
+          ? { width: '100%', height: '100%', objectFit: 'cover', display: 'block' }
+          : { width: '100%', height: 'auto', display: 'block' }}
       />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 40%, transparent 65%)' }} />
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', zIndex: 2 }}>
@@ -724,18 +762,25 @@ function Inicio() {
     </>
   );
 
-  const Card = ({ serv, rotate }) => {
+  const Card = ({ serv, rotate, fill, height, radius = 18 }) => {
     const [hovered, setHovered] = useState(false);
     return (
-      <div style={{ breakInside: 'avoid', marginBottom: 16, position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-        <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
-          <CardContent serv={serv} />
+      <div
+        style={{
+          height: fill ? '100%' : height,
+          marginBottom: fill || height ? 0 : 16,
+          position: 'relative',
+          zIndex: hovered ? 10 : 1,
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div style={{ position: 'relative', height: '100%', borderRadius: radius, overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
+          <CardContent serv={serv} fill={fill || !!height} />
         </div>
       </div>
     );
   };
-
-  const s = servicios;
 
   return (
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
@@ -745,8 +790,6 @@ function Inicio() {
         id="hero"
         className="w-full flex relative items-center vb-snap-section"
         style={{
-          minHeight: '100vh',
-          height: '100vh',
           background: '#FFFFFF',
           marginTop: 0,
           paddingTop: 0,
@@ -931,7 +974,7 @@ function Inicio() {
               <IconChevronDown className="chev-down" size={16} stroke={2.6} style={{ transition: 'transform 0.25s ease' }} />
             </button>
             <button
-              onClick={() => navigate('/servicios')}
+              onClick={() => navigate('/proyectos')}
               style={{
                 padding: '13px 26px', borderRadius: 999,
                 border: '2px solid #941918', background: '#fff', color: '#941918',
@@ -975,7 +1018,7 @@ function Inicio() {
       <div
         id="proyectos"
         className="w-full px-4 sm:px-6 lg:px-12 py-20 vb-snap-section"
-        style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+        style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
       >
         <div style={{
           maxWidth: 1180, margin: '0 auto', display: 'grid',
@@ -993,22 +1036,47 @@ function Inicio() {
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-          {/* Mosaico tipo masonry: cada tarjeta usa la altura natural de su propia imagen
-              (sin recorte, sin forzar cuadrados) — una puerta se ve vertical, una ventana
-              se ve horizontal, según la proporción real de la foto. */}
-          <div style={{ columnCount: windowWidth < 900 ? 1 : 2, columnGap: 16 }}>
-            <Card serv={s[0]} rotate="-1deg" />
-            <Card serv={s[1]} rotate="1deg" />
-            <Card serv={s[2]} rotate="-1deg" />
-            <Card serv={s[3]} rotate="1deg" />
-          </div>
+          {/* Estructura fija: costados con una imagen alta (ocupa las 2 filas),
+              centro con dos imágenes apiladas (la de arriba más alta que la de abajo).
+              Sin radio/rotación entre celdas para que no se note ningún borde. */}
+          {windowWidth < 900 ? (
+            <div style={{ display: 'grid', gap: 12 }}>
+              <Card serv={proyectosGrid.izquierda} rotate="0deg" radius={0} height={220} />
+              <Card serv={proyectosGrid.centroArriba} rotate="0deg" radius={0} height={260} />
+              <Card serv={proyectosGrid.centroAbajo} rotate="0deg" radius={0} height={180} />
+              <Card serv={proyectosGrid.derecha} rotate="0deg" radius={0} height={220} />
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.3fr 1.1fr 0.7fr',
+                gridTemplateRows: '1.2fr 0.8fr',
+                gap: 12,
+                height: 560,
+              }}
+            >
+              <div style={{ gridColumn: '1', gridRow: '1 / span 2' }}>
+                <Card serv={proyectosGrid.izquierda} rotate="0deg" radius={0} fill />
+              </div>
+              <div style={{ gridColumn: '2', gridRow: '1' }}>
+                <Card serv={proyectosGrid.centroArriba} rotate="0deg" radius={0} fill />
+              </div>
+              <div style={{ gridColumn: '2', gridRow: '2' }}>
+                <Card serv={proyectosGrid.centroAbajo} rotate="0deg" radius={0} fill />
+              </div>
+              <div style={{ gridColumn: '3', gridRow: '1 / span 2' }}>
+                <Card serv={proyectosGrid.derecha} rotate="0deg" radius={0} fill />
+              </div>
+            </div>
+          )}
         </div>
-        <ScrollDownButton targetId="testimonios" />
       </div>
 
       {/* TESTIMONIOS / EQUIPO */}
       <Testimonios />
 
+      <ScrollDownButton activeId={activeSection} />
     </section>
   );
 }
