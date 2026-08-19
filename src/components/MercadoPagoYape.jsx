@@ -1,5 +1,4 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { IconEye } from '@tabler/icons-react';
 import { COLORS, FONTS } from '../colors';
 
 const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-31db4b36-66c5-4017-a197-d65775a236d4';
@@ -74,7 +73,6 @@ export default function MercadoPagoYape({
   const [payerEmail, setPayerEmail] = useState('');
   const [yapePhone, setYapePhone] = useState('');
   const [yapeOtp, setYapeOtp] = useState('');
-  const [showYapeOtp, setShowYapeOtp] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleExpiredSession = () => {
@@ -175,7 +173,6 @@ export default function MercadoPagoYape({
         installments: 1,
         yape_phone: yapePhone,
         yape_otp: yapeOtp,
-        device_id: window.MP_DEVICE_SESSION_ID || null,
         items: items.map((it) => ({
           id: it.id || it.producto_id || '',
           title: it.nombre || it.title || 'Producto VIDRIOBRAS',
@@ -192,10 +189,7 @@ export default function MercadoPagoYape({
       });
       if (res.status === 401) { handleExpiredSession(); return; }
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        console.error('[Yape] Pago rechazado - detalle técnico:', data?.message || res.status);
-        throw new Error('Pago rechazado. Revise bien su método de pago.');
-      }
+      if (!res.ok || !data.success) throw new Error(data?.message || `Pago rechazado (${res.status})`);
 
       // En éxito: NO resetear isProcessing — spinner permanece hasta que el padre
       // desmonte este componente al mostrar el comprobante.
@@ -370,17 +364,10 @@ export default function MercadoPagoYape({
         {/* OTP */}
         <div>
           <label style={{ display: 'block', marginBottom: 5, fontWeight: 700, fontFamily: FONTS.heading, fontSize: 12, color: '#334155', letterSpacing: 0.3 }}>OTP Yape</label>
-          <div style={{ position: 'relative' }}>
-            <input type={showYapeOtp ? 'text' : 'password'} value={yapeOtp} placeholder="• • • • • •" maxLength={6}
-              onChange={(e) => { setYapeOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setErrors(p => ({ ...p, yapeOtp: '' })); }}
-              style={{ width: '100%', padding: '10px 40px 10px 13px', borderRadius: 11, border: `1px solid ${errors.yapeOtp ? '#7ec8e6' : COLORS.borderStrong}`, background: errors.yapeOtp ? '#f1f9ff' : '#fff', fontFamily: FONTS.body, fontSize: 16, outline: 'none', boxSizing: 'border-box', letterSpacing: 6, fontWeight: 700, textAlign: 'center' }}
-            />
-            <button type="button" onClick={() => setShowYapeOtp((p) => !p)}
-              aria-label={showYapeOtp ? 'Ocultar OTP' : 'Mostrar OTP'}
-              style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: showYapeOtp ? '#6d14b5' : '#94a3b8', display: 'flex' }}>
-              <IconEye size={18} stroke={2} />
-            </button>
-          </div>
+          <input type="text" value={yapeOtp} placeholder="• • • • • •" maxLength={6}
+            onChange={(e) => { setYapeOtp(e.target.value.replace(/\D/g, '').slice(0, 6)); setErrors(p => ({ ...p, yapeOtp: '' })); }}
+            style={{ width: '100%', padding: '10px 13px', borderRadius: 11, border: `1px solid ${errors.yapeOtp ? '#7ec8e6' : COLORS.borderStrong}`, background: errors.yapeOtp ? '#f1f9ff' : '#fff', fontFamily: FONTS.body, fontSize: 16, outline: 'none', boxSizing: 'border-box', letterSpacing: 6, fontWeight: 700, textAlign: 'center' }}
+          />
           {errors.yapeOtp && <ErrorNotice message={errors.yapeOtp} />}
         </div>
 
