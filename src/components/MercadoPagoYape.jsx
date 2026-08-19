@@ -74,7 +74,6 @@ export default function MercadoPagoYape({
   const [payerEmail, setPayerEmail] = useState('');
   const [yapePhone, setYapePhone] = useState('');
   const [yapeOtp, setYapeOtp] = useState('');
-  const [showYapePhone, setShowYapePhone] = useState(false);
   const [showYapeOtp, setShowYapeOtp] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -360,17 +359,10 @@ export default function MercadoPagoYape({
         {/* Celular */}
         <div>
           <label style={{ display: 'block', marginBottom: 5, fontWeight: 700, fontFamily: FONTS.heading, fontSize: 12, color: '#334155', letterSpacing: 0.3 }}>Celular Yape</label>
-          <div style={{ position: 'relative' }}>
-            <input type={showYapePhone ? 'tel' : 'password'} value={yapePhone} placeholder="987654321"
-              onChange={(e) => { setYapePhone(e.target.value.replace(/\D/g, '').slice(0, 9)); setErrors(p => ({ ...p, yapePhone: '' })); }}
-              style={{ width: '100%', padding: '10px 40px 10px 13px', borderRadius: 11, border: `1px solid ${errors.yapePhone ? '#7ec8e6' : COLORS.borderStrong}`, background: errors.yapePhone ? '#f1f9ff' : '#fff', fontFamily: FONTS.body, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-            />
-            <button type="button" onClick={() => setShowYapePhone((p) => !p)}
-              aria-label={showYapePhone ? 'Ocultar celular' : 'Mostrar celular'}
-              style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', padding: 4, cursor: 'pointer', color: showYapePhone ? '#6d14b5' : '#94a3b8', display: 'flex' }}>
-              <IconEye size={18} stroke={2} />
-            </button>
-          </div>
+          <input type="tel" value={yapePhone} placeholder="987654321"
+            onChange={(e) => { setYapePhone(e.target.value.replace(/\D/g, '').slice(0, 9)); setErrors(p => ({ ...p, yapePhone: '' })); }}
+            style={{ width: '100%', padding: '10px 13px', borderRadius: 11, border: `1px solid ${errors.yapePhone ? '#7ec8e6' : COLORS.borderStrong}`, background: errors.yapePhone ? '#f1f9ff' : '#fff', fontFamily: FONTS.body, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+          />
           {errors.yapePhone && <ErrorNotice message={errors.yapePhone} />}
         </div>
 
