@@ -20,3 +20,16 @@ html, body {
 :root {
   --navbar-height: 64px; /* Ajusta este valor si cambias el alto del navbar */
 }
+
+/* Scroll por bloques (solo activo en Inicio, ver toggle de clase en Inicio.jsx) */
+html.vb-snap-scroll {
+  scroll-snap-type: y mandatory;
+}
+.vb-snap-section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+@keyframes vb-bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
