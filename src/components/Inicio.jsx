@@ -390,11 +390,12 @@ const ProductCard = ({ item, navigate }) => {
         <img
           src={item.img}
           alt={item.nombre}
+          onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
           style={{
             width: '90%',
             maxHeight: '96%',
             objectFit: 'contain',
-            marginBottom: '4%',
+            marginBottom: '16%',
             filter: 'drop-shadow(0 30px 22px rgba(0,0,0,0.5))',
             pointerEvents: 'none',
           }}
@@ -486,7 +487,6 @@ const Ubicacion = () => {
             style={{
               position: 'relative',
               background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
-              clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
               padding: isMobile ? '48px 24px' : '56px 60px',
               display: 'flex',
               flexDirection: 'column',
@@ -742,13 +742,15 @@ function Inicio() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const CardContent = ({ serv }) => (
+  const CardContent = ({ serv, fill }) => (
     <>
       <img
         src={serv?.imagen_public_url || DEFAULT_SERVICE_IMAGE}
         alt={serv?.nombre}
         onError={(e) => { e.currentTarget.src = DEFAULT_SERVICE_IMAGE; }}
-        style={{ width: '100%', height: 'auto', display: 'block' }}
+        style={fill
+          ? { width: '100%', height: '100%', objectFit: 'cover', display: 'block' }
+          : { width: '100%', height: 'auto', display: 'block' }}
       />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.08) 40%, transparent 65%)' }} />
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px', zIndex: 2 }}>
@@ -758,12 +760,21 @@ function Inicio() {
     </>
   );
 
-  const Card = ({ serv, rotate }) => {
+  const Card = ({ serv, rotate, fill, height }) => {
     const [hovered, setHovered] = useState(false);
     return (
-      <div style={{ breakInside: 'avoid', marginBottom: 16, position: 'relative', zIndex: hovered ? 10 : 1 }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-        <div style={{ position: 'relative', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
-          <CardContent serv={serv} />
+      <div
+        style={{
+          height: fill ? '100%' : height,
+          marginBottom: fill || height ? 0 : 16,
+          position: 'relative',
+          zIndex: hovered ? 10 : 1,
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div style={{ position: 'relative', height: '100%', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
+          <CardContent serv={serv} fill={fill || !!height} />
         </div>
       </div>
     );
@@ -963,7 +974,7 @@ function Inicio() {
               <IconChevronDown className="chev-down" size={16} stroke={2.6} style={{ transition: 'transform 0.25s ease' }} />
             </button>
             <button
-              onClick={() => navigate('/servicios')}
+              onClick={() => navigate('/proyectos')}
               style={{
                 padding: '13px 26px', borderRadius: 999,
                 border: '2px solid #941918', background: '#fff', color: '#941918',
@@ -1025,15 +1036,39 @@ function Inicio() {
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-          {/* Mosaico tipo masonry: cada tarjeta usa la altura natural de su propia imagen
-              (sin recorte, sin forzar cuadrados) — una puerta se ve vertical, una ventana
-              se ve horizontal, según la proporción real de la foto. */}
-          <div style={{ columnCount: windowWidth < 900 ? 1 : 2, columnGap: 16 }}>
-            <Card serv={s[0]} rotate="-1deg" />
-            <Card serv={s[1]} rotate="1deg" />
-            <Card serv={s[2]} rotate="-1deg" />
-            <Card serv={s[3]} rotate="1deg" />
-          </div>
+          {/* Estructura fija: columna izquierda y derecha con una imagen alta
+              (ocupa las 2 filas), columna central con dos imágenes apiladas. */}
+          {windowWidth < 900 ? (
+            <div style={{ display: 'grid', gap: 16 }}>
+              <Card serv={s[0]} rotate="-1deg" height={220} />
+              <Card serv={s[1]} rotate="1deg" height={220} />
+              <Card serv={s[2]} rotate="-1deg" height={220} />
+              <Card serv={s[3]} rotate="1deg" height={220} />
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.3fr 1.1fr 0.7fr',
+                gridTemplateRows: 'repeat(2, 1fr)',
+                gap: 16,
+                height: 560,
+              }}
+            >
+              <div style={{ gridColumn: '1', gridRow: '1 / span 2' }}>
+                <Card serv={s[0]} rotate="-1deg" fill />
+              </div>
+              <div style={{ gridColumn: '2', gridRow: '1' }}>
+                <Card serv={s[1]} rotate="1deg" fill />
+              </div>
+              <div style={{ gridColumn: '2', gridRow: '2' }}>
+                <Card serv={s[2]} rotate="-1deg" fill />
+              </div>
+              <div style={{ gridColumn: '3', gridRow: '1 / span 2' }}>
+                <Card serv={s[3]} rotate="1deg" fill />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
