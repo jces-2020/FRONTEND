@@ -202,23 +202,21 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
 
     setDocApiLoading(true);
     try {
-      const res = await fetch('/api/validar_documento', {
+      // Mismo endpoint centralizado que usa Registro (LoginInicioSesion/config.js
+      // consultarDocumentoApi) — /api/validar_documento usa un token de ApisPeru
+      // distinto (con error de tipeo) y no encuentra documentos válidos.
+      const res = await fetch('/api/consulta_documento', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo, numero: limpio }),
       });
       const data = await res.json();
-      if (data?.success && data?.data) {
-        const d = data.data;
-        const nombreEncontrado = tipo === 'DNI'
-          ? [d.nombres, d.apellidoPaterno, d.apellidoMaterno].filter(Boolean).join(' ').trim()
-          : String(d.razonSocial || d.nombre || '').trim();
-        if (nombreEncontrado) {
-          setForm((prev) => (prev.documento === limpio ? { ...prev, nombre: nombreEncontrado } : prev));
-        }
+      const nombreEncontrado = String(data?.nombre || '').trim();
+      if (data?.success && nombreEncontrado) {
+        setForm((prev) => (prev.documento === limpio ? { ...prev, nombre: nombreEncontrado } : prev));
         setFormNotice((prev) => (prev.field === 'documento' ? { text: '', field: '' } : prev));
       } else {
-        setFormNotice({ field: 'documento', text: `${tipo} no encontrado en RENIEC/SUNAT. Verifica el número.` });
+        setFormNotice({ field: 'documento', text: data?.error || `${tipo} no encontrado en RENIEC/SUNAT. Verifica el número.` });
       }
     } catch {
       setFormNotice({ field: 'documento', text: 'No se pudo validar el documento, verifica tu conexión.' });
