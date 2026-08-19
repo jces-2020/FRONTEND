@@ -286,6 +286,14 @@ const QuienesSomos = () => {
   );
 };
 
+// ─── NUESTROS PROYECTOS (grilla fija: costados altos + centro apilado) ──────
+const proyectosGrid = {
+  izquierda: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/07fc8b591ac74042aa5a9571ea3ba014.jpg' },
+  derecha: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/07fc8b591ac74042aa5a9571ea3ba014.jpg' },
+  centroArriba: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/5dea6494e327447d8775792235d27170.jpg' },
+  centroAbajo: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/94ca9d6fe6e24884803172b4f482c6bf.jpg' },
+};
+
 // ─── PRODUCTOS ───────────────────────────────────────────────────────────────
 const productosData = [
   {
@@ -305,7 +313,7 @@ const productosData = [
   {
     nombre: 'Accesorios',
     descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
-    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/acc_1_proc_2deaecae.png',
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/JHG_edit_9bc147b2.png',
     slug: 'accesorios',
     color: '#ad7d00',
   },
@@ -395,7 +403,7 @@ const ProductCard = ({ item, navigate }) => {
             width: '90%',
             maxHeight: '96%',
             objectFit: 'contain',
-            marginBottom: '16%',
+            marginBottom: 46,
             filter: 'drop-shadow(0 30px 22px rgba(0,0,0,0.5))',
             pointerEvents: 'none',
           }}
@@ -472,7 +480,7 @@ const Ubicacion = () => {
       className="w-full vb-snap-section"
       style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
     >
-      <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
+      <div style={{ width: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
           <div style={{ position: 'relative', minHeight: 300 }}>
             <img
@@ -487,6 +495,7 @@ const Ubicacion = () => {
             style={{
               position: 'relative',
               background: 'linear-gradient(150deg, #941918 0%, #7a2f18 35%, #16222f 100%)',
+              clipPath: isMobile ? 'none' : 'polygon(8% 0%, 100% 0%, 100% 100%, 0% 100%)',
               padding: isMobile ? '48px 24px' : '56px 60px',
               display: 'flex',
               flexDirection: 'column',
@@ -616,7 +625,6 @@ const Testimonios = () => (
 
 // ─── Componente principal ───────────────────────────────────────────────────
 function Inicio() {
-  const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [activeSection, setActiveSection] = useState('hero');
   const navigate = useNavigate();
@@ -658,12 +666,6 @@ function Inicio() {
     );
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/servicios/random')
-      .then(res => res.json())
-      .then(data => { if (data.success) setServicios(data.data); });
   }, []);
 
   // Animación de entrada con animejs (secuencial, responsiva con % en vez de px fijos).
@@ -760,7 +762,7 @@ function Inicio() {
     </>
   );
 
-  const Card = ({ serv, rotate, fill, height }) => {
+  const Card = ({ serv, rotate, fill, height, radius = 18 }) => {
     const [hovered, setHovered] = useState(false);
     return (
       <div
@@ -773,14 +775,12 @@ function Inicio() {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <div style={{ position: 'relative', height: '100%', borderRadius: '18px', overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
+        <div style={{ position: 'relative', height: '100%', borderRadius: radius, overflow: 'hidden', cursor: 'pointer', width: '100%', boxShadow: hovered ? '0 16px 48px rgba(0,0,0,0.38)' : '0 8px 32px rgba(0,0,0,0.22)', transform: hovered ? 'rotate(0deg) scale(1.03)' : `rotate(${rotate})`, transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}>
           <CardContent serv={serv} fill={fill || !!height} />
         </div>
       </div>
     );
   };
-
-  const s = servicios;
 
   return (
     <section className="w-full flex flex-col items-center" style={{ marginTop: 0, paddingTop: 0 }}>
@@ -1036,36 +1036,37 @@ function Inicio() {
               <NeonButton onClick={() => navigate('/proyectos')}>Ver más</NeonButton>
             </div>
           </div>
-          {/* Estructura fija: columna izquierda y derecha con una imagen alta
-              (ocupa las 2 filas), columna central con dos imágenes apiladas. */}
+          {/* Estructura fija: costados con una imagen alta (ocupa las 2 filas),
+              centro con dos imágenes apiladas (la de arriba más alta que la de abajo).
+              Sin gap/radio/rotación entre celdas para que no se note ningún borde. */}
           {windowWidth < 900 ? (
-            <div style={{ display: 'grid', gap: 16 }}>
-              <Card serv={s[0]} rotate="-1deg" height={220} />
-              <Card serv={s[1]} rotate="1deg" height={220} />
-              <Card serv={s[2]} rotate="-1deg" height={220} />
-              <Card serv={s[3]} rotate="1deg" height={220} />
+            <div style={{ display: 'grid', gap: 0 }}>
+              <Card serv={proyectosGrid.izquierda} rotate="0deg" radius={0} height={220} />
+              <Card serv={proyectosGrid.centroArriba} rotate="0deg" radius={0} height={260} />
+              <Card serv={proyectosGrid.centroAbajo} rotate="0deg" radius={0} height={180} />
+              <Card serv={proyectosGrid.derecha} rotate="0deg" radius={0} height={220} />
             </div>
           ) : (
             <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1.3fr 1.1fr 0.7fr',
-                gridTemplateRows: 'repeat(2, 1fr)',
-                gap: 16,
+                gridTemplateRows: '1.2fr 0.8fr',
+                gap: 0,
                 height: 560,
               }}
             >
               <div style={{ gridColumn: '1', gridRow: '1 / span 2' }}>
-                <Card serv={s[0]} rotate="-1deg" fill />
+                <Card serv={proyectosGrid.izquierda} rotate="0deg" radius={0} fill />
               </div>
               <div style={{ gridColumn: '2', gridRow: '1' }}>
-                <Card serv={s[1]} rotate="1deg" fill />
+                <Card serv={proyectosGrid.centroArriba} rotate="0deg" radius={0} fill />
               </div>
               <div style={{ gridColumn: '2', gridRow: '2' }}>
-                <Card serv={s[2]} rotate="-1deg" fill />
+                <Card serv={proyectosGrid.centroAbajo} rotate="0deg" radius={0} fill />
               </div>
               <div style={{ gridColumn: '3', gridRow: '1 / span 2' }}>
-                <Card serv={s[3]} rotate="1deg" fill />
+                <Card serv={proyectosGrid.derecha} rotate="0deg" radius={0} fill />
               </div>
             </div>
           )}
