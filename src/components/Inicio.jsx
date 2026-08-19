@@ -57,6 +57,25 @@ const NeonButton = ({ onClick, children }) => {
   );
 };
 
+// ─── Botón flotante para bajar al siguiente bloque de pantalla completa ────
+const ScrollDownButton = ({ targetId, dark }) => (
+  <button
+    onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' })}
+    aria-label="Ver siguiente sección"
+    style={{
+      position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+      width: 44, height: 44, borderRadius: '50%', zIndex: 5,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      border: `2px solid ${dark ? 'rgba(255,255,255,0.6)' : '#941918'}`,
+      background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.85)',
+      color: dark ? '#fff' : '#941918',
+      cursor: 'pointer', animation: 'vb-bounce 1.8s ease-in-out infinite',
+    }}
+  >
+    <IconChevronDown size={22} stroke={2.4} />
+  </button>
+);
+
 // ─── Eyebrow reutilizable (mismo patrón visual en todas las secciones) ──────
 const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
   <div style={{ textAlign: align, maxWidth: 840, margin: align === 'center' ? '0 auto' : 0 }}>
@@ -150,7 +169,11 @@ const QuienesSomos = () => {
   }, []);
 
   return (
-    <section id="quienes-somos" className="w-full py-20" style={{ background: '#ffffff', overflow: 'hidden' }}>
+    <section
+      id="quienes-somos"
+      className="w-full py-20 vb-snap-section"
+      style={{ background: '#ffffff', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+    >
       <p style={{
         margin: '0 0 28px',
         paddingLeft: QS_GUTTER,
@@ -244,6 +267,7 @@ const QuienesSomos = () => {
           </div>
         </div>
       </div>
+      <ScrollDownButton targetId="productos" />
     </section>
   );
 };
@@ -383,7 +407,11 @@ const ProductCard = ({ item, navigate }) => {
 };
 
 const Productos = ({ navigate }) => (
-  <section className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: '#ffffff' }}>
+  <section
+    id="productos"
+    className="w-full px-4 sm:px-6 lg:px-12 py-20 vb-snap-section"
+    style={{ background: '#ffffff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+  >
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
       <SectionEyebrow
         label="PRODUCTOS"
@@ -396,6 +424,7 @@ const Productos = ({ navigate }) => (
         ))}
       </div>
     </div>
+    <ScrollDownButton targetId="ubicacion" />
   </section>
 );
 
@@ -423,8 +452,13 @@ const Ubicacion = () => {
   const isMobile = window.innerWidth < 900;
 
   return (
-    <section ref={ref} className="w-full" style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b' }}>
-      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+    <section
+      id="ubicacion"
+      ref={ref}
+      className="w-full vb-snap-section"
+      style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+    >
+      <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
           <div style={{ position: 'relative', minHeight: 300 }}>
             <img
@@ -513,6 +547,7 @@ const Ubicacion = () => {
           </div>
         </div>
       </div>
+      <ScrollDownButton targetId="proyectos" dark />
     </section>
   );
 };
@@ -546,7 +581,11 @@ const TestimonioCard = ({ item }) => (
 );
 
 const Testimonios = () => (
-  <div className="w-full py-20" style={{ background: 'rgba(15,15,30,0.92)' }}>
+  <div
+    id="testimonios"
+    className="w-full py-20 vb-snap-section"
+    style={{ background: 'rgba(15,15,30,0.92)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+  >
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
       <SectionEyebrow
         label="NUESTRO EQUIPO"
@@ -583,6 +622,8 @@ function Inicio() {
       window.history.scrollRestoration = 'manual';
     }
     window.scrollTo(0, 0);
+    document.documentElement.classList.add('vb-snap-scroll');
+    return () => document.documentElement.classList.remove('vb-snap-scroll');
   }, []);
 
   useEffect(() => {
@@ -701,10 +742,11 @@ function Inicio() {
 
       {/* HERO */}
       <div
-        className="w-full flex relative items-center"
+        id="hero"
+        className="w-full flex relative items-center vb-snap-section"
         style={{
-          minHeight: '92vh',
-          height: '92vh',
+          minHeight: '100vh',
+          height: '100vh',
           background: '#FFFFFF',
           marginTop: 0,
           paddingTop: 0,
@@ -930,7 +972,11 @@ function Inicio() {
       <Ubicacion />
 
       {/* NUESTROS PROYECTOS */}
-      <div className="w-full px-4 sm:px-6 lg:px-12 py-20" style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)' }}>
+      <div
+        id="proyectos"
+        className="w-full px-4 sm:px-6 lg:px-12 py-20 vb-snap-section"
+        style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+      >
         <div style={{
           maxWidth: 1180, margin: '0 auto', display: 'grid',
           gridTemplateColumns: windowWidth < 900 ? '1fr' : '0.9fr 1.3fr',
@@ -957,6 +1003,7 @@ function Inicio() {
             <Card serv={s[3]} rotate="1deg" />
           </div>
         </div>
+        <ScrollDownButton targetId="testimonios" />
       </div>
 
       {/* TESTIMONIOS / EQUIPO */}
