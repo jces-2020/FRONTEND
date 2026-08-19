@@ -780,7 +780,7 @@ const Proyectos = () => {
 
         /* ══ CAROUSEL ════ */
         .ic-root{position:relative;width:100%;height:clamp(480px,58vw,680px);overflow:hidden}
-        .ic-bg-layer{position:absolute;inset:0;background-size:cover;background-position:center;transition:opacity .9s ease}
+        .ic-bg-layer{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#0b0f1a;transition:opacity .9s ease}
         .ic-bg-active{animation:icZoom 6s ease-out forwards}
         .ic-vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,.45) 28%,rgba(0,0,0,.12) 55%,transparent 100%)}
         .ic-left-grad{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(to right,rgba(0,0,0,.55) 0%,rgba(0,0,0,.2) 38%,transparent 62%)}
