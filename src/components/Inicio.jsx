@@ -172,7 +172,7 @@ const QuienesSomos = () => {
     <section
       id="quienes-somos"
       className="w-full py-20 vb-snap-section"
-      style={{ background: '#ffffff', overflow: 'hidden', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+      style={{ background: '#ffffff', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
     >
       <p style={{
         margin: '0 0 28px',
@@ -410,7 +410,7 @@ const Productos = ({ navigate }) => (
   <section
     id="productos"
     className="w-full px-4 sm:px-6 lg:px-12 py-20 vb-snap-section"
-    style={{ background: '#ffffff', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+    style={{ background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
   >
     <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gap: 40 }}>
       <SectionEyebrow
@@ -456,7 +456,7 @@ const Ubicacion = () => {
       id="ubicacion"
       ref={ref}
       className="w-full vb-snap-section"
-      style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+      style={{ position: 'relative', overflow: 'hidden', background: '#0f1b2b', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
     >
       <div style={{ maxWidth: 1400, margin: '0 auto', width: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1.15fr', minHeight: isMobile ? 'auto' : 480 }}>
@@ -464,7 +464,7 @@ const Ubicacion = () => {
             <img
               src="/tienda%20anime.png"
               alt="Local Vidriobras"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(0.85)' }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'right center', display: 'block', filter: 'brightness(0.85)' }}
             />
             <div style={{ position: 'absolute', inset: 0, background: isMobile ? 'linear-gradient(180deg, rgba(15,27,43,0) 55%, rgba(15,27,43,0.95) 100%)' : 'linear-gradient(90deg, rgba(15,27,43,0) 62%, rgba(15,27,43,0.95) 100%)' }} />
           </div>
@@ -524,7 +524,7 @@ const Ubicacion = () => {
               />
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <p style={{ margin: 0, color: '#fff', fontWeight: 900, fontSize: '1.1rem', letterSpacing: '0.04em' }}>HUANCAYO</p>
-                <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en todo Junín</p>
+                <p style={{ margin: '2px 0 0', color: '#80C2DC', fontWeight: 700, fontSize: '0.85rem' }}>Envíos en Huancayo</p>
               </div>
             </div>
 
@@ -584,7 +584,7 @@ const Testimonios = () => (
   <div
     id="testimonios"
     className="w-full py-20 vb-snap-section"
-    style={{ background: 'rgba(15,15,30,0.92)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+    style={{ background: 'rgba(15,15,30,0.92)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
   >
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px' }}>
       <SectionEyebrow
@@ -745,8 +745,6 @@ function Inicio() {
         id="hero"
         className="w-full flex relative items-center vb-snap-section"
         style={{
-          minHeight: '100vh',
-          height: '100vh',
           background: '#FFFFFF',
           marginTop: 0,
           paddingTop: 0,
@@ -975,7 +973,7 @@ function Inicio() {
       <div
         id="proyectos"
         className="w-full px-4 sm:px-6 lg:px-12 py-20 vb-snap-section"
-        style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
+        style={{ background: 'linear-gradient(180deg, #f3fbff 0%, #ffffff 40%, #f4f8fb 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}
       >
         <div style={{
           maxWidth: 1180, margin: '0 auto', display: 'grid',
