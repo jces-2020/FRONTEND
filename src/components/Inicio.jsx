@@ -289,7 +289,7 @@ const QuienesSomos = () => {
 // ─── NUESTROS PROYECTOS (grilla fija: costados altos + centro apilado) ──────
 const proyectosGrid = {
   izquierda: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/07fc8b591ac74042aa5a9571ea3ba014.jpg' },
-  derecha: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/07fc8b591ac74042aa5a9571ea3ba014.jpg' },
+  derecha: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/servicio/1d031c22-f456-4523-932d-48fac2ea1e16_1774456546832.jpg' },
   centroArriba: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/5dea6494e327447d8775792235d27170.jpg' },
   centroAbajo: { imagen_public_url: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/SERVICIOS/18fe2390-05a3-48d3-879d-b5d28babf970/94ca9d6fe6e24884803172b4f482c6bf.jpg' },
 };
@@ -1038,9 +1038,9 @@ function Inicio() {
           </div>
           {/* Estructura fija: costados con una imagen alta (ocupa las 2 filas),
               centro con dos imágenes apiladas (la de arriba más alta que la de abajo).
-              Sin gap/radio/rotación entre celdas para que no se note ningún borde. */}
+              Sin radio/rotación entre celdas para que no se note ningún borde. */}
           {windowWidth < 900 ? (
-            <div style={{ display: 'grid', gap: 0 }}>
+            <div style={{ display: 'grid', gap: 12 }}>
               <Card serv={proyectosGrid.izquierda} rotate="0deg" radius={0} height={220} />
               <Card serv={proyectosGrid.centroArriba} rotate="0deg" radius={0} height={260} />
               <Card serv={proyectosGrid.centroAbajo} rotate="0deg" radius={0} height={180} />
@@ -1052,7 +1052,7 @@ function Inicio() {
                 display: 'grid',
                 gridTemplateColumns: '1.3fr 1.1fr 0.7fr',
                 gridTemplateRows: '1.2fr 0.8fr',
-                gap: 0,
+                gap: 12,
                 height: 560,
               }}
             >
