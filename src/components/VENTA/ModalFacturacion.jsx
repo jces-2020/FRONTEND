@@ -185,8 +185,45 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
   const [credencialParaImprimir, setCredencialParaImprimir] = useState(null);
   const emisionEnCursoRef = useRef(false);
   const direccionInputRef = useRef(null);
+  const [docApiLoading, setDocApiLoading] = useState(false);
+  const ultimoDocumentoValidadoRef = useRef('');
 
   const isMobile = viewportWidth < 768;
+
+  // Valida el DNI/RUC contra RENIEC/SUNAT (vía /api/validar_documento, APIsPeru)
+  // y autocompleta el nombre del cliente. Se dispara tanto cuando el documento
+  // llega ya autorrellenado (sesión/cliente existente) como cuando el usuario
+  // lo escribe manualmente.
+  const validarDocumentoConApi = async (documento) => {
+    const limpio = String(documento || '').replace(/\D/g, '');
+    const tipo = limpio.length === 8 ? 'DNI' : limpio.length === 11 ? 'RUC' : null;
+    if (!tipo || ultimoDocumentoValidadoRef.current === limpio) return;
+    ultimoDocumentoValidadoRef.current = limpio;
+
+    setDocApiLoading(true);
+    try {
+      // Mismo endpoint centralizado que usa Registro (LoginInicioSesion/config.js
+      // consultarDocumentoApi) — /api/validar_documento usa un token de ApisPeru
+      // distinto (con error de tipeo) y no encuentra documentos válidos.
+      const res = await fetch('/api/consulta_documento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo, numero: limpio }),
+      });
+      const data = await res.json();
+      const nombreEncontrado = String(data?.nombre || '').trim();
+      if (data?.success && nombreEncontrado) {
+        setForm((prev) => (prev.documento === limpio ? { ...prev, nombre: nombreEncontrado } : prev));
+        setFormNotice((prev) => (prev.field === 'documento' ? { text: '', field: '' } : prev));
+      } else {
+        setFormNotice({ field: 'documento', text: data?.error || `${tipo} no encontrado en RENIEC/SUNAT. Verifica el número.` });
+      }
+    } catch {
+      setFormNotice({ field: 'documento', text: 'No se pudo validar el documento, verifica tu conexión.' });
+    } finally {
+      setDocApiLoading(false);
+    }
+  };
 
   useEffect(() => {
     const soloDigitos = (valor) => String(valor || '').replace(/\D/g, '');
@@ -261,6 +298,8 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
           documento: documento || '',
         };
       });
+
+      if (documento) validarDocumentoConApi(documento);
     };
 
     cargarClienteSesion();
@@ -457,6 +496,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
         ruc: limpio.length === 11 ? limpio : prev.ruc,
         actual: limpio,
       }));
+      if (limpio.length === 8 || limpio.length === 11) validarDocumentoConApi(limpio);
     }
     else if (name === 'nombre') {
       const limpio = String(value || '').replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]/g, '');
@@ -1289,14 +1329,17 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
                       {renderFieldNotice('nombre')}
                     </div>
                     <div>
-                      <label style={labelStyle}>{documentLabel}</label>
+                      <label style={labelStyle}>
+                        {documentLabel}
+                        {docApiLoading && <span style={{ marginLeft: 8, fontWeight: 400, fontSize: 10, color: '#5a8ba8' }}>Validando con RENIEC/SUNAT…</span>}
+                      </label>
                       <div style={inputWithIconWrapStyle}>
                         <span style={inputIconStyle}><IconSquareAsterisk size={14} stroke={1} /></span>
-                        <input 
-                          name="documento" 
-                          required 
-                          value={form.documento} 
-                          onChange={handleChange} 
+                        <input
+                          name="documento"
+                          required
+                          value={form.documento}
+                          onChange={handleChange}
                           placeholder={form.tipo_comprobante === 'factura' ? 'Ej: 20123456789' : 'Ej: 12345678'}
                           style={{...fieldStyle, background: '#fbfdff', paddingLeft: 38}}
                         />
