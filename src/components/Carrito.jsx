@@ -23,6 +23,8 @@ const Carrito = () => {
   const [showCardForm, setShowCardForm] = useState(false);
   const [cardFormLoading, setCardFormLoading] = useState(false);
   const [showCortesDrawer, setShowCortesDrawer] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [corteEnEdicion, setCorteEnEdicion] = useState(null);
   const [costoCorte, setCostoCorte] = useState(0);
   const [preciosPorProducto, setPreciosPorProducto] = useState({});
@@ -271,7 +273,9 @@ const Carrito = () => {
   //         el card form. Se apaga con un delay de 400ms para que el
   //         spinner sea visible antes de que aparezca el modal de pago.
   // =====================================================================
-  const realizarPedido = async () => {
+  // Valida sesión, carrito y stock; si todo está en orden, abre el modal de
+  // condiciones de entrega/pago antes de continuar hacia Mercado Pago.
+  const handlePedidoClick = async () => {
     setLoading(true);
     setMensaje('');
 
@@ -301,6 +305,22 @@ const Carrito = () => {
         return;
       }
 
+      setLoading(false);
+      setAceptaTerminos(false);
+      setShowConfirmModal(true);
+    } catch (err) {
+      console.error('[HANDLEPEDIDOCLICK] Error:', err);
+      setMensaje('❌ Ocurrió un error al iniciar el pedido. Intenta nuevamente.');
+      setLoading(false);
+    }
+  };
+
+  // Se ejecuta tras confirmar en el modal de condiciones de entrega/pago.
+  const confirmarPedido = async () => {
+    setShowConfirmModal(false);
+    setLoading(true);
+
+    try {
       if (!ENABLE_MERCADO_PAGO) {
         guardarFacturacionPendiente(construirProductosFacturacion(carritoLocal));
         showToast('Mercado Pago deshabilitado. Continúa con la emisión de comprobante.', 'payment-info');
@@ -322,7 +342,7 @@ const Carrito = () => {
       setTimeout(() => setLoading(false), 400);
 
     } catch (err) {
-      console.error('[REALIZARPEDIDO] Error:', err);
+      console.error('[CONFIRMARPEDIDO] Error:', err);
       setMensaje('❌ Ocurrió un error al iniciar el pago. Intenta nuevamente.');
       setLoading(false);
     }
@@ -531,6 +551,7 @@ const Carrito = () => {
         .cart-top-toast.payment-info { border: 1px solid #bde0ef; background: linear-gradient(120deg, rgba(232,244,249,0.98), rgba(255,255,255,0.98)); color: #0c4a6e; }
         .cart-top-toast.leave { animation: cartToastOut .28s ease forwards; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes cartPaymentIn { 0% { opacity: 0; transform: translateY(-14px) scale(.985); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes cartToastIn { 0% { opacity: 0; transform: translateY(-10px) scale(.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes cartToastOut { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-6px) scale(.98); } }
         @media (max-width: 767px) {
@@ -676,6 +697,82 @@ const Carrito = () => {
         />
       )}
 
+      {showConfirmModal && (
+        <div
+          onClick={() => setShowConfirmModal(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(15,23,42,0.42)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: isMobile ? '16px' : '24px', overflowY: 'auto' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: 'min(560px, 100%)', borderRadius: isMobile ? 14 : 18, border: '1px solid rgba(199,228,240,0.85)', background: '#ffffff', boxShadow: '0 24px 48px rgba(15,23,42,0.22)', overflow: 'hidden', animation: 'cartPaymentIn .24s ease' }}
+          >
+            <div style={{ padding: isMobile ? '14px 16px' : '18px 24px', background: 'linear-gradient(135deg, #941918 0%, #c94543 100%)', color: '#fff' }}>
+              <div style={{ fontFamily: FONTS.heading, fontSize: isMobile ? 17 : 20, fontWeight: 800, letterSpacing: 0.3 }}>Confirmación de pedido</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 12.5, opacity: 0.9, marginTop: 2 }}>Por favor, lea atentamente antes de continuar con el pago.</div>
+            </div>
+
+            <div style={{ padding: isMobile ? '16px' : '22px 24px', fontFamily: FONTS.body, color: COLORS.text }}>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <li style={{ fontSize: 14, lineHeight: 1.6 }}>
+                  <strong>Cobertura de entrega:</strong> el servicio de entrega a domicilio se realiza exclusivamente dentro de la ciudad de Huancayo. Si su dirección de entrega corresponde a otra localidad, el pedido no podrá ser despachado a domicilio.
+                </li>
+                <li style={{ fontSize: 14, lineHeight: 1.6 }}>
+                  <strong>Condición de envío:</strong> la entrega a domicilio solo aplica para pedidos cuyo monto supere los S/ 1000.00. {totalBruto > 1000
+                    ? <span style={{ color: '#166534', fontWeight: 700 }}>Su pedido actual (S/ {formatPrice(totalBruto)}) sí califica para entrega a domicilio.</span>
+                    : <span style={{ color: '#9a3412', fontWeight: 700 }}>Su pedido actual (S/ {formatPrice(totalBruto)}) no supera dicho monto, por lo que deberá recoger sus productos en tienda.</span>}
+                </li>
+                <li style={{ fontSize: 14, lineHeight: 1.6 }}>
+                  <strong>Política de devoluciones:</strong> una vez efectuado el pago, no se realizan devoluciones ni reembolsos.
+                </li>
+                <li style={{ fontSize: 14, lineHeight: 1.6 }}>
+                  <strong>Conformidad:</strong> al confirmar, usted declara haber revisado los productos, cantidades y precios de su carrito, y estar conforme con su pedido.
+                </li>
+              </ul>
+
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 20, padding: '12px 14px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={aceptaTerminos}
+                  onChange={(e) => setAceptaTerminos(e.target.checked)}
+                  style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0, cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: 13.5, lineHeight: 1.5, color: COLORS.text }}>
+                  He leído y acepto las condiciones de entrega, cobertura y devoluciones descritas anteriormente.
+                </span>
+              </label>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 20, flexDirection: isMobile ? 'column' : 'row', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  style={{ padding: '10px 20px', borderRadius: 10, border: '1px solid #cbd5e1', background: '#fff', color: COLORS.text, fontFamily: FONTS.heading, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmarPedido}
+                  disabled={!aceptaTerminos}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: 10,
+                    border: 'none',
+                    background: aceptaTerminos ? 'linear-gradient(120deg, #941918 0%, #c94543 100%)' : '#cbd5e1',
+                    color: '#fff',
+                    fontFamily: FONTS.heading,
+                    fontWeight: 800,
+                    fontSize: 14,
+                    cursor: aceptaTerminos ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Confirmar y continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {ENABLE_MERCADO_PAGO && showCardForm && (
         <div
           onClick={() => { if (!cardFormLoading) { setShowCardForm(false); setLoading(false); } }}
@@ -685,7 +782,6 @@ const Carrito = () => {
             onClick={(e) => e.stopPropagation()}
             style={{ width: 'min(1160px, 100%)', maxHeight: isMobile ? 'calc(100vh - 72px)' : 'calc(100vh - 110px)', overflow: 'hidden', borderRadius: isMobile ? 14 : 24, border: '1px solid rgba(199,228,240,0.85)', background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(239,249,255,0.98))', boxShadow: '0 24px 48px rgba(15,23,42,0.18)', display: 'flex', flexDirection: 'column', animation: 'cartPaymentIn .24s ease' }}
           >
-            <style>{`@keyframes cartPaymentIn { 0% { opacity: 0; transform: translateY(-14px) scale(.985); } 100% { opacity: 1; transform: translateY(0) scale(1); } }`}</style>
             <div style={{ padding: isMobile ? '10px 12px' : '14px 20px', background: 'linear-gradient(135deg, #3ab4d6 0%, #5ecae8 55%, #82daf5 100%)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontFamily: FONTS.heading, fontSize: isMobile ? 16 : 20, lineHeight: 1, display: 'flex', alignItems: 'center', gap: 10, color: '#ffffff', letterSpacing: 0.3 }}>
                 <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
@@ -712,7 +808,7 @@ const Carrito = () => {
                 total={totalBruto}
                 items={carritoLocal}
                 onPaymentSuccess={procesarPagoExitoso}
-                onPaymentError={(error) => { console.log('[CARRITO] Error en pago:', error); setMensaje(`Error: ${error}`); }}
+                onPaymentError={(error) => { console.log('[CARRITO] Error en pago:', error); setMensaje(error); }}
                 onLoading={(isLoading) => setCardFormLoading(isLoading)}
               />
             </div>
@@ -728,7 +824,7 @@ const Carrito = () => {
       <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
         <button
           type="button"
-          onClick={realizarPedido}
+          onClick={handlePedidoClick}
           className="font-heading"
           disabled={loading || cardFormLoading}
           onMouseEnter={(e) => {
