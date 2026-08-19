@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { COLORS, FONTS } from '../colors';
 import { buildApiUrl } from '../config';
 import PresupuestoServicio from './PresupuestoServicio';
@@ -13,6 +13,35 @@ const normalizeServicio = (row = {}) => ({
   nombre: servicioNombre(row),
   descripcion: row?.descripcion || row?.detalle || '',
 });
+
+// Detecta qué imágenes son anchas (horizontales) precargándolas, y devuelve
+// solo esas — el carrusel inmersivo necesita fotos horizontales para lucir bien.
+const useWideOnly = (items, limit) => {
+  const [wideIds, setWideIds] = useState(() => new Set());
+  const pool = items.slice(0, 24);
+  const poolKey = pool.map(servicioId).join(',');
+
+  useEffect(() => {
+    let cancelled = false;
+    pool.forEach((it) => {
+      const im = new Image();
+      im.onload = () => {
+        if (cancelled || im.naturalWidth <= im.naturalHeight * 1.05) return;
+        const id = servicioId(it);
+        setWideIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+      };
+      im.src = imgSrc(it);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poolKey]);
+
+  return useMemo(
+    () => pool.filter((it) => wideIds.has(servicioId(it))).slice(0, limit),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [poolKey, wideIds, limit]
+  );
+};
 
 /* ══════════════════════════════════════════════════════════════════
    SERVICIO PANEL — desliza desde la IZQUIERDA, debajo del navbar
@@ -111,7 +140,7 @@ const ServicioPanel = ({ servicio, servicios, onClose, onSelect }) => {
         {/* ── IMAGEN HERO ── */}
         <div style={{ position: 'relative', flexShrink: 0, height: 'clamp(200px,34vw,280px)', overflow: 'hidden', background: '#1a1a2e' }}>
           <img src={imgSrc(servicio)} alt={servicio.nombre}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: 'brightness(.88)' }}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(.88)' }}
             onError={e => { e.target.onerror = null; e.target.src = PH; }} />
 
           {/* Gradiente oscuro inferior */}
@@ -751,7 +780,7 @@ const Proyectos = () => {
   const handleClose = () => { setSelectedServicio(null); setPresupuestoOpen(false); setDetalleOpen(false); };
 
   const filtrados = servicios;
-  const carousel = filtrados.slice(0, Math.min(filtrados.length, 8));
+  const carousel = useWideOnly(filtrados, 8);
   const mosaic   = filtrados.slice(0, 5);
   const dark     = filtrados.slice(5, 8);
   const fp1      = filtrados[8] || null;
@@ -821,7 +850,7 @@ const Proyectos = () => {
         .mw-right{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px}
         .mc-card{position:relative;overflow:hidden;cursor:pointer;background:#ddd}
         .mc-big{grid-row:1}
-        .mc-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .52s,filter .4s}
+        .mc-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .52s,filter .4s}
         .mc-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,10,10,.82) 0%,rgba(10,10,10,.06) 55%,transparent 100%)}
         .mc-accent{position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--r),var(--c),var(--y));transition:opacity .3s}
         .mc-info{position:absolute;bottom:0;left:0;right:0;padding:20px 22px;transition:transform .3s}
@@ -840,8 +869,8 @@ const Proyectos = () => {
         @media(max-width:640px){.db-grid{grid-template-columns:1fr}}
         .db-card{cursor:pointer;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);transition:transform .3s,box-shadow .3s}
         .db-card:hover{transform:translateY(-8px);box-shadow:0 24px 48px rgba(0,0,0,.6)}
-        .db-img-wrap{position:relative;overflow:hidden;aspect-ratio:4/3}
-        .db-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s,filter .4s}
+        .db-img-wrap{position:relative;overflow:hidden;aspect-ratio:4/3;background:#0b1220}
+        .db-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .5s,filter .4s}
         .db-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 60%)}
         .db-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:7px}
         .db-num{font-family:'Oswald',sans-serif;font-size:42px;font-weight:700;line-height:1;opacity:.12;letter-spacing:-.03em}
@@ -850,8 +879,8 @@ const Proyectos = () => {
         .db-bar{height:2px;transition:width .4s ease;margin-top:8px}
 
         /* ══ CINEMATIC PAIR ════ */
-        .cp-root{position:relative;width:100%;height:clamp(380px,48vw,580px);overflow:hidden;cursor:pointer}
-        .cp-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .65s ease}
+        .cp-root{position:relative;width:100%;height:clamp(380px,48vw,580px);overflow:hidden;cursor:pointer;background:#0b1220}
+        .cp-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transition:transform .65s ease}
         .cp-grad{position:absolute;inset:0;z-index:2;pointer-events:none}
         .cp-text{position:absolute;top:50%;transform:translateY(-50%);z-index:5;max-width:clamp(280px,38vw,460px);display:flex;flex-direction:column;gap:14px}
         .cp-eyebrow{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;font-family:'Open Sans',sans-serif}
@@ -866,9 +895,9 @@ const Proyectos = () => {
         /* ══ TRIO ════ */
         .trio-root{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:clamp(420px,55vw,660px)}
         @media(max-width:640px){.trio-root{grid-template-columns:1fr;height:auto}}
-        .trio-card{position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+        .trio-card{position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;background:#0b1220}
         @media(max-width:640px){.trio-card{height:320px}}
-        .trio-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .55s ease,filter .4s ease}
+        .trio-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transition:transform .55s ease,filter .4s ease}
         .trio-box-white{position:absolute;bottom:0;left:0;right:0;padding:22px 24px 28px;z-index:4}
         .trio-box-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-family:'Open Sans',sans-serif;margin-bottom:4px}
         .trio-box-name{font-family:'Oswald',sans-serif;font-size:clamp(18px,2.2vw,26px);font-weight:700;color:#fff;text-transform:uppercase;line-height:1.1;margin-bottom:14px}
@@ -892,9 +921,9 @@ const Proyectos = () => {
         .r3d-accent{width:60px;height:3px;background:linear-gradient(90deg,var(--r),var(--c),var(--y));margin:0 auto}
         .r3d-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
         @media(max-width:640px){.r3d-grid{grid-template-columns:1fr}}
-        .c3d-outer{position:relative;overflow:hidden;cursor:pointer;aspect-ratio:4/3;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s}
+        .c3d-outer{position:relative;overflow:hidden;cursor:pointer;aspect-ratio:4/3;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;background:#12131a}
         .c3d-outer:hover{box-shadow:0 28px 56px rgba(0,0,0,.28)}
-        .c3d-img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .3s}
+        .c3d-img{width:100%;height:100%;object-fit:contain;display:block;transition:filter .3s}
         .c3d-border{position:absolute;inset:0;border-width:3px;border-style:solid;pointer-events:none;transition:opacity .3s;z-index:3}
         .c3d-gloss{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.38) 0%,transparent 60%);pointer-events:none;z-index:4;transition:opacity .3s}
         .c3d-num{position:absolute;top:14px;left:14px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;background:rgba(0,0,0,.32);padding:4px 10px;backdrop-filter:blur(6px);z-index:5}
@@ -904,9 +933,9 @@ const Proyectos = () => {
 
         /* ══ SCATTERED ════ */
         .ss-root{display:flex;gap:4px;overflow:hidden;align-items:flex-end}
-        .ss-card{flex:1;position:relative;overflow:hidden;cursor:pointer;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s}
+        .ss-card{flex:1;position:relative;overflow:hidden;cursor:pointer;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;background:#0b1220}
         .ss-card:hover{transform:scaleY(1.04);box-shadow:0 12px 32px rgba(0,0,0,.28)}
-        .ss-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s,filter .4s}
+        .ss-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .5s,filter .4s}
         .ss-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.05) 55%,transparent 100%);transition:opacity .3s}
         .ss-tag{position:absolute;top:14px;left:14px;font-size:10px;font-weight:700;letter-spacing:.14em;padding:4px 10px;transition:opacity .25s;font-family:'Open Sans',sans-serif}
         .ss-info{position:absolute;bottom:0;left:0;right:0;padding:16px 18px}
@@ -914,8 +943,8 @@ const Proyectos = () => {
         @media(max-width:640px){.ss-root{flex-direction:column}.ss-card{height:200px!important;margin-top:0!important}}
 
         /* ══ BANNER ════ */
-        .fb-root{position:relative;height:clamp(280px,36vw,420px);overflow:hidden;cursor:pointer}
-        .fb-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .65s;filter:grayscale(18%)}
+        .fb-root{position:relative;height:clamp(280px,36vw,420px);overflow:hidden;cursor:pointer;background:#0b1220}
+        .fb-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .65s;filter:grayscale(18%)}
         .fb-root:hover .fb-img{transform:scale(1.04)}
         .fb-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(148,25,24,.9) 0%,rgba(148,25,24,.52) 45%,rgba(0,0,0,.2) 100%)}
         .fb-content{position:absolute;left:clamp(28px,6vw,80px);top:50%;transform:translateY(-50%);z-index:4;max-width:520px}
@@ -929,7 +958,7 @@ const Proyectos = () => {
         /* ══ REST ════ */
         .rg-root{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:3px}
         .rg-card{position:relative;overflow:hidden;cursor:pointer;aspect-ratio:4/3;background:#ddd}
-        .rg-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s,filter .4s}
+        .rg-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .45s,filter .4s}
         .rg-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.06) 55%,transparent 100%);transition:opacity .3s}
         .rg-bar{position:absolute;bottom:0;left:0;height:3px;transition:width .4s ease;z-index:3}
         .rg-info{position:absolute;bottom:0;left:0;right:0;padding:16px 18px;display:flex;flex-direction:column;gap:3px}
