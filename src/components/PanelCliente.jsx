@@ -626,6 +626,23 @@ const PanelCliente = ({ onLogout }) => {
           }
         }
       )
+      .on(
+        // Entregas/servicios ahora se eliminan al culminar (no solo se
+        // marcan "entregado"), asi que la barra debe refrescarse tambien
+        // cuando el carrito desaparece, no solo cuando cambia de estado.
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "carrito_compras" },
+        (payload) => {
+          const cid = payload.old?.id_carrito;
+          if (!cid) return;
+          if (progresoPedidoListaRef.current.some((i) => i.carrito_id === cid)) {
+            recargarBarraProgreso(clienteId, authToken);
+          }
+          if (progresoServicioListaRef.current.some((i) => i.carrito_id === cid)) {
+            recargarBarraProgresoServicio(clienteId);
+          }
+        }
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
