@@ -57,24 +57,39 @@ const NeonButton = ({ onClick, children }) => {
   );
 };
 
-// ─── Botón flotante para bajar al siguiente bloque de pantalla completa ────
-const ScrollDownButton = ({ targetId, dark }) => (
-  <button
-    onClick={() => document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth' })}
-    aria-label="Ver siguiente sección"
-    style={{
-      position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
-      width: 44, height: 44, borderRadius: '50%', zIndex: 5,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      border: `2px solid ${dark ? 'rgba(255,255,255,0.6)' : '#941918'}`,
-      background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.85)',
-      color: dark ? '#fff' : '#941918',
-      cursor: 'pointer', animation: 'vb-bounce 1.8s ease-in-out infinite',
-    }}
-  >
-    <IconChevronDown size={22} stroke={2.4} />
-  </button>
-);
+// ─── Botón flotante (fijo al viewport) para bajar al siguiente bloque ──────
+// Fijo en vez de absoluto: así siempre queda visible pegado al borde inferior
+// de la pantalla, sin importar si el bloque activo mide más de 100vh.
+const SNAP_SECTIONS = ['hero', 'quienes-somos', 'productos', 'ubicacion', 'proyectos', 'testimonios'];
+const SNAP_DARK_SECTIONS = new Set(['ubicacion', 'testimonios']);
+
+const ScrollDownButton = ({ activeId }) => {
+  const activeIdx = SNAP_SECTIONS.indexOf(activeId);
+  const nextId = activeIdx >= 0 ? SNAP_SECTIONS[activeIdx + 1] : null;
+  if (!nextId) return null; // última sección: no hay a dónde bajar
+
+  const dark = SNAP_DARK_SECTIONS.has(activeId);
+
+  return (
+    <button
+      onClick={() => document.getElementById(nextId)?.scrollIntoView({ behavior: 'smooth' })}
+      aria-label="Ver siguiente sección"
+      style={{
+        position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+        width: 44, height: 44, borderRadius: '50%', zIndex: 40,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: `2px solid ${dark ? 'rgba(255,255,255,0.6)' : '#941918'}`,
+        background: dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.9)',
+        color: dark ? '#fff' : '#941918',
+        boxShadow: '0 6px 18px rgba(0,0,0,0.25)',
+        cursor: 'pointer', animation: 'vb-bounce 1.8s ease-in-out infinite',
+        transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
+      }}
+    >
+      <IconChevronDown size={22} stroke={2.4} />
+    </button>
+  );
+};
 
 // ─── Eyebrow reutilizable (mismo patrón visual en todas las secciones) ──────
 const SectionEyebrow = ({ label, title, subtitle, dark, align = 'center' }) => (
@@ -267,7 +282,6 @@ const QuienesSomos = () => {
           </div>
         </div>
       </div>
-      <ScrollDownButton targetId="productos" />
     </section>
   );
 };
@@ -424,7 +438,6 @@ const Productos = ({ navigate }) => (
         ))}
       </div>
     </div>
-    <ScrollDownButton targetId="ubicacion" />
   </section>
 );
 
@@ -547,7 +560,6 @@ const Ubicacion = () => {
           </div>
         </div>
       </div>
-      <ScrollDownButton targetId="proyectos" dark />
     </section>
   );
 };
@@ -606,6 +618,7 @@ const Testimonios = () => (
 function Inicio() {
   const [servicios, setServicios] = useState([]);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [activeSection, setActiveSection] = useState('hero');
   const navigate = useNavigate();
   const bgShadowRef = useRef(null); // aura difuminada (sombreado del degradado de atrás)
   const bgBackRef = useRef(null);   // degradado de atrás
@@ -624,6 +637,27 @@ function Inicio() {
     window.scrollTo(0, 0);
     document.documentElement.classList.add('vb-snap-scroll');
     return () => document.documentElement.classList.remove('vb-snap-scroll');
+  }, []);
+
+  // Detecta qué bloque de pantalla completa está en pantalla, para saber
+  // hacia dónde debe apuntar el botón flotante de "bajar".
+  useEffect(() => {
+    const elements = SNAP_SECTIONS
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const mostVisible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (mostVisible) setActiveSection(mostVisible.target.id);
+      },
+      { threshold: [0.35, 0.5, 0.65] }
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -1001,12 +1035,12 @@ function Inicio() {
             <Card serv={s[3]} rotate="1deg" />
           </div>
         </div>
-        <ScrollDownButton targetId="testimonios" />
       </div>
 
       {/* TESTIMONIOS / EQUIPO */}
       <Testimonios />
 
+      <ScrollDownButton activeId={activeSection} />
     </section>
   );
 }
