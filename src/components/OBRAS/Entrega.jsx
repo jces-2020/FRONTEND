@@ -280,9 +280,6 @@ const EntregaPedido = ({ notificacion, onBack }) => {
   /* ── Fetch cortes reales ── */
   const [cortesData, setCortesData] = useState(DEMO_CUTS);
   const [cargando, setCargando] = useState(false);
-  // Ubicación de entrega: solo llega desde el backend cuando el pago del
-  // cliente superó S/ 1000 (si no, ubicacion viene null y no se muestra nada).
-  const [ubicacionEntrega, setUbicacionEntrega] = useState(null);
 
   useEffect(() => {
     const id = notificacion?.id || notificacion?.id_notificacion;
@@ -309,29 +306,11 @@ const EntregaPedido = ({ notificacion, onBack }) => {
           });
           if (filas.length > 0) setCortesData(filas);
         }
-        setUbicacionEntrega(data?.ubicacion || null);
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setCargando(false); });
     return () => { cancelled = true; };
   }, [notificacion?.id, notificacion?.id_notificacion]);
-
-  // Botón "Ver ruta de todos modos": fuerza traer la ubicación aunque el
-  // pago no haya superado S/ 1000.
-  const [cargandoUbicacionForzada, setCargandoUbicacionForzada] = useState(false);
-  const verRutaForzada = useCallback(() => {
-    const id = notificacion?.id || notificacion?.id_notificacion;
-    if (!id) return;
-    setCargandoUbicacionForzada(true);
-    fetch(`/api/cortes/notificacion/${id}?forzar_ubicacion=1`)
-      .then(r => r.json())
-      .then(data => {
-        if (data?.ubicacion) setUbicacionEntrega(data.ubicacion);
-        else showToast('Este cliente no tiene una ubicación registrada.', 'error');
-      })
-      .catch(() => showToast('No se pudo cargar la ubicación.', 'error'))
-      .finally(() => setCargandoUbicacionForzada(false));
-  }, [notificacion?.id, notificacion?.id_notificacion, showToast]);
 
   const completados = cortesData.filter(c => c.est === 'Completado').length;
   const totalCortes = cortesData.length;
@@ -581,52 +560,6 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                   </div>
                   <div className="mes-stat-lbl">Cortes</div>
                 </div>
-              </div>
-            </div>
-
-            {/* Ubicación de entrega — automática si el pago superó S/ 1000,
-                o manual con el botón "Ver ruta de todos modos" */}
-            <div className="mes-widget">
-              <div className="mes-widget-head"><span>UBICACIÓN DE ENTREGA</span></div>
-              <div className="mes-widget-body" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {ubicacionEntrega ? (
-                  <>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>
-                      {ubicacionEntrega.direccion || 'Dirección no registrada'}
-                    </div>
-                    {ubicacionEntrega.referencia && (
-                      <div style={{ fontSize: 11, color: '#64748b' }}>
-                        Ref: {ubicacionEntrega.referencia}
-                      </div>
-                    )}
-                    {ubicacionEntrega.latitud != null && ubicacionEntrega.longitud != null && (
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${ubicacionEntrega.latitud},${ubicacionEntrega.longitud}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mes-ctrl-btn-v start"
-                        style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                      >
-                        Ver ruta a seguir
-                      </a>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>
-                      Solo se muestra automáticamente si el pago superó S/ 1000.
-                    </div>
-                    <button
-                      type="button"
-                      className="mes-ctrl-btn-v start"
-                      disabled={cargandoUbicacionForzada}
-                      onClick={verRutaForzada}
-                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                    >
-                      {cargandoUbicacionForzada ? 'Buscando…' : 'Ver ruta de todos modos'}
-                    </button>
-                  </>
-                )}
               </div>
             </div>
 
