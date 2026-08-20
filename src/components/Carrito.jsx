@@ -808,7 +808,7 @@ const Carrito = () => {
                 total={totalBruto}
                 items={carritoLocal}
                 onPaymentSuccess={procesarPagoExitoso}
-                onPaymentError={(error) => { console.log('[CARRITO] Error en pago:', error); setMensaje(error); }}
+                onPaymentError={(error) => { console.log('[CARRITO] Error en pago:', error); setMensaje(`Error: ${error}`); }}
                 onLoading={(isLoading) => setCardFormLoading(isLoading)}
               />
             </div>

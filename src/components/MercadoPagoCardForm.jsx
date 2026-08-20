@@ -405,8 +405,7 @@ export default function MercadoPagoCardForm({
         const causeDetails = Array.isArray(data.cause)
           ? data.cause.map((c) => typeof c === 'object' ? (c.message || c.description || JSON.stringify(c)) : String(c)).filter(Boolean).join(' | ')
           : data.cause;
-        console.error('[MP] Pago rechazado - detalle técnico:', errorMessage, causeDetails || '');
-        throw new Error('Pago rechazado. Revise bien su método de pago.');
+        throw new Error(`Pago rechazado: ${causeDetails ? `${errorMessage} (${causeDetails})` : errorMessage}`);
       }
       setPaymentSuccess(data);
       await new Promise((resolve) => setTimeout(resolve, 2400));
