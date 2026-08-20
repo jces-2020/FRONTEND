@@ -280,6 +280,9 @@ const EntregaPedido = ({ notificacion, onBack }) => {
   /* ── Fetch cortes reales ── */
   const [cortesData, setCortesData] = useState(DEMO_CUTS);
   const [cargando, setCargando] = useState(false);
+  // Ubicación de entrega: solo llega desde el backend cuando el pago del
+  // cliente superó S/ 1000 (si no, ubicacion viene null y no se muestra nada).
+  const [ubicacionEntrega, setUbicacionEntrega] = useState(null);
 
   useEffect(() => {
     const id = notificacion?.id || notificacion?.id_notificacion;
@@ -306,6 +309,7 @@ const EntregaPedido = ({ notificacion, onBack }) => {
           });
           if (filas.length > 0) setCortesData(filas);
         }
+        setUbicacionEntrega(data?.ubicacion || null);
       })
       .catch(() => {})
       .finally(() => { if (!cancelled) setCargando(false); });
@@ -562,6 +566,34 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                 </div>
               </div>
             </div>
+
+            {/* Ubicación de entrega — solo si el pago superó S/ 1000 */}
+            {ubicacionEntrega && (
+              <div className="mes-widget">
+                <div className="mes-widget-head"><span>UBICACIÓN DE ENTREGA</span></div>
+                <div className="mes-widget-body" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#1e293b' }}>
+                    {ubicacionEntrega.direccion || 'Dirección no registrada'}
+                  </div>
+                  {ubicacionEntrega.referencia && (
+                    <div style={{ fontSize: 11, color: '#64748b' }}>
+                      Ref: {ubicacionEntrega.referencia}
+                    </div>
+                  )}
+                  {ubicacionEntrega.latitud != null && ubicacionEntrega.longitud != null && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${ubicacionEntrega.latitud},${ubicacionEntrega.longitud}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mes-ctrl-btn-v start"
+                      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                    >
+                      Ver ruta a seguir
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Machine controls */}
             <div className="mes-widget">
