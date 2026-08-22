@@ -601,6 +601,7 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
       {mostrarFacturacion && (
         <ModalFacturacion
           productos={productosFacturacion}
+          carritoId={carritoData?.carrito_id || null}
           clienteActual={{
             nombre: clienteResuelto?.nombre || notificacion?.nombre || '',
             documento: clienteResuelto?.documento || notificacion?.documento || '',

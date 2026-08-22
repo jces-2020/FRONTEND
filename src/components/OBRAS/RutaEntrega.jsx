@@ -134,7 +134,12 @@ const RutaEntrega = ({ carritoId }) => {
         const directionsService = new maps.DirectionsService();
         const directionsRenderer = new maps.DirectionsRenderer({ map, suppressMarkers: false });
         directionsService.route(
-          { origin: ORIGEN_TIENDA, destination: destino, travelMode: maps.TravelMode.DRIVING },
+          {
+            origin: ORIGEN_TIENDA,
+            destination: destino,
+            travelMode: maps.TravelMode.DRIVING,
+            drivingOptions: { departureTime: new Date(), trafficModel: 'bestguess' },
+          },
           (result, status) => {
             if (cancelado) return;
             if (status === 'OK') {

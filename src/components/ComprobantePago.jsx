@@ -17,6 +17,11 @@ export function useComprobantePago({ clearCart, setCarritoId }) {
   const [showFacturacionModal, setShowFacturacionModal] = useState(false);
   const [facturacionProductos, setFacturacionProductos] = useState([]);
   const [registroPagoPendienteId, setRegistroPagoPendienteId] = useState(null);
+  // carrito_compras.id_carrito real generado por /api/pagos/confirmar_compra
+  // (distinto del carrito_id temporal del store local) — se necesita para
+  // que la ubicación que el cliente fije en el mapa quede ligada a ESTE
+  // pedido específico, y no solo "la más reciente del cliente".
+  const [pedidoCarritoId, setPedidoCarritoId] = useState(null);
 
   useEffect(() => {
     try {
@@ -40,6 +45,7 @@ export function useComprobantePago({ clearCart, setCarritoId }) {
   const limpiarFacturacionPendiente = () => {
     setFacturacionProductos([]);
     setRegistroPagoPendienteId(null);
+    setPedidoCarritoId(null);
     setShowFacturacionModal(false);
     try { sessionStorage.removeItem(FACTURACION_PENDIENTE_KEY); } catch {}
   };
@@ -51,6 +57,7 @@ export function useComprobantePago({ clearCart, setCarritoId }) {
     setCarritoId(null);
     setFacturacionProductos([]);
     setRegistroPagoPendienteId(null);
+    setPedidoCarritoId(null);
   };
 
   return {
@@ -59,6 +66,8 @@ export function useComprobantePago({ clearCart, setCarritoId }) {
     facturacionProductos,
     registroPagoPendienteId,
     setRegistroPagoPendienteId,
+    pedidoCarritoId,
+    setPedidoCarritoId,
     guardarFacturacionPendiente,
     limpiarFacturacionPendiente,
     marcarFacturacionCompletada,
@@ -71,6 +80,7 @@ export default function ComprobantePago({
   setShowFacturacionModal,
   facturacionProductos,
   registroPagoPendienteId,
+  pedidoCarritoId,
   registrarCompraParaSeguimiento,
   marcarFacturacionCompletada,
   limpiarFacturacionPendiente,
@@ -96,6 +106,7 @@ export default function ComprobantePago({
         <ModalFacturacion
           productos={facturacionProductos.length > 0 ? facturacionProductos : construirProductosFacturacion(carritoLocal)}
           registroPagoId={registroPagoPendienteId}
+          carritoId={pedidoCarritoId}
           onComprobanteGenerado={async () => {
             const okSeguimiento = await registrarCompraParaSeguimiento();
             if (!okSeguimiento) { showToast('Se generó el comprobante, pero no se pudo registrar el seguimiento.', 'payment-info'); return; }
