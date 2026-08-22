@@ -9,6 +9,7 @@ import ProductosServicio from './ProductosServicio';
 import Instalacion from './Instalacion';
 import DisenoServicio from './DisenoServicio';
 import ModalFacturacion from '../VENTA/ModalFacturacion';
+import RutaEntrega from './RutaEntrega';
 
 const T = {
   bgPage:     'linear-gradient(145deg,#dff0f8 0%,#eaf5fb 40%,#f4f9fd 100%)',
@@ -449,6 +450,12 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
           </div>
         </header>
 
+        {carritoData?.carrito_id && (
+          <div style={{ borderRadius: 18, padding: '14px 18px', ...gc, animation: 'svUp .45s ease' }}>
+            <RutaEntrega carritoId={carritoData.carrito_id} />
+          </div>
+        )}
+
         <div style={{ borderRadius: 22, overflow: 'hidden', ...gcM, animation: 'svUp .45s ease', position: 'relative' }}>
           <div
             style={{
@@ -594,6 +601,7 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
       {mostrarFacturacion && (
         <ModalFacturacion
           productos={productosFacturacion}
+          carritoId={carritoData?.carrito_id || null}
           clienteActual={{
             nombre: clienteResuelto?.nombre || notificacion?.nombre || '',
             documento: clienteResuelto?.documento || notificacion?.documento || '',

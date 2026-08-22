@@ -142,7 +142,7 @@ const AnimatedSelect = ({ name, value, options, onChange, shellStyle, buttonStyl
   );
 };
 
-const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegistroPago = false, clienteActual = null, autoCloseOnComprobante = false, registroPagoId = null }) => {
+const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegistroPago = false, clienteActual = null, autoCloseOnComprobante = false, registroPagoId = null, carritoId = null }) => {
   const COSTO_CORTE = 10;
   const [productosLocales] = useState(
     Array.isArray(productos) ? [...productos] : []
@@ -734,6 +734,7 @@ const ModalFacturacion = ({ productos, onClose, onComprobanteGenerado, deferRegi
         totales,
         ubicacion: {
           cliente_id: localStorage.getItem('cliente_id') || null,
+          carrito_id: carritoId || null,
           direccion: form.direccion,
           referencia: form.referencia || '',
           latitud: form.latitud,

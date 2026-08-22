@@ -12,6 +12,7 @@ import BrandToast from '../UI/BrandToast';
 import Retazo from './Retazo';
 import Materiales from './Materiales';
 import Productos from './Productos';
+import RutaEntrega from './RutaEntrega';
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -445,6 +446,12 @@ const EntregaPedido = ({ notificacion, onBack }) => {
 
           {/* CENTER */}
           <div className="mes-center">
+
+            {notificacion?.carrito_id && (
+              <div className="mes-project-bar" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <RutaEntrega carritoId={notificacion.carrito_id} />
+              </div>
+            )}
 
             {/* 2-col split */}
             <div className="mes-split">

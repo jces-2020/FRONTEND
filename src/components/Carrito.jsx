@@ -44,6 +44,7 @@ const Carrito = () => {
     showFacturacionModal, setShowFacturacionModal,
     facturacionProductos,
     registroPagoPendienteId, setRegistroPagoPendienteId,
+    pedidoCarritoId, setPedidoCarritoId,
     guardarFacturacionPendiente,
     limpiarFacturacionPendiente,
     marcarFacturacionCompletada,
@@ -211,6 +212,7 @@ const Carrito = () => {
       const resultadoGuardar = await res.json();
       if (resultadoGuardar.success) {
         setRegistroPagoPendienteId(resultadoGuardar?.registro_pago_id || null);
+        setPedidoCarritoId(resultadoGuardar?.carrito_id || null);
         setShowCardForm(false);
         const eventPayload = {
           carrito_id: carritoId || localStorage.getItem('carrito_id'),
@@ -896,6 +898,7 @@ const Carrito = () => {
           setShowFacturacionModal={setShowFacturacionModal}
           facturacionProductos={facturacionProductos}
           registroPagoPendienteId={registroPagoPendienteId}
+          pedidoCarritoId={pedidoCarritoId}
           registrarCompraParaSeguimiento={registrarCompraParaSeguimiento}
           marcarFacturacionCompletada={marcarFacturacionCompletada}
           limpiarFacturacionPendiente={limpiarFacturacionPendiente}
