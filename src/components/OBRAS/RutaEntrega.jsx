@@ -64,14 +64,19 @@ function formatDistancia(m) {
  * mapa y avisa en verde al llegar al destino).
  * - Si el pedido supera S/ 1000, la ruta se muestra automáticamente.
  * - Si no, se muestra un botón "Mostrar ruta" para revelarla bajo demanda.
- * Reutilizable desde Entrega (OBRAS) y Servicio (OBRAS); solo necesita el
- * carrito_id del pedido/trabajo en curso.
+ * Reutilizable desde Entrega (OBRAS) y Servicio/Remetro (OBRAS):
+ * - `carritoId`: pedido de producto ya con carrito_compras real (Entrega,
+ *   Instalación). El monto se resuelve solo si no se pasa `monto`.
+ * - `presupuestoId`: servicio recien cotizado, todavia sin carrito (Remetro).
+ *   En este caso `monto` es obligatorio (el precio ya se conoce en pantalla).
  */
-const RutaEntrega = ({ carritoId }) => {
+const RutaEntrega = ({ carritoId, presupuestoId, monto }) => {
   const mapElRef = useRef(null);
   const mapRef = useRef(null);
   const currentMarkerRef = useRef(null);
   const watchIdRef = useRef(null);
+
+  const claveJob = carritoId || presupuestoId || null;
 
   const [totalPedido, setTotalPedido] = useState(null);
   const [ubicacion, setUbicacion] = useState(null);
@@ -87,21 +92,28 @@ const RutaEntrega = ({ carritoId }) => {
     setUbicacion(null);
     setMostrarRuta(false);
     setError('');
-    if (!carritoId) return;
+    if (!claveJob) return;
 
     let cancelado = false;
     const headers = authHeaders();
 
+    const ubicacionUrl = presupuestoId
+      ? `/api/ubicacion/ruta/presupuesto/${presupuestoId}`
+      : `/api/ubicacion/ruta/${carritoId}`;
+    const totalPromise = monto != null
+      ? Promise.resolve({ total_precio: monto })
+      : fetch(`/api/admin/pedidos/${carritoId}/detalle`, { headers })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
+
     Promise.all([
-      fetch(`/api/admin/pedidos/${carritoId}/detalle`, { headers })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null),
-      fetch(`/api/ubicacion/ruta/${carritoId}`, { headers })
+      totalPromise,
+      fetch(ubicacionUrl, { headers })
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null),
     ]).then(([detalle, ubi]) => {
       if (cancelado) return;
-      const total = Number(detalle?.total_precio || 0);
+      const total = Number(detalle?.total_precio ?? monto ?? 0);
       setTotalPedido(total);
       if (ubi?.success && ubi.latitud != null && ubi.longitud != null) {
         setUbicacion(ubi);
@@ -110,7 +122,7 @@ const RutaEntrega = ({ carritoId }) => {
     });
 
     return () => { cancelado = true; };
-  }, [carritoId]);
+  }, [claveJob, carritoId, presupuestoId, monto]);
 
   // Dibuja el mapa y la ruta estática tienda -> cliente (una sola vez por pedido).
   useEffect(() => {
@@ -225,9 +237,9 @@ const RutaEntrega = ({ carritoId }) => {
   // Corta el GPS si se cambia de pedido o se desmonta el componente.
   useEffect(() => () => {
     if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
-  }, [carritoId]);
+  }, [claveJob]);
 
-  if (!carritoId || totalPedido === null) return null;
+  if (!claveJob || totalPedido === null) return null;
 
   if (!ubicacion) {
     return (

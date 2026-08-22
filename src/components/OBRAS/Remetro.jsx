@@ -1,5 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { COLORS, FONTS } from '../../colors';
+import RutaEntrega from './RutaEntrega';
+
+const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+function formatFechaHoraEs(valor) {
+  if (!valor) return '';
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return '';
+  const dia = d.getDate();
+  const mes = MESES_ES[d.getMonth()];
+  const anio = d.getFullYear();
+  let horas = d.getHours();
+  const minutos = String(d.getMinutes()).padStart(2, '0');
+  const ampm = horas >= 12 ? 'p. m.' : 'a. m.';
+  horas = horas % 12 || 12;
+  return `${dia} de ${mes} de ${anio} a las ${horas}:${minutos} ${ampm}`;
+}
 
 const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onPagoConfirmado }) => {
   const [ancho, setAncho] = useState('');
@@ -22,6 +39,17 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   })();
+  // Minimo para el input datetime-local: fecha y hora actuales (formato
+  // "YYYY-MM-DDTHH:mm", el que usa ese tipo de input nativamente).
+  const fechaHoraMinima = (() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  })();
   const notificacionId = notificacion?.id_notificacion || notificacion?.id || null;
   const isTablet = viewportWidth <= 1024;
   const isMobile = viewportWidth <= 760;
@@ -33,10 +61,13 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  // Acepta fecha+hora completa ("YYYY-MM-DDTHH:mm"); si llega solo fecha
+  // (dato viejo, guardado antes de agregar la hora) le asigna 09:00 por defecto.
   const normalizarFechaServicio = (valor) => {
     if (!valor) return '';
-    const fecha = String(valor).slice(0, 10);
-    return fecha >= fechaHoy ? fecha : fechaHoy;
+    const texto = String(valor);
+    const conHora = texto.length === 10 ? `${texto}T09:00` : texto;
+    return conHora >= fechaHoraMinima ? conHora : fechaHoraMinima;
   };
 
   const descripcionBaseNotificacion = (raw) => {
@@ -58,7 +89,7 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
       servicio?.descripcion_presupuesto ||
       servicio?.nombre_servicio ||
       descripcionBaseNotificacion(notificacion?.descripcion),
-    fecha_servicio: normalizarFechaServicio(fechaServicio || notificacion?.fecha || fechaHoy)
+    fecha_servicio: normalizarFechaServicio(fechaServicio || notificacion?.fecha || fechaHoraMinima)
   });
 
   const actualizarDraftActivo = (patch) => {
@@ -148,6 +179,7 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               nombre_servicio: item.nombre_servicio || `servicio${idx + 1}`,
               descripcion_presupuesto: item.descripcion || '',
               imagen_url: item.imagen_url || '',
+              fecha_remetro: item.fecha_remetro || null,
             }))
             .filter((s) => s.id);
 
@@ -346,8 +378,8 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
       onToast && onToast('Ingrese un precio valido mayor a 0', 'error');
       return;
     }
-    if (!fechaServicio || fechaServicio < fechaHoy) {
-      onToast && onToast('La fecha de servicio no puede ser anterior a hoy', 'error');
+    if (!fechaServicio || fechaServicio < fechaHoraMinima) {
+      onToast && onToast('La fecha y hora de servicio no pueden ser anteriores al momento actual', 'error');
       return;
     }
 
@@ -420,6 +452,29 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
           )}
         </div>
       </div>
+
+      {/* Visita de remetro: fecha/hora agendada + ruta hacia el cliente */}
+      {serviciosCliente.length > 0 && (
+        <div style={{
+          border: `1px solid ${COLORS.border}`,
+          borderRadius: 12,
+          background: '#fff',
+          padding: '12px',
+          marginBottom: 14,
+          display: 'grid',
+          gap: 8,
+        }}>
+          {serviciosCliente[0]?.fecha_remetro && (
+            <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.text }}>
+              <strong>Visita para tomar medidas:</strong> {formatFechaHoraEs(serviciosCliente[0].fecha_remetro)}
+            </div>
+          )}
+          <RutaEntrega
+            presupuestoId={serviciosCliente[0]?.id}
+            monto={serviciosCliente.reduce((acc, s) => acc + (Number(s.total) || 0), 0)}
+          />
+        </div>
+      )}
 
       {/* Layout principal: izquierda (imagen + gráfico) y derecha (datos) */}
       <div style={{
@@ -698,18 +753,18 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               fontFamily: FONTS.heading,
               color: COLORS.text,
               letterSpacing: 0.5
-            }}>FECHA PARA REALIZAR EL SERVICIO</label>
+            }}>FECHA Y HORA PARA REALIZAR EL SERVICIO</label>
             <input
               value={fechaServicio}
               onChange={(e) => {
                 const val = e.target.value;
-                if (!val || val >= fechaHoy) {
+                if (!val || val >= fechaHoraMinima) {
                   setFechaServicio(val);
                   actualizarDraftActivo({ fecha_servicio: val });
                 }
               }}
-              type="date"
-              min={fechaHoy}
+              type="datetime-local"
+              min={fechaHoraMinima}
               style={{
                 width: '100%',
                 padding: '10px 11px',
@@ -722,7 +777,7 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               }}
             />
             <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
-              No se permiten fechas anteriores al dia actual.
+              No se permiten fechas u horas anteriores al momento actual.
             </div>
           </div>
         </div>
