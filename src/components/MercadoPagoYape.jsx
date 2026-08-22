@@ -173,7 +173,6 @@ export default function MercadoPagoYape({
         installments: 1,
         yape_phone: yapePhone,
         yape_otp: yapeOtp,
-        device_id: window.MP_DEVICE_SESSION_ID || null,
         items: items.map((it) => ({
           id: it.id || it.producto_id || '',
           title: it.nombre || it.title || 'Producto VIDRIOBRAS',
