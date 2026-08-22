@@ -3,6 +3,7 @@ import { IconUser, IconBuilding, IconTrash, IconEdit, IconPlus, IconCheck, IconA
 import { COLORS, FONTS } from "../../colors";
 import { getPresupuestos, updatePresupuesto, removePresupuesto, clearPresupuestos } from "../../utils/ramPresupuestos";
 import PresupuestoServicio from "../PresupuestoServicio";
+import MapaUbicacion from "./MapaUbicacion";
 
 // --- CSS -----------------------------------------------------------------------
 const SERVICIO_CSS = `
@@ -114,6 +115,13 @@ export default function Servicio() {
   const [busquedaEstado, setBusquedaEstado] = useState('');
   const [busquedaOk, setBusquedaOk]     = useState(false);
   const [cargandoDoc, setCargandoDoc]   = useState(false);
+
+  // Remetro: fecha y ubicacion de la visita para tomar las medidas exactas
+  const direccionRemetroRef = useRef(null);
+  const [fechaRemetro, setFechaRemetro] = useState('');
+  const [ubicacionRemetro, setUbicacionRemetro] = useState({
+    direccion: '', referencia: '', latitud: null, longitud: null,
+  });
 
   // UI
   const [guardando, setGuardando]       = useState(false);
@@ -290,6 +298,8 @@ export default function Servicio() {
       setBusquedaEstado('');
       setBusquedaOk(false);
       setTipoSel(null);
+      setFechaRemetro('');
+      setUbicacionRemetro({ direccion: '', referencia: '', latitud: null, longitud: null });
       limpiarAccesoTemporal(digitos);
     }
   };
@@ -330,6 +340,10 @@ export default function Servicio() {
         alto:         f.alto   ? parseFloat(f.alto)   : null,
         total:        parseFloat(f.total) || 0,
       })),
+      fecha_remetro: fechaRemetro || null,
+      ubicacion: (ubicacionRemetro.latitud != null && ubicacionRemetro.longitud != null)
+        ? ubicacionRemetro
+        : null,
     };
 
     try {
@@ -354,6 +368,8 @@ export default function Servicio() {
         setBusquedaEstado('');
         setBusquedaOk(false);
         setTipoSel(null);
+        setFechaRemetro('');
+        setUbicacionRemetro({ direccion: '', referencia: '', latitud: null, longitud: null });
       } else {
         showNotice(data.message || 'Error al guardar.', 'err');
       }
@@ -437,6 +453,48 @@ export default function Servicio() {
             {cargandoDoc ? 'Consultando...' : busquedaEstado}
           </div>
         )}
+      </div>
+
+      {/* -- Remetro: fecha y ubicacion de la visita -------------------------- */}
+      <div className="sv-card">
+        <div className="sv-head">
+          <div className="sv-title">Remetro — visita para tomar medidas exactas</div>
+        </div>
+
+        <div className="sv-grid">
+          <div className="sv-field">
+            <label>Fecha del remetro</label>
+            <input
+              type="date"
+              value={fechaRemetro}
+              onChange={e => setFechaRemetro(e.target.value)}
+              className="sv-input"
+            />
+          </div>
+
+          <div className="sv-field">
+            <label>Dirección de la visita</label>
+            <input
+              ref={direccionRemetroRef}
+              type="text"
+              value={ubicacionRemetro.direccion}
+              onChange={e => setUbicacionRemetro(prev => ({ ...prev, direccion: e.target.value }))}
+              placeholder="Escribe la dirección o usa el mapa"
+              autoComplete="off"
+              className="sv-input"
+            />
+          </div>
+        </div>
+
+        <MapaUbicacion
+          direccion={ubicacionRemetro.direccion}
+          referencia={ubicacionRemetro.referencia}
+          latitud={ubicacionRemetro.latitud}
+          longitud={ubicacionRemetro.longitud}
+          onChange={({ distritoSugerido, ...resto }) => setUbicacionRemetro(prev => ({ ...prev, ...resto }))}
+          apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+          inputRef={direccionRemetroRef}
+        />
       </div>
 
       {/* -- Tabla de servicios (RAM) ----------------------------------------- */}
