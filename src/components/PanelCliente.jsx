@@ -707,6 +707,23 @@ const PanelCliente = ({ onLogout }) => {
     return `${dd} ${mes} ${yy}`;
   };
 
+  // Fecha y hora de instalación agendada, en español, para el mensaje de
+  // seguimiento del servicio ("El servicio se instalará el día ... a las ...").
+  const formatFechaHoraServicioEs = (value) => {
+    if (!value) return "";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+    const dia = d.getDate();
+    const mes = meses[d.getMonth()];
+    const anio = d.getFullYear();
+    let horas = d.getHours();
+    const minutos = String(d.getMinutes()).padStart(2, "0");
+    const ampm = horas >= 12 ? "p. m." : "a. m.";
+    horas = horas % 12 || 12;
+    return `El servicio se instalará el día ${dia} de ${mes} de ${anio} a las ${horas}:${minutos} ${ampm}.`;
+  };
+
   const onFechaInicioChange = (value) => {
     const fecha = value && value > fechaMaximaBusqueda ? fechaMaximaBusqueda : value;
     setFechaInicioComprobante(fecha);
@@ -1532,6 +1549,11 @@ const PanelCliente = ({ onLogout }) => {
                           {progresoServicioLista.length > 1 ? ` de ${progresoServicioLista.length}` : ""}
                         </div>
                         <BarraProgresoServicio estado={item.estado} progreso={item.progreso} mostrar={item.mostrar_barra} />
+                        {item.fecha_servicio && (
+                          <div style={{ marginTop: 6, fontSize: 12.5, color: "#475569", fontWeight: 600 }}>
+                            {formatFechaHoraServicioEs(item.fecha_servicio)}
+                          </div>
+                        )}
                       </div>
                     ))
                   : (

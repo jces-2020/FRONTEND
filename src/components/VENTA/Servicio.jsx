@@ -463,9 +463,9 @@ export default function Servicio() {
 
         <div className="sv-grid">
           <div className="sv-field">
-            <label>Fecha del remetro</label>
+            <label>Fecha y hora del remetro</label>
             <input
-              type="date"
+              type="datetime-local"
               value={fechaRemetro}
               onChange={e => setFechaRemetro(e.target.value)}
               className="sv-input"
