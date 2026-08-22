@@ -408,7 +408,7 @@ const Cliente = ({ onToast }) => {
                               padding: windowWidth < 640 ? '6px 8px' : windowWidth < 1024 ? '8px 10px' : '10px 12px',
                               display: windowWidth < 768 ? 'none' : 'table-cell'
                             }}>
-                              {v.metodo_pago?.descripcion || '-'}
+                              {v.metodo || '-'}
                             </td>
                           </tr>
                         ))
