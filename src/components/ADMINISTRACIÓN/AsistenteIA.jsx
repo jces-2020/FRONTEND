@@ -7,6 +7,13 @@ import { API_BASE_URL } from '../../config';
 const API_IA_BASE_URL = API_BASE_URL;
 const MAX_CONTEXT_MESSAGES = 8;
 
+const SUGGESTED_QUERIES = [
+  'Dame un reporte general del negocio',
+  '¿Cómo van las ventas este mes?',
+  '¿Quiénes son mis mejores clientes?',
+  '¿Qué productos se venden más?',
+];
+
 const messageBubble = (role) => ({
   maxWidth: '82%',
   alignSelf: role === 'user' ? 'flex-end' : 'flex-start',
@@ -81,9 +88,8 @@ function AsistenteIA({ onToast }) {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, sending, streamingMessage]);
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const trimmed = draft.trim();
+  async function sendMessage(text) {
+    const trimmed = text.trim();
     if (!trimmed || sending) return;
 
     const nextMessages = [...messages, { role: 'user', content: trimmed }];
@@ -137,6 +143,11 @@ function AsistenteIA({ onToast }) {
     } finally {
       setSending(false);
     }
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    sendMessage(draft);
   }
 
   return (
@@ -258,6 +269,38 @@ function AsistenteIA({ onToast }) {
               </div>
             )}
           </div>
+
+          {messages.length <= 1 && !sending && (
+            <div
+              style={{
+                padding: '0 12px 10px',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+              }}
+            >
+              {SUGGESTED_QUERIES.map((query) => (
+                <button
+                  key={query}
+                  type="button"
+                  onClick={() => sendMessage(query)}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: '999px',
+                    border: '1px solid rgba(70,165,220,0.3)',
+                    background: 'rgba(58,176,232,0.08)',
+                    color: '#1a7ab5',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {query}
+                </button>
+              ))}
+            </div>
+          )}
 
           <form
             onSubmit={handleSubmit}
