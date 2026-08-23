@@ -15,7 +15,7 @@ import { deduceSystem } from './DeductionEngine';
 import type { SystemConfig } from './DeductionEngine';
 
 export type SplitDirection = 'vertical' | 'horizontal';
-export type SystemType = 'fixed' | 'sliding' | 'hinged';
+export type SystemType = 'fixed' | 'sliding' | 'hinged' | 'glass';
 export type PanelMaterial = 'vidrio' | 'solido';
 
 export interface Rect {

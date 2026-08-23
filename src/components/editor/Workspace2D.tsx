@@ -21,6 +21,7 @@ const DIM_COLOR = '#5a8ba8';
 const MONO = "'IBM Plex Mono',monospace";
 
 const SYSTEM_LABEL: Record<SystemType, string> = {
+  glass: 'VIDRIO',
   fixed: 'FIJO',
   sliding: 'CORREDIZA',
   hinged: 'BATIENTE',
@@ -186,7 +187,9 @@ export default function Workspace2D({
 
     elements.push(
       <g key={node.id} onClick={() => setSelectedId(node.id)} style={{ cursor: 'pointer' }}>
-        <rect x={sx} y={sy} width={sw} height={sh} fill={ALUM_COLOR} opacity={0.5} />
+        {node.leaf.systemType !== 'glass' && (
+          <rect x={sx} y={sy} width={sw} height={sh} fill={ALUM_COLOR} opacity={0.5} />
+        )}
         {node.leaf.panels.map((p) => {
           const px = toX(p.x), py = toY(p.y), pw = toLen(p.width), ph = toLen(p.height);
           return (

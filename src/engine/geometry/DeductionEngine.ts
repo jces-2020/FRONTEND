@@ -88,6 +88,25 @@ export function deduceFixedPanel(rect: Rect, config: SystemConfig): DeductionRes
 }
 
 /**
+ * Vidrio puro: llena la zona exacta, de borde a borde, sin ninguna holgura
+ * ni perfil. Para cuando el propio operador ya arma el aluminio a mano
+ * dividiendo zonas y solo necesita el vidrio del hueco resultante — a
+ * diferencia del Paño Fijo, acá no se descuenta ni la garra del junquillo.
+ */
+export function deduceGlassOnly(rect: Rect, config: SystemConfig): DeductionResult {
+  const panel: Omit<Panel, 'id'> = {
+    material: VIDRIO,
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    color: config.color,
+    thickness: config.espesorVidrio,
+  };
+  return { panels: [panel], profiles: [] };
+}
+
+/**
  * Sistema Corredizo de N hojas: reparte el ancho disponible entre las hojas
  * considerando el traslape (cruce) de los perfiles centrales — cada unión
  * intermedia "regala" `traslape` cm de vuelta al ancho total de hojas, por
@@ -186,6 +205,8 @@ export function deduceSystem(systemType: SystemType, rect: Rect, config: SystemC
       return deduceSlidingSystem(rect, config);
     case 'hinged':
       return deduceHingedDoor(rect, config);
+    case 'glass':
+      return deduceGlassOnly(rect, config);
     default:
       throw new Error(`Sistema desconocido: ${systemType}`);
   }

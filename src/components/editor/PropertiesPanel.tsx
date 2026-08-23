@@ -20,6 +20,7 @@ const ROW_STYLE: CSSProperties = {
 };
 
 const SYSTEM_LABEL: Record<string, string> = {
+  glass: 'Vidrio (sin aluminio)',
   fixed: 'Paño Fijo',
   sliding: 'Sistema Corredizo',
   hinged: 'Puerta Batiente',
@@ -64,7 +65,9 @@ export default function PropertiesPanel({ node, onUpdateColor }: PropertiesPanel
           <div>
             <div style={LABEL_STYLE}>Sistema</div>
             <div style={ROW_STYLE}><span>Tipo</span><span>{SYSTEM_LABEL[node.leaf.systemType] || node.leaf.systemType}</span></div>
-            <div style={ROW_STYLE}><span>Perfil</span><span>{node.leaf.config.profileWidth} cm</span></div>
+            {node.leaf.systemType !== 'glass' && (
+              <div style={ROW_STYLE}><span>Perfil</span><span>{node.leaf.config.profileWidth} cm</span></div>
+            )}
             {node.leaf.config.hojas != null && (
               <div style={ROW_STYLE}><span>Hojas</span><span>{node.leaf.config.hojas}</span></div>
             )}

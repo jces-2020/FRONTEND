@@ -28,6 +28,7 @@ const BTN_PRIMARY: CSSProperties = { ...BTN, background: '#127fc3', color: '#fff
 const BTN_DANGER: CSSProperties = { ...BTN, color: '#991b1b', borderColor: 'rgba(220,38,38,.3)' };
 
 const SYSTEM_OPTIONS: Array<{ value: SystemType; label: string }> = [
+  { value: 'glass', label: 'Vidrio (sin aluminio)' },
   { value: 'fixed', label: 'Paño Fijo' },
   { value: 'sliding', label: 'Sistema Corredizo' },
   { value: 'hinged', label: 'Puerta Batiente' },
@@ -123,10 +124,12 @@ export default function Toolbox({ node, defaultProfileWidth, onSplit, onInsertSy
               </select>
             </div>
             <div style={{ ...ROW, marginTop: 8 }}>
-              <div style={FIELD}>
-                <span style={{ fontSize: 9, color: '#8aa8bc' }}>Perfil (cm)</span>
-                <input style={INPUT} type="number" min={1} step={0.5} value={profileWidth} onChange={(e) => setProfileWidth(e.target.value)} />
-              </div>
+              {systemType !== 'glass' && (
+                <div style={FIELD}>
+                  <span style={{ fontSize: 9, color: '#8aa8bc' }}>Perfil (cm)</span>
+                  <input style={INPUT} type="number" min={1} step={0.5} value={profileWidth} onChange={(e) => setProfileWidth(e.target.value)} />
+                </div>
+              )}
               {systemType === 'sliding' && (
                 <>
                   <div style={FIELD}>
