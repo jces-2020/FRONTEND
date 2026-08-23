@@ -48,6 +48,12 @@ const CSS = `
 .ds-svc-tab{padding:4px 10px;border-radius:999px;border:1px solid rgba(128,194,220,.35);background:transparent;font-family:${DS_MONO};font-size:10px;font-weight:600;color:#5a7a90;cursor:pointer;transition:all .14s}
 .ds-svc-tab.active{background:#127fc3;border-color:#127fc3;color:#fff}
 .ds-error{padding:10px 14px;border-radius:10px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);color:#991b1b;font-family:${DS_MONO};font-size:12px}
+.ds-work-row{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.ds-ref-card{width:260px;flex-shrink:0}
+.ds-ref-img{width:100%;display:block;border-radius:10px;border:1px solid rgba(128,194,220,.3);cursor:zoom-in}
+.ds-ref-empty{font-family:${DS_MONO};font-size:11px;color:#8aa8bc;text-align:center;padding:24px 8px}
+.ds-work-main{flex:1;min-width:320px;display:flex;flex-direction:column;gap:14px}
+@media(max-width:720px){.ds-ref-card{width:100%}}
 `;
 
 function injectCSS() {
@@ -239,29 +245,42 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
         </div>
       )}
 
-      <div className="ds-view-toggle">
-        <button className={`ds-vbtn${!vista3D ? ' active' : ''}`} onClick={() => setVista3D(false)}>2D</button>
-        <button className={`ds-vbtn${vista3D ? ' active' : ''}`} onClick={() => setVista3D(true)}>
-          <IconBox size={11} style={{ marginRight: 4, verticalAlign: 'middle' }} />3D
-        </button>
-      </div>
-
-      {vista3D ? (
-        <div className="ds-section">
-          <div className="ds-svg-wrap">
-            <ServicioRender servicio={{ nombre: nombreDisplay }} ancho={ancho} alto={alto} configuracion={{ hojas: 2 }} />
-          </div>
+      <div className="ds-work-row">
+        <div className="ds-card ds-ref-card">
+          <div className="ds-section-lbl">Imagen de referencia</div>
+          {servicio?.imagen_url ? (
+            <a href={servicio.imagen_url} target="_blank" rel="noreferrer">
+              <img className="ds-ref-img" src={servicio.imagen_url} alt={`Referencia — ${nombreDisplay}`} />
+            </a>
+          ) : (
+            <div className="ds-ref-empty">Este servicio no tiene imagen de referencia.</div>
+          )}
         </div>
-      ) : (
-        <Workspace2D
-          key={servicioIdx}
-          initialWidth={ancho}
-          initialHeight={alto}
-          initialProfileWidth={PERFIL_DEFECTO_CM}
-          title={`${nombreDisplay} — ${ancho}×${alto} cm`}
-          onChange={setGraph}
-        />
-      )}
+
+        <div className="ds-work-main">
+          <div className="ds-view-toggle">
+            <button className={`ds-vbtn${!vista3D ? ' active' : ''}`} onClick={() => setVista3D(false)}>2D</button>
+            <button className={`ds-vbtn${vista3D ? ' active' : ''}`} onClick={() => setVista3D(true)}>
+              <IconBox size={11} style={{ marginRight: 4, verticalAlign: 'middle' }} />3D
+            </button>
+          </div>
+
+          {vista3D ? (
+            <div className="ds-svg-wrap">
+              <ServicioRender servicio={{ nombre: nombreDisplay }} ancho={ancho} alto={alto} configuracion={{ hojas: 2 }} />
+            </div>
+          ) : (
+            <Workspace2D
+              key={servicioIdx}
+              initialWidth={ancho}
+              initialHeight={alto}
+              initialProfileWidth={PERFIL_DEFECTO_CM}
+              title={`${nombreDisplay} — ${ancho}×${alto} cm`}
+              onChange={setGraph}
+            />
+          )}
+        </div>
+      </div>
 
       {/* Optimización de cortes */}
       <div className="ds-section">
