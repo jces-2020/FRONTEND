@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import {
+  IconLayoutDashboard, IconReportAnalytics, IconDownload, IconChartBar,
+  IconBox, IconCoin, IconUsers, IconUserCog, IconPalette, IconTarget,
+  IconTrendingUp, IconTrendingDown, IconCircles, IconLink, IconAlertTriangle,
+  IconShoppingCart, IconCreditCard, IconTag, IconClipboardList, IconBuilding,
+  IconTool, IconArrowsMaximize, IconArrowsMinimize, IconLoader2, IconBulb,
+} from '@tabler/icons-react';
 
 const ETL_API = import.meta.env.VITE_API_URL || 'https://api.vidriobras.com';
 const ETL_PREFIX = '/api/etl';
@@ -211,21 +218,23 @@ function EmptyChart() {
 }
 
 // ──────────────────── ChartCard ────────────────────────────────
-function ChartCard({ chart, zoom }) {
+function ChartCard({ chart, zoom, index = 0 }) {
   const [expanded, setExpanded] = useState(false);
   const cardZoom = expanded ? zoom * 1.6 : zoom;
   return (
-    <div style={{background:'#fff', border:'1px solid rgba(70,165,220,0.15)', borderRadius:14, overflow:'hidden',
-      boxShadow:'0 2px 8px rgba(70,155,210,0.08)', gridColumn: expanded ? '1 / -1' : undefined, transition:'all 0.2s'}}>
+    <div className="etl-fade-in" style={{background:'#fff', border:'1px solid rgba(70,165,220,0.1)', borderRadius:16, overflow:'hidden',
+      boxShadow:'0 8px 24px rgba(20,70,110,0.08), 0 1px 3px rgba(20,70,110,0.05)',
+      gridColumn: expanded ? '1 / -1' : undefined, transition:'box-shadow 0.2s, transform 0.2s',
+      animationDelay:`${Math.min(index,10)*0.05}s`}}>
       <div style={{background:'linear-gradient(135deg,rgba(26,122,181,0.06),rgba(58,176,232,0.04))',
         borderBottom:'1px solid rgba(70,165,220,0.15)', padding:'10px 14px',
         display:'flex', alignItems:'center', justifyContent:'space-between'}}>
         <div style={{fontWeight:700,fontSize:'0.82rem',color:'#1a4a6a'}}>{chart.title}</div>
         <div style={{display:'flex',gap:6}}>
           <button onClick={() => downloadExcelFromData(chart.data, chart.id)} title="Descargar Excel"
-            style={btnStyle('#3ab0e8')}>↓ Excel</button>
+            style={iconBtnStyle('#3ab0e8')}><IconDownload size={14} stroke={2}/></button>
           <button onClick={() => setExpanded(e=>!e)} title={expanded?'Reducir':'Ampliar'}
-            style={btnStyle('#6b9ab8')}>{expanded ? '⊟' : '⊞'}</button>
+            style={iconBtnStyle('#6b9ab8')}>{expanded ? <IconArrowsMinimize size={14} stroke={2}/> : <IconArrowsMaximize size={14} stroke={2}/>}</button>
         </div>
       </div>
       <div style={{padding:'12px 14px'}}>
@@ -243,6 +252,11 @@ function btnStyle(color) {
     border:`1.5px solid ${color}`, background:'transparent', color, cursor:'pointer'};
 }
 
+function iconBtnStyle(color) {
+  return {padding:'4px 8px', borderRadius:8, border:`1.5px solid ${color}`, background:'transparent',
+    color, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center'};
+}
+
 // ──────────────────── Summary Cards ────────────────────────────
 function SummaryCards({ summary }) {
   if (!summary || !Object.keys(summary).length) return null;
@@ -254,9 +268,9 @@ function SummaryCards({ summary }) {
     cargos:'Cargos', margen:'Margen Neto', gasto_promedio:'Gasto Promedio', total_areas:'Áreas/Roles',
   };
   const ICONS = {
-    total_ingresos:'💰', total_gastos:'💸', total_clientes:'👥', total_productos:'📦',
-    total_personal:'👷', total_pedidos:'🛒', total_pagos:'💳', total_categorias:'🏷️',
-    precio_promedio:'🏷️', stock_total:'📋', margen:'📈', gasto_promedio:'💸', total_areas:'🏢',
+    total_ingresos:IconCoin, total_gastos:IconTrendingDown, total_clientes:IconUsers, total_productos:IconBox,
+    total_personal:IconUserCog, total_pedidos:IconShoppingCart, total_pagos:IconCreditCard, total_categorias:IconTag,
+    precio_promedio:IconTag, stock_total:IconClipboardList, margen:IconTrendingUp, gasto_promedio:IconTrendingDown, total_areas:IconBuilding,
   };
   const getColor = (k) => {
     if (k.includes('ingreso') || k.includes('margen')) return { accent:'#4ecb8d', bg:'rgba(78,203,141,0.07)', val:'#1a6a3a' };
@@ -273,13 +287,15 @@ function SummaryCards({ summary }) {
   };
   return (
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:24}}>
-      {Object.entries(summary).map(([k,v])=>{
+      {Object.entries(summary).map(([k,v],i)=>{
         const c = getColor(k);
+        const Icon = ICONS[k] || IconChartBar;
         return (
-          <div key={k} style={{background:c.bg, border:`1.5px solid ${c.accent}30`,
-            borderLeft:`4px solid ${c.accent}`, borderRadius:12, padding:'14px 16px'}}>
+          <div key={k} className="etl-fade-in" style={{background:c.bg, border:`1.5px solid ${c.accent}30`,
+            borderLeft:`4px solid ${c.accent}`, borderRadius:14, padding:'14px 16px',
+            boxShadow:'0 6px 18px rgba(20,70,110,0.06)', animationDelay:`${Math.min(i,10)*0.04}s`}}>
             <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-              <span style={{fontSize:'1rem'}}>{ICONS[k]||'📊'}</span>
+              <Icon size={16} stroke={2} color={c.accent}/>
               <span style={{fontSize:'0.62rem',fontWeight:700,textTransform:'uppercase',
                 letterSpacing:'0.4px',color:c.accent}}>{labels[k]||k}</span>
             </div>
@@ -377,7 +393,7 @@ const inputStyle = {width:'100%',padding:'7px 10px',borderRadius:9,border:'1px s
   background:'#fff',color:'#1a4a6a',fontSize:'0.8rem',outline:'none',boxSizing:'border-box'};
 
 // ──────────────────── Main Component ───────────────────────────
-const TEMPLATE_ICONS  = {resumen_general:'📊',inventario:'📦',ventas_finanzas:'💰',clientes:'👥',personal:'👷',custom:'🎨'};
+const TEMPLATE_ICONS  = {resumen_general:IconChartBar,inventario:IconBox,ventas_finanzas:IconCoin,clientes:IconUsers,personal:IconUserCog,custom:IconPalette};
 const TEMPLATE_COLORS = {resumen_general:'#3ab0e8',inventario:'#4ecb8d',ventas_finanzas:'#f4a533',clientes:'#9b6cdc',personal:'#38b2ac',custom:'#e8623a'};
 
 export default function DashboardETL() {
@@ -438,17 +454,20 @@ export default function DashboardETL() {
     <div style={{background:'#f5f7fa',minHeight:'100vh',padding:'20px',fontFamily:'inherit'}}>
       <div style={{maxWidth:'1400px',margin:'0 auto'}}>
         {/* Header */}
-        <div style={{marginBottom:24}}>
-          <div style={{fontSize:'1.2rem',fontWeight:800,color:'#0c4f7a',marginBottom:4}}>📊 Dashboard ETL — Análisis de Datos</div>
-          <div style={{fontSize:'0.85rem',color:'#6b9ab8'}}>Genera dashboards personalizados, análisis ML y exporta datos en tiempo real.</div>
+        <div style={{marginBottom:24, display:'flex', alignItems:'center', gap:10}}>
+          <IconLayoutDashboard size={24} stroke={2} color="#0c4f7a"/>
+          <div>
+            <div style={{fontSize:'1.2rem',fontWeight:800,color:'#0c4f7a'}}>Dashboard ETL — Análisis de Datos</div>
+            <div style={{fontSize:'0.85rem',color:'#6b9ab8'}}>Genera dashboards personalizados, análisis ML y exporta datos en tiempo real.</div>
+          </div>
         </div>
 
         {/* Tab Bar */}
-        <div style={{display:'flex',gap:0,marginBottom:24,background:'#fff',borderRadius:12,padding:'4px',boxShadow:'0 2px 8px rgba(0,0,0,0.06)',marginBottom:20}}>
+        <div style={{display:'flex',gap:0,marginBottom:20,background:'#fff',borderRadius:12,padding:'4px',boxShadow:'0 8px 24px rgba(20,70,110,0.08)'}}>
           {[
-            {id:'dashboard', label:'📊 Dashboard', icon:'📊'},
-            {id:'mining', label:'🔬 Minería de Datos', icon:'🔬'},
-            {id:'descarga', label:'📥 Descargas', icon:'📥'},
+            {id:'dashboard', label:'Dashboard', Icon: IconLayoutDashboard},
+            {id:'mining', label:'Análisis', Icon: IconReportAnalytics},
+            {id:'descarga', label:'Descargas', Icon: IconDownload},
           ].map(tab => (
             <button key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -457,15 +476,16 @@ export default function DashboardETL() {
                 background: activeTab===tab.id ? 'linear-gradient(135deg,#3ab0e8,#1a7ab5)' : 'transparent',
                 color: activeTab===tab.id ? '#fff' : '#6b9ab8',
                 border:'none', cursor:'pointer', transition:'all 0.2s',
-                boxShadow: activeTab===tab.id ? '0 2px 8px rgba(58,176,232,0.25)' : 'none',
-              }}>{tab.label}</button>
+                display:'flex', alignItems:'center', justifyContent:'center', gap:7,
+                boxShadow: activeTab===tab.id ? '0 4px 14px rgba(58,176,232,0.3)' : 'none',
+              }}><tab.Icon size={16} stroke={2}/>{tab.label}</button>
           ))}
         </div>
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div>
-            <div style={{background:'#fff',borderRadius:14,padding:'20px',marginBottom:20,boxShadow:'0 2px 12px rgba(0,0,0,0.07)'}}>
+            <div style={{background:'#fff',borderRadius:16,padding:'20px',marginBottom:20,boxShadow:'0 8px 24px rgba(20,70,110,0.08), 0 1px 3px rgba(20,70,110,0.05)'}}>
               <div style={{fontSize:'0.7rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.5px',
                 color:'#4a90b8',marginBottom:12}}>Selecciona un tipo de dashboard</div>
 
@@ -473,16 +493,17 @@ export default function DashboardETL() {
                 {templates.map(t => {
                   const color = TEMPLATE_COLORS[t.id] || '#3ab0e8';
                   const active = selectedTemplate === t.id;
+                  const Icon = TEMPLATE_ICONS[t.id] || IconChartBar;
                   return (
                     <button key={t.id}
                       onClick={()=>{setSelectedTemplate(t.id);setResult(null);setCustomCharts([]);setDashboardName('');}}
                       style={{
-                        padding:'14px 12px', borderRadius:12, textAlign:'left', cursor:'pointer',
-                        border:`2px solid ${active ? color : 'rgba(70,165,220,0.2)'}`,
+                        padding:'14px 12px', borderRadius:14, textAlign:'left', cursor:'pointer',
+                        border:`2px solid ${active ? color : 'rgba(70,165,220,0.15)'}`,
                         background: active ? `${color}18` : '#fff',
-                        boxShadow: active ? `0 2px 10px ${color}30` : 'none',
+                        boxShadow: active ? `0 6px 18px ${color}30` : '0 2px 8px rgba(20,70,110,0.05)',
                         transition:'all 0.15s'}}>
-                      <div style={{fontSize:'1.6rem',marginBottom:6}}>{TEMPLATE_ICONS[t.id]||'📊'}</div>
+                      <Icon size={26} stroke={1.75} color={active ? color : '#3a7ab5'} style={{marginBottom:6}}/>
                       <div style={{fontSize:'0.77rem',fontWeight:700,color: active ? color : '#1a4a6a',marginBottom:4,lineHeight:1.2}}>{t.name}</div>
                       <div style={{fontSize:'0.62rem',color:'#6b9ab8',lineHeight:1.3}}>{t.description}</div>
                     </button>
@@ -494,8 +515,9 @@ export default function DashboardETL() {
                 style={{width:'100%',padding:'12px',borderRadius:10,fontSize:'0.85rem',fontWeight:700,
                   background:canGenerate?'linear-gradient(135deg,#3ab0e8,#1a7ab5)':'rgba(58,176,232,0.35)',
                   color:'#fff',border:'none',cursor:canGenerate?'pointer':'not-allowed',
-                  boxShadow:canGenerate?'0 4px 14px rgba(58,176,232,0.35)':'none',transition:'all 0.15s'}}>
-                {loading?'⏳ Generando…':'⚡ Generar Dashboard'}
+                  boxShadow:canGenerate?'0 4px 14px rgba(58,176,232,0.35)':'none',transition:'all 0.15s',
+                  display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                {loading ? <><IconLoader2 size={16} className="etl-spin"/> Generando…</> : <><IconChartBar size={16}/> Generar Dashboard</>}
               </button>
 
               {isCustom && (
@@ -505,18 +527,20 @@ export default function DashboardETL() {
             </div>
 
             {error && <div style={{background:'rgba(232,92,92,0.12)',border:'1.5px solid rgba(232,92,92,0.3)',
-              borderRadius:10,padding:'12px 16px',color:'#c0392b',fontSize:'0.8rem',marginBottom:16}}>⚠️ {error}</div>}
+              borderRadius:10,padding:'12px 16px',color:'#c0392b',fontSize:'0.8rem',marginBottom:16,
+              display:'flex',alignItems:'center',gap:8}}><IconAlertTriangle size={16}/> {error}</div>}
 
             {loading && <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16}}>
-              {[1,2,3,4].map(i=><div key={i} style={{height:260,borderRadius:14,background:'#fff',
-                animation:'pulse 1.4s ease-in-out infinite',boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}/>)}
+              {[1,2,3,4].map(i=><div key={i} style={{height:260,borderRadius:16,background:'#fff',
+                animation:'pulse 1.4s ease-in-out infinite',boxShadow:'0 8px 24px rgba(20,70,110,0.06)'}}/>)}
             </div>}
 
             {result && !loading && (
               <>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10,background:'#fff',padding:'14px 16px',borderRadius:12,boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
-                  <div style={{fontWeight:800,fontSize:'0.9rem',color:'#0c4f7a'}}>
-                    {TEMPLATE_ICONS[result.template_id]||'📊'} {result.template_name}
+                <div className="etl-fade-in" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10,background:'#fff',padding:'14px 16px',borderRadius:14,boxShadow:'0 8px 24px rgba(20,70,110,0.08)'}}>
+                  <div style={{fontWeight:800,fontSize:'0.9rem',color:'#0c4f7a',display:'flex',alignItems:'center',gap:8}}>
+                    {(() => { const Icon = TEMPLATE_ICONS[result.template_id] || IconChartBar; return <Icon size={18} stroke={2}/>; })()}
+                    {result.template_name}
                   </div>
                   <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
                     <div style={{display:'flex',alignItems:'center',gap:6,background:'rgba(220,242,255,0.6)',
@@ -541,7 +565,7 @@ export default function DashboardETL() {
 
                 {result.charts?.length > 0
                   ? <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:16}}>
-                      {result.charts.map(chart=><ChartCard key={chart.id} chart={chart} zoom={zoom}/>)}
+                      {result.charts.map((chart,i)=><ChartCard key={chart.id} chart={chart} zoom={zoom} index={i}/>)}
                     </div>
                   : <div style={{padding:40,textAlign:'center',color:'#9bb',fontSize:'0.85rem',background:'#fff',borderRadius:12,boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
                       No se encontraron datos para los gráficos seleccionados.
@@ -558,7 +582,13 @@ export default function DashboardETL() {
         {/* Descarga Tab */}
         {activeTab === 'descarga' && <TableExportSection tables={tables} ETL_API={ETL_API} ETL_PREFIX={ETL_PREFIX} />}
       </div>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes etlFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes etlSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        .etl-fade-in{animation:etlFadeIn 0.35s ease-out both}
+        .etl-spin{animation:etlSpin 0.8s linear infinite}
+      `}</style>
     </div>
   );
 }
@@ -570,11 +600,11 @@ const zoomBtn = {
 
 // ──────────────────── Mining Section ───────────────────────────
 const MINING_OPTIONS = [
-  { id:'rfm',          label:'Clientes por Valor',      icon:'🎯', desc:'Clasifica a tus clientes en Campeones, Leales, En Riesgo o Perdidos según cuánto y qué tan seguido compran' },
-  { id:'forecast',     label:'Predicción de Ventas',    icon:'📈', desc:'Proyecta cómo podrían ir tus ventas en los próximos meses, según la tendencia actual' },
-  { id:'clustering',   label:'Grupos de Clientes',      icon:'🔵', desc:'Agrupa a tus clientes en categorías según su comportamiento de compra (alto, medio o bajo valor)' },
-  { id:'correlaciones',label:'Ingresos vs Gastos',      icon:'🔗', desc:'Muestra cómo se relacionan tus ingresos, gastos y cantidad de ventas mes a mes' },
-  { id:'anomalias',    label:'Montos Inusuales',        icon:'⚠️', desc:'Encuentra gastos o ingresos que se salen mucho de lo habitual, para que los revises' },
+  { id:'rfm',          label:'Clientes por Valor',      Icon:IconTarget,      desc:'Clasifica a tus clientes en Campeones, Leales, En Riesgo o Perdidos según cuánto y qué tan seguido compran' },
+  { id:'forecast',     label:'Predicción de Ventas',    Icon:IconTrendingUp,  desc:'Proyecta cómo podrían ir tus ventas en los próximos meses, según la tendencia actual' },
+  { id:'clustering',   label:'Grupos de Clientes',      Icon:IconCircles,     desc:'Agrupa a tus clientes en categorías según su comportamiento de compra (alto, medio o bajo valor)' },
+  { id:'correlaciones',label:'Ingresos vs Gastos',      Icon:IconLink,        desc:'Muestra cómo se relacionan tus ingresos, gastos y cantidad de ventas mes a mes' },
+  { id:'anomalias',    label:'Montos Inusuales',        Icon:IconAlertTriangle, desc:'Encuentra gastos o ingresos que se salen mucho de lo habitual, para que los revises' },
 ];
 
 function MiningSection({ ETL_API, ETL_PREFIX }) {
@@ -613,12 +643,12 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
         {MINING_OPTIONS.map(opt => (
           <button key={opt.id} onClick={() => { setSelected(opt.id); setResult(null); setError(''); }}
             style={{
-              padding:'14px 14px', borderRadius:12, textAlign:'left', cursor:'pointer',
-              border:`2px solid ${selected===opt.id ? '#3ab0e8' : 'rgba(70,165,220,0.15)'}`,
+              padding:'14px 14px', borderRadius:14, textAlign:'left', cursor:'pointer',
+              border:`2px solid ${selected===opt.id ? '#3ab0e8' : 'rgba(70,165,220,0.12)'}`,
               background: selected===opt.id ? 'linear-gradient(135deg,rgba(58,176,232,0.2),rgba(26,122,181,0.1))' : '#fff',
-              boxShadow: selected===opt.id ? '0 2px 8px rgba(58,176,232,0.15)' : '0 1px 3px rgba(0,0,0,0.05)',
+              boxShadow: selected===opt.id ? '0 6px 18px rgba(58,176,232,0.2)' : '0 6px 18px rgba(20,70,110,0.06)',
               transition:'all 0.15s'}}>
-            <div style={{fontSize:'1.4rem',marginBottom:6}}>{opt.icon}</div>
+            <opt.Icon size={22} stroke={1.75} color={selected===opt.id ? '#1a7ab5' : '#3a7ab5'} style={{marginBottom:6}}/>
             <div style={{fontSize:'0.77rem',fontWeight:700,color:'#1a4a6a',marginBottom:3}}>{opt.label}</div>
             <div style={{fontSize:'0.65rem',color:'#6b9ab8',lineHeight:1.3}}>{opt.desc}</div>
           </button>
@@ -626,7 +656,7 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
       </div>
 
       {selected === 'clustering' && (
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,background:'#fff',padding:'12px 14px',borderRadius:10,boxShadow:'0 1px 3px rgba(0,0,0,0.05)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,background:'#fff',padding:'12px 14px',borderRadius:10,boxShadow:'0 6px 18px rgba(20,70,110,0.06)'}}>
           <label style={{...labelStyle,marginBottom:0}}>Número de grupos (K):</label>
           {[2,3,4,5].map(k => (
             <button key={k} onClick={()=>setKClusters(k)}
@@ -636,7 +666,7 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
         </div>
       )}
       {selected === 'forecast' && (
-        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,background:'#fff',padding:'12px 14px',borderRadius:10,boxShadow:'0 1px 3px rgba(0,0,0,0.05)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,background:'#fff',padding:'12px 14px',borderRadius:10,boxShadow:'0 6px 18px rgba(20,70,110,0.06)'}}>
           <label style={{...labelStyle,marginBottom:0}}>Meses a predecir:</label>
           {[1,3,6,12].map(m => (
             <button key={m} onClick={()=>setMesesFC(m)}
@@ -651,24 +681,27 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
           padding:'12px 24px',borderRadius:10,fontSize:'0.85rem',fontWeight:700,marginBottom:20,
           background:loading?'rgba(58,176,232,0.4)':'linear-gradient(135deg,#3ab0e8,#1a7ab5)',
           color:'#fff',border:'none',cursor:loading?'not-allowed':'pointer',
-          boxShadow:'0 3px 12px rgba(58,176,232,0.28)',transition:'all 0.15s',width:'100%'}}>
-          {loading?'⏳ Analizando…':'🔬 Ejecutar Análisis'}
+          boxShadow:'0 3px 12px rgba(58,176,232,0.28)',transition:'all 0.15s',width:'100%',
+          display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+          {loading ? <><IconLoader2 size={16} className="etl-spin"/> Analizando…</> : <><IconReportAnalytics size={16}/> Ejecutar Análisis</>}
         </button>
       )}
 
       {error && <div style={{background:'rgba(232,92,92,0.12)',border:'1.5px solid rgba(232,92,92,0.3)',
-        borderRadius:10,padding:'12px 16px',color:'#c0392b',fontSize:'0.8rem',marginBottom:16}}>⚠️ {error}</div>}
+        borderRadius:10,padding:'12px 16px',color:'#c0392b',fontSize:'0.8rem',marginBottom:16,
+        display:'flex',alignItems:'center',gap:8}}><IconAlertTriangle size={16}/> {error}</div>}
 
       {result && !loading && (
-        <div style={{background:'#fff',border:'1px solid rgba(70,165,220,0.15)',borderRadius:14,padding:'18px 20px',boxShadow:'0 2px 8px rgba(0,0,0,0.06)'}}>
+        <div className="etl-fade-in" style={{background:'#fff',border:'1px solid rgba(70,165,220,0.1)',borderRadius:16,padding:'18px 20px',boxShadow:'0 8px 24px rgba(20,70,110,0.08)'}}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
             <div style={{fontWeight:800,fontSize:'0.9rem',color:'#0c4f7a'}}>{result.titulo}</div>
             <button onClick={downloadMiningExcel} style={{...btnStyle('#4ecb8d'),padding:'5px 12px'}}>↓ Excel</button>
           </div>
           {result.insight && (
             <div style={{background:'rgba(58,176,232,0.1)',borderRadius:10,padding:'10px 14px',
-              fontSize:'0.78rem',color:'#1a4a6a',marginBottom:16,lineHeight:1.5}}>
-              💡 {result.insight}
+              fontSize:'0.78rem',color:'#1a4a6a',marginBottom:16,lineHeight:1.5,
+              display:'flex',alignItems:'flex-start',gap:8}}>
+              <IconBulb size={16} stroke={1.75} style={{flexShrink:0,marginTop:1}}/> {result.insight}
             </div>
           )}
           <MiningTable data={
@@ -819,12 +852,12 @@ function MiningTable({ data }) {
 
 // ──────────────────── Table Export Section ─────────────────────
 const CATEGORY_LABELS = {
-  finanzas:   '💰 Finanzas',
-  inventario: '📦 Inventario',
-  ventas:     '🛒 Ventas',
-  clientes:   '👥 Clientes',
-  personal:   '👷 Personal',
-  servicios:  '🔧 Servicios',
+  finanzas:   { label:'Finanzas',   Icon:IconCoin },
+  inventario: { label:'Inventario', Icon:IconBox },
+  ventas:     { label:'Ventas',     Icon:IconShoppingCart },
+  clientes:   { label:'Clientes',   Icon:IconUsers },
+  personal:   { label:'Personal',   Icon:IconUserCog },
+  servicios:  { label:'Servicios',  Icon:IconTool },
 };
 
 const REPORTE_CONSOLIDADO_TABLAS = [
@@ -900,21 +933,25 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
 
   return (
     <div>
-      <div style={{background:'#fff', border:'1px solid rgba(70,165,220,0.15)', borderRadius:12,
+      <div style={{background:'#fff', border:'1px solid rgba(70,165,220,0.1)', borderRadius:14,
         padding:'14px 16px', marginBottom:24, display:'flex', alignItems:'center',
-        justifyContent:'space-between', gap:12, flexWrap:'wrap'}}>
-        <div>
-          <div style={{fontWeight:700,fontSize:'0.82rem',color:'#1a4a6a',marginBottom:2}}>📊 Reporte General</div>
-          <div style={{fontSize:'0.68rem',color:'#6b9ab8'}}>
-            Un solo Excel con ventas, productos, pagos, movimientos, caja, categorías, clientes, presupuestos y personal.
+        justifyContent:'space-between', gap:12, flexWrap:'wrap',
+        boxShadow:'0 8px 24px rgba(20,70,110,0.08)'}}>
+        <div style={{display:'flex', alignItems:'center', gap:10}}>
+          <IconReportAnalytics size={20} stroke={1.75} color="#3ab0e8"/>
+          <div>
+            <div style={{fontWeight:700,fontSize:'0.82rem',color:'#1a4a6a',marginBottom:2}}>Reporte General</div>
+            <div style={{fontSize:'0.68rem',color:'#6b9ab8'}}>
+              Un solo Excel con ventas, productos, pagos, movimientos, caja, categorías, clientes, presupuestos y personal.
+            </div>
           </div>
         </div>
         <button onClick={handleBatchDownload} disabled={batchLoading} style={{
           padding:'9px 16px', borderRadius:9, fontSize:'0.78rem', fontWeight:700,
           background: batchLoading ? 'rgba(58,176,232,0.4)' : 'linear-gradient(135deg,#3ab0e8,#1a7ab5)',
           color:'#fff', border:'none', cursor: batchLoading ? 'not-allowed' : 'pointer',
-          whiteSpace:'nowrap'}}>
-          {batchLoading ? '⏳ Generando…' : '↓ Descargar Reporte'}
+          whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:7}}>
+          {batchLoading ? <><IconLoader2 size={15} className="etl-spin"/> Generando…</> : <><IconDownload size={15}/> Descargar Reporte</>}
         </button>
       </div>
 
@@ -922,22 +959,23 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
         <div key={cat} style={{marginBottom:28}}>
           <div style={{fontSize:'0.8rem',fontWeight:700,textTransform:'uppercase',
             letterSpacing:'0.5px',color:'#3ab0e8',marginBottom:14,display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:'1.2rem'}}>{CATEGORY_LABELS[cat]?.split(' ')[0]}</span>
-            {CATEGORY_LABELS[cat] || cat}
+            {(() => { const Icon = CATEGORY_LABELS[cat]?.Icon || IconChartBar; return <Icon size={18} stroke={1.75}/>; })()}
+            {CATEGORY_LABELS[cat]?.label || cat}
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))',gap:12}}>
-            {tbls.map(table => {
+            {tbls.map((table,i) => {
               const count = rowCounts[table.name];
               const isLoading = downloading[table.name];
               return (
-                <div key={table.name} style={{
-                  background:'#fff', border:'1px solid rgba(70,165,220,0.12)',
-                  borderRadius:12, padding:'14px 16px', boxShadow:'0 1px 3px rgba(0,0,0,0.05)',
+                <div key={table.name} className="etl-fade-in" style={{
+                  background:'#fff', border:'1px solid rgba(70,165,220,0.1)',
+                  borderRadius:14, padding:'14px 16px', boxShadow:'0 6px 18px rgba(20,70,110,0.06)',
                   display:'flex', flexDirection:'column', justifyContent:'space-between',
+                  animationDelay:`${Math.min(i,10)*0.03}s`,
                 }}>
                   <div style={{flex:1}}>
                     <div style={{display:'flex',alignItems:'flex-start',gap:8,marginBottom:10}}>
-                      <span style={{fontSize:'1.4rem',flexShrink:0}}>{table.icon}</span>
+                      {(() => { const Icon = CATEGORY_LABELS[table.category]?.Icon || IconChartBar; return <Icon size={22} stroke={1.75} color="#3a7ab5" style={{flexShrink:0}}/>; })()}
                       <div style={{minWidth:0,flex:1}}>
                         <div style={{fontWeight:700,fontSize:'0.82rem',color:'#1a4a6a',marginBottom:2}}>
                           {table.display_name}
@@ -975,8 +1013,9 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
                       border:'1.5px solid #1a7ab5',
                       background: isLoading ? 'rgba(26,122,181,0.15)' : 'linear-gradient(135deg,rgba(26,122,181,0.15),rgba(58,176,232,0.08))',
                       color:'#1a7ab5', cursor: isLoading ? 'not-allowed' : 'pointer',
-                      whiteSpace:'nowrap',transition:'all 0.15s'}}>
-                    {isLoading ? '⏳ Descargando…' : '↓ Descargar Excel'}
+                      whiteSpace:'nowrap',transition:'all 0.15s',
+                      display:'flex', alignItems:'center', justifyContent:'center', gap:6}}>
+                    {isLoading ? <><IconLoader2 size={14} className="etl-spin"/> Descargando…</> : <><IconDownload size={14}/> Descargar Excel</>}
                   </button>
                 </div>
               );
@@ -1035,8 +1074,10 @@ function DownloadOptionsModal({ table, count, onClose, onDownload }) {
       display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:16}}>
       <div onClick={e => e.stopPropagation()} style={{background:'#fff', borderRadius:14, padding:'22px 24px',
         width:'100%', maxWidth:420, boxShadow:'0 12px 40px rgba(0,0,0,0.25)'}}>
-        <div style={{fontWeight:800, fontSize:'0.95rem', color:'#0c4f7a', marginBottom:4}}>
-          {table.icon} Descargar {table.display_name}
+        <div style={{fontWeight:800, fontSize:'0.95rem', color:'#0c4f7a', marginBottom:4,
+          display:'flex', alignItems:'center', gap:8}}>
+          {(() => { const Icon = CATEGORY_LABELS[table.category]?.Icon || IconChartBar; return <Icon size={18} stroke={1.75}/>; })()}
+          Descargar {table.display_name}
         </div>
         <div style={{fontSize:'0.75rem', color:'#6b9ab8', marginBottom:16}}>
           Esta tabla tiene {count != null ? count.toLocaleString('es-PE') : '—'} registros en total.
@@ -1101,8 +1142,9 @@ function DownloadOptionsModal({ table, count, onClose, onDownload }) {
           <button onClick={onClose} style={{...btnStyle('#9bb'), flex:1, padding:'9px 0'}}>Cancelar</button>
           <button onClick={handleDownloadClick} style={{
             flex:2, padding:'9px 0', borderRadius:8, fontSize:'0.78rem', fontWeight:700,
-            background:'linear-gradient(135deg,#3ab0e8,#1a7ab5)', color:'#fff', border:'none', cursor:'pointer'}}>
-            ↓ Descargar
+            background:'linear-gradient(135deg,#3ab0e8,#1a7ab5)', color:'#fff', border:'none', cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:6}}>
+            <IconDownload size={14}/> Descargar
           </button>
         </div>
       </div>
