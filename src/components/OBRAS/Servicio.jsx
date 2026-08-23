@@ -450,12 +450,6 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
           </div>
         </header>
 
-        {carritoData?.carrito_id && (
-          <div style={{ borderRadius: 18, padding: '14px 18px', ...gc, animation: 'svUp .45s ease' }}>
-            <RutaEntrega carritoId={carritoData.carrito_id} />
-          </div>
-        )}
-
         <div style={{ borderRadius: 22, overflow: 'hidden', ...gcM, animation: 'svUp .45s ease', position: 'relative' }}>
           <div
             style={{
@@ -581,17 +575,24 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
               )}
 
               {activeTab === 'INSTALACION' && (
-                <Instalacion
-                  notificacion={notificacion}
-                  onToast={showToast}
-                  tipoNotificacion="SERVICIO"
-                  carritoData={carritoData}
-                  onFinalizarServicio={async () => {
-                    await actualizarEstadoSeguimiento('instalado');
-                    showToast('Servicio culminado correctamente', 'success');
-                    onBack && onBack();
-                  }}
-                />
+                <>
+                  {carritoData?.carrito_id && (
+                    <div style={{ borderRadius: 18, padding: '14px 18px', marginBottom: 14, ...gc }}>
+                      <RutaEntrega carritoId={carritoData.carrito_id} />
+                    </div>
+                  )}
+                  <Instalacion
+                    notificacion={notificacion}
+                    onToast={showToast}
+                    tipoNotificacion="SERVICIO"
+                    carritoData={carritoData}
+                    onFinalizarServicio={async () => {
+                      await actualizarEstadoSeguimiento('instalado');
+                      showToast('Servicio culminado correctamente', 'success');
+                      onBack && onBack();
+                    }}
+                  />
+                </>
               )}
             </div>
           </div>

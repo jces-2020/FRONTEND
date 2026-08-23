@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import {
   createFrame, splitZone, insertSystem, resetZone, getNode, summarizeGraph,
@@ -32,14 +32,33 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export default function Workspace2D() {
-  const [width, setWidth] = useState(150);
-  const [height, setHeight] = useState(120);
-  const [frameProfileWidth, setFrameProfileWidth] = useState(4.5);
-  const [graph, setGraph] = useState<ContainerGraph>(() => createFrame(150, 120, 4.5));
+interface Workspace2DProps {
+  initialWidth?: number;
+  initialHeight?: number;
+  initialProfileWidth?: number;
+  title?: string;
+  onChange?: (graph: ContainerGraph) => void;
+}
+
+export default function Workspace2D({
+  initialWidth = 150,
+  initialHeight = 120,
+  initialProfileWidth = 4.5,
+  title = 'Editor CAD 2D — Fase 1 (modelo geométrico)',
+  onChange,
+}: Workspace2DProps) {
+  const [width, setWidth] = useState(initialWidth);
+  const [height, setHeight] = useState(initialHeight);
+  const [frameProfileWidth, setFrameProfileWidth] = useState(initialProfileWidth);
+  const [graph, setGraph] = useState<ContainerGraph>(() => createFrame(initialWidth, initialHeight, initialProfileWidth));
   const [history, setHistory] = useState<ContainerGraph[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    onChange?.(graph);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graph]);
 
   const drawW = CANVAS_W - 2 * PAD;
   const drawH = CANVAS_H - 2 * PAD;
@@ -171,7 +190,7 @@ export default function Workspace2D() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 18, alignItems: 'start', fontFamily: "'Open Sans',sans-serif", padding: 20, maxWidth: 980, margin: '0 auto' }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <span style={{ fontFamily: "'Oswald',sans-serif", fontSize: 17, fontWeight: 700, color: '#1a2a3a' }}>Editor CAD 2D — Fase 1 (modelo geométrico)</span>
+        <span style={{ fontFamily: "'Oswald',sans-serif", fontSize: 17, fontWeight: 700, color: '#1a2a3a' }}>{title}</span>
 
         <div style={{ background: 'rgba(240,248,255,.6)', borderRadius: 12, border: '1px solid rgba(128,194,220,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <svg viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`} width={CANVAS_W} height={CANVAS_H} style={{ display: 'block', maxWidth: '100%' }}>
