@@ -383,7 +383,7 @@ const TABS = [
   { key: 'cuadre',    label: 'Cuadre'     },
   { key: 'clientes',  label: 'Clientes'   },
   { key: 'proyecto',  label: 'Proyecto'   },
-  { key: 'dashboard', label: '📊 Dashboard' },
+  { key: 'dashboard', label: 'Dashboard' },
 ];
 
 /* ─── Component ───────────────────────────────────────────── */

@@ -457,7 +457,7 @@ export default function DashboardETL() {
         <div style={{marginBottom:24, display:'flex', alignItems:'center', gap:10}}>
           <IconLayoutDashboard size={24} stroke={2} color="#0c4f7a"/>
           <div>
-            <div style={{fontSize:'1.2rem',fontWeight:800,color:'#0c4f7a'}}>Dashboard ETL — Análisis de Datos</div>
+            <div style={{fontSize:'1.2rem',fontWeight:800,color:'#0c4f7a'}}>Datos</div>
             <div style={{fontSize:'0.85rem',color:'#6b9ab8'}}>Genera dashboards personalizados, análisis ML y exporta datos en tiempo real.</div>
           </div>
         </div>
