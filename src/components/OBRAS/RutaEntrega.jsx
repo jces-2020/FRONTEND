@@ -115,10 +115,11 @@ const RutaEntrega = ({ carritoId, presupuestoId, monto }) => {
       if (ubi?.success && ubi.latitud != null && ubi.longitud != null) {
         setUbicacion(ubi);
       }
-      // Servicios (presupuestoId): siempre mostrar la ruta automaticamente,
-      // sin importar el monto. Solo los pedidos de producto (carritoId)
-      // respetan el umbral de S/ 1000.
-      setMostrarRuta(presupuestoId ? true : total > MONTO_MINIMO_RUTA_AUTOMATICA);
+      // Servicios (presupuestoId): el mapa queda oculto detras del boton
+      // "Mostrar ruta de entrega" (ocupa mucho espacio y se ve en todos los
+      // tabs de Servicio, no solo en Remetro). Los pedidos de producto
+      // (carritoId) siguen mostrandose solos cuando superan S/ 1000.
+      setMostrarRuta(presupuestoId ? false : total > MONTO_MINIMO_RUTA_AUTOMATICA);
     });
 
     return () => { cancelado = true; };
