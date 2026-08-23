@@ -21,6 +21,18 @@ const ISO = {
   }
 };
 
+// Convierte un viewBox "minX minY w h" en atributos width/height fijos (en px,
+// manteniendo la proporción real). Un <svg> con solo width/height:100% en CSS
+// (sin estos atributos) puede terminar con alto 0 dentro de un contenedor flex
+// que no estira a sus hijos (como .ds-svg-wrap, que usa align-items:center) —
+// por eso se fija un tamaño intrínseco real y se deja que maxWidth:100% lo
+// achique en pantallas angostas.
+function svgDimsFromViewBox(viewBox, targetWidth = 380) {
+  const [, , vbW, vbH] = viewBox.split(' ').map(Number);
+  const ratio = vbW > 0 ? vbH / vbW : 1;
+  return { width: targetWidth, height: Math.round(targetWidth * ratio) };
+}
+
 /**
  * Render de Ventana (corredera 2-3 hojas)
  */
@@ -33,6 +45,7 @@ const VentanaRender = ({ ancho = 150, alto = 120, hojas = 2 }) => {
     const maxY = alto * 0.5 + padding;
     return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
   }, [ancho, alto]);
+  const dims = useMemo(() => svgDimsFromViewBox(viewBox), [viewBox]);
 
   // Puntos del marco
   const p1 = ISO.project(0, 0, 0);
@@ -64,7 +77,7 @@ const VentanaRender = ({ ancho = 150, alto = 120, hojas = 2 }) => {
   }
 
   return (
-    <svg viewBox={viewBox} style={{ width: '100%', height: '100%', maxHeight: '400px' }}>
+    <svg viewBox={viewBox} width={dims.width} height={dims.height} style={{ display: 'block', maxWidth: '100%', height: 'auto' }}>
       {/* Marco exterior - frente */}
       <polygon
         points={ISO.face([p1, p2, p3, p4])}
@@ -172,6 +185,7 @@ const PuertaRender = ({ ancho = 90, alto = 200 }) => {
     const maxY = alto * 0.5 + padding;
     return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
   }, [ancho, alto]);
+  const dims = useMemo(() => svgDimsFromViewBox(viewBox), [viewBox]);
 
   // Marco
   const marcoEspesor = 5;
@@ -194,7 +208,7 @@ const PuertaRender = ({ ancho = 90, alto = 200 }) => {
   const bisagra2 = ISO.project(5, 2, alto - 20);
 
   return (
-    <svg viewBox={viewBox} style={{ width: '100%', height: '100%', maxHeight: '400px' }}>
+    <svg viewBox={viewBox} width={dims.width} height={dims.height} style={{ display: 'block', maxWidth: '100%', height: 'auto' }}>
       {/* Marco */}
       <polygon
         points={ISO.face([p1, p2, p3, p4])}
@@ -282,6 +296,7 @@ const MamparaRender = ({ ancho = 100, alto = 180 }) => {
     const maxY = alto * 0.5 + padding;
     return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
   }, [ancho, alto]);
+  const dims = useMemo(() => svgDimsFromViewBox(viewBox), [viewBox]);
 
   const panelAncho = ancho / 2;
 
@@ -304,7 +319,7 @@ const MamparaRender = ({ ancho = 100, alto = 180 }) => {
   const perf4 = ISO.project(panelAncho - 2, 0, alto);
 
   return (
-    <svg viewBox={viewBox} style={{ width: '100%', height: '100%', maxHeight: '400px' }}>
+    <svg viewBox={viewBox} width={dims.width} height={dims.height} style={{ display: 'block', maxWidth: '100%', height: 'auto' }}>
       {/* Panel fijo */}
       <polygon
         points={ISO.face([pf1, pf2, pf3, pf4])}

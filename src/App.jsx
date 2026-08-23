@@ -19,6 +19,7 @@ import PanelCliente from './components/PanelCliente';
 import DemoDisenoBarra from './components/DemoDisenoBarra';
 import AccesoQR from './components/AccesoQR';
 import PreviewComprobante from './components/PreviewComprobante';
+import Workspace2D from './components/editor/Workspace2D';
 import { useEffect } from 'react';
 
 function AppLayout() {
@@ -117,6 +118,7 @@ function AppLayout() {
           <Route path="/panelcliente" element={<PanelCliente />} />
           <Route path="/demo-barra" element={<DemoDisenoBarra />} />
           <Route path="/dev/comprobante" element={<PreviewComprobante />} />
+          <Route path="/dev/cad" element={<Workspace2D />} />
           <Route path="/acceso" element={<AccesoQR />} />
         </Routes>
       </main>

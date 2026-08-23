@@ -44,6 +44,7 @@
   borderStrong: "#cbd5e1",
   text: "#1f2937",
   textLight: "#6b7280",
+  textMid: "#475569",
   background: "#ffffff",
   backgroundLight: "#f9fafb",
   surface: "#f8fbff",
@@ -53,6 +54,7 @@
 export const FONTS = {
   heading: "'Oswald', sans-serif",
   body: "'Open Sans', sans-serif",
+  mono: "'IBM Plex Mono', monospace",
 };
 
 export const BRAND_THEME = {
