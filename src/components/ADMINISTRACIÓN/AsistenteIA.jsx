@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BrandButton from '../UI/BrandButton';
+import MiniChart from '../UI/MiniChart';
 import { COLORS, FONTS } from '../../colors';
 import { getAiHealth, streamAiChat } from '../../services/aiStreamService';
 import { API_BASE_URL } from '../../config';
@@ -9,9 +10,9 @@ const MAX_CONTEXT_MESSAGES = 8;
 
 const SUGGESTED_QUERIES = [
   'Dame un reporte general del negocio',
+  'Muéstrame el dashboard de productos más vendidos',
   '¿Cómo van las ventas este mes?',
   '¿Quiénes son mis mejores clientes?',
-  '¿Qué productos se venden más?',
 ];
 
 const messageBubble = (role) => ({
@@ -108,12 +109,13 @@ function AsistenteIA({ onToast }) {
         onToken: (token) => {
           setStreamingMessage((prev) => prev + token);
         },
-        onDone: (fullResponse) => {
+        onDone: (fullResponse, diagnostics) => {
           setMessages((current) => [
             ...current,
             {
               role: 'assistant',
               content: fullResponse,
+              chart: diagnostics?.chart || null,
             },
           ]);
           setStreamingMessage('');
@@ -229,6 +231,7 @@ function AsistenteIA({ onToast }) {
                   {message.role === 'user' ? 'Tú' : 'IA'}
                 </div>
                 {message.content}
+                {message.chart && <MiniChart chart={message.chart} />}
               </div>
             ))}
 

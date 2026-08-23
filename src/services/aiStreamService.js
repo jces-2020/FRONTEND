@@ -7,7 +7,7 @@ export const API_IA_BASE_URL = API_BASE_URL;
  * @param {string} message - Mensaje del usuario
  * @param {Array} messages - Historial de mensajes
  * @param {Function} onToken - Callback cada token recibido: (token) => {}
- * @param {Function} onDone - Callback al finalizar: (fullResponse) => {}
+ * @param {Function} onDone - Callback al finalizar: (fullResponse, diagnostics) => {}
  * @param {Function} onError - Callback en error: (error) => {}
  */
 export async function streamAiChat({
@@ -78,7 +78,7 @@ export async function streamAiChat({
           }
 
           if (data.done) {
-            onDone(fullResponse || data.full_response || '');
+            onDone(fullResponse || data.full_response || '', data.diagnostics || null);
             return fullResponse || data.full_response || '';
           }
         } catch (error) {
@@ -87,7 +87,7 @@ export async function streamAiChat({
       }
     }
 
-    onDone(fullResponse);
+    onDone(fullResponse, null);
     return fullResponse;
   } catch (error) {
     onError(error.message || 'Error en el streaming.');
