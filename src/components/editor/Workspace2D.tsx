@@ -11,11 +11,20 @@ import PropertiesPanel from './PropertiesPanel';
 const CANVAS_W = 420;
 const CANVAS_H = 380;
 const PAD = 56;
+const ARROW_OFFSET = 22;
 const ALUM_COLOR = '#7a9ab5';
 const VIDRIO_FILL = 'rgba(180,220,255,0.28)';
 const VIDRIO_STROKE = '#4a9eff';
 const SOLIDO_FILL = 'rgba(154,169,184,.5)';
 const SEL_STROKE = '#f59e0b';
+const DIM_COLOR = '#5a8ba8';
+const MONO = "'IBM Plex Mono',monospace";
+
+const SYSTEM_LABEL: Record<SystemType, string> = {
+  fixed: 'FIJO',
+  sliding: 'CORREDIZA',
+  hinged: 'BATIENTE',
+};
 
 const INPUT_STYLE: CSSProperties = {
   width: 86, padding: '7px 10px', borderRadius: 8, border: '1.5px solid rgba(128,194,220,.45)',
@@ -151,18 +160,29 @@ export default function Workspace2D({
 
     const sx = toX(node.rect.x), sy = toY(node.rect.y), sw = toLen(node.rect.width), sh = toLen(node.rect.height);
     const isSelected = node.id === selectedId;
+    const cx = sx + sw / 2, cy = sy + sh / 2;
+    const medida = `${node.rect.width.toFixed(0)}×${node.rect.height.toFixed(0)}`;
+    const cabeMedida = sw > 52 && sh > 22;
 
     if (!node.leaf) {
       elements.push(
-        <rect
-          key={node.id} x={sx} y={sy} width={sw} height={sh}
-          fill="rgba(240,248,255,.4)" stroke={isSelected ? SEL_STROKE : '#c7dbe8'}
-          strokeWidth={isSelected ? 2.5 : 1} strokeDasharray="5,4"
-          style={{ cursor: 'pointer' }} onClick={() => setSelectedId(node.id)}
-        />
+        <g key={node.id} onClick={() => setSelectedId(node.id)} style={{ cursor: 'pointer' }}>
+          <rect
+            x={sx} y={sy} width={sw} height={sh}
+            fill="rgba(240,248,255,.4)" stroke={isSelected ? SEL_STROKE : '#c7dbe8'}
+            strokeWidth={isSelected ? 2.5 : 1} strokeDasharray="5,4"
+          />
+          {cabeMedida && (
+            <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={9} fill="#8aa8bc" fontFamily={MONO} style={{ pointerEvents: 'none' }}>
+              {medida}
+            </text>
+          )}
+        </g>
       );
       return elements;
     }
+
+    const etiqueta = `${SYSTEM_LABEL[node.leaf.systemType]}${node.leaf.config.hojas ? ` ${node.leaf.config.hojas}H` : ''}`;
 
     elements.push(
       <g key={node.id} onClick={() => setSelectedId(node.id)} style={{ cursor: 'pointer' }}>
@@ -181,6 +201,17 @@ export default function Workspace2D({
             </g>
           );
         })}
+        {cabeMedida && (
+          <g style={{ pointerEvents: 'none' }}>
+            <rect x={cx - Math.min(sw - 6, 74) / 2} y={cy - 15} width={Math.min(sw - 6, 74)} height={26} rx={4} fill="rgba(255,255,255,.85)" />
+            <text x={cx} y={cy - 5} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight={700} fill="#1a2a3a" fontFamily={MONO}>
+              {etiqueta}
+            </text>
+            <text x={cx} y={cy + 7} textAnchor="middle" dominantBaseline="middle" fontSize={8.5} fill="#5a7a90" fontFamily={MONO}>
+              {medida}
+            </text>
+          </g>
+        )}
         <rect x={sx} y={sy} width={sw} height={sh} fill="none" stroke={isSelected ? SEL_STROKE : 'transparent'} strokeWidth={isSelected ? 2.5 : 0} />
       </g>
     );
@@ -194,7 +225,32 @@ export default function Workspace2D({
 
         <div style={{ background: 'rgba(240,248,255,.6)', borderRadius: 12, border: '1px solid rgba(128,194,220,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <svg viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`} width={CANVAS_W} height={CANVAS_H} style={{ display: 'block', maxWidth: '100%' }}>
+            <defs>
+              <marker id="ws-arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 Z" fill={DIM_COLOR} />
+              </marker>
+              <marker id="ws-arrow-r" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse">
+                <path d="M0,0 L0,6 L6,3 Z" fill={DIM_COLOR} />
+              </marker>
+            </defs>
+
             {renderZone(graph.rootId)}
+
+            {/* Cota de ANCHO total, arriba */}
+            <line x1={rX} y1={rY - ARROW_OFFSET} x2={rX + rW} y2={rY - ARROW_OFFSET} stroke={DIM_COLOR} strokeWidth={1} markerStart="url(#ws-arrow-r)" markerEnd="url(#ws-arrow)" />
+            <line x1={rX} y1={rY - 6} x2={rX} y2={rY - ARROW_OFFSET + 2} stroke={DIM_COLOR} strokeWidth={0.8} strokeDasharray="3,2" opacity={0.6} />
+            <line x1={rX + rW} y1={rY - 6} x2={rX + rW} y2={rY - ARROW_OFFSET + 2} stroke={DIM_COLOR} strokeWidth={0.8} strokeDasharray="3,2" opacity={0.6} />
+            <text x={rX + rW / 2} y={rY - ARROW_OFFSET - 6} textAnchor="middle" fill="#1a2a3a" fontSize={11} fontFamily={MONO} fontWeight={700}>
+              ANCHO {graph.frame.width} cm
+            </text>
+
+            {/* Cota de ALTO total, a la derecha */}
+            <line x1={rX + rW + ARROW_OFFSET} y1={rY} x2={rX + rW + ARROW_OFFSET} y2={rY + rH} stroke={DIM_COLOR} strokeWidth={1} markerStart="url(#ws-arrow-r)" markerEnd="url(#ws-arrow)" />
+            <line x1={rX + rW + 6} y1={rY} x2={rX + rW + ARROW_OFFSET - 2} y2={rY} stroke={DIM_COLOR} strokeWidth={0.8} strokeDasharray="3,2" opacity={0.6} />
+            <line x1={rX + rW + 6} y1={rY + rH} x2={rX + rW + ARROW_OFFSET - 2} y2={rY + rH} stroke={DIM_COLOR} strokeWidth={0.8} strokeDasharray="3,2" opacity={0.6} />
+            <text x={rX + rW + ARROW_OFFSET + 7} y={rY + rH / 2} textAnchor="middle" fill="#1a2a3a" fontSize={11} fontFamily={MONO} fontWeight={700} transform={`rotate(90, ${rX + rW + ARROW_OFFSET + 7}, ${rY + rH / 2})`}>
+              ALTO {graph.frame.height} cm
+            </text>
           </svg>
         </div>
 
