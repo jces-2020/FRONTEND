@@ -638,7 +638,7 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
       {selected === 'forecast' && (
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14,background:'#fff',padding:'12px 14px',borderRadius:10,boxShadow:'0 1px 3px rgba(0,0,0,0.05)'}}>
           <label style={{...labelStyle,marginBottom:0}}>Meses a predecir:</label>
-          {[1,2,3,6].map(m => (
+          {[1,3,6,12].map(m => (
             <button key={m} onClick={()=>setMesesFC(m)}
               style={{...btnStyle(mesesFC===m?'#3ab0e8':'#aaa'), padding:'4px 12px',
                 background:mesesFC===m?'rgba(58,176,232,0.15)':'transparent'}}>{m}</button>
@@ -683,10 +683,99 @@ function MiningSection({ ETL_API, ETL_PREFIX }) {
               <MiningTable data={result.detalle}/>
             </>
           )}
+          <MiningExplanation selected={selected}/>
         </div>
       )}
     </div>
   );
+}
+
+const RFM_DESC = [
+  { label: 'Campeón',       color: '#4ecb8d', desc: 'Compran seguido, hace poco tiempo y gastan más que el resto — tus mejores clientes.' },
+  { label: 'Cliente Leal',  color: '#3ab0e8', desc: 'Compran con frecuencia, aunque su gasto no sea el más alto.' },
+  { label: 'Cliente Nuevo', color: '#9b6cdc', desc: 'Compraron hace poco pero todavía no acumulan muchas compras.' },
+  { label: 'En Riesgo',     color: '#f4a533', desc: 'Antes compraban seguido, pero ya llevan un tiempo sin volver.' },
+  { label: 'Perdido',       color: '#e85c5c', desc: 'Llevan mucho tiempo sin comprar — es poco probable que regresen sin un incentivo.' },
+];
+
+const CLUSTER_DESC = [
+  { label: 'Alto Valor',        color: '#4ecb8d', desc: 'Gastan más en total y suelen comprar con mayor frecuencia o monto por compra.' },
+  { label: 'Valor Medio-Alto',  color: '#3ab0e8', desc: 'Gastan por encima del promedio, sin llegar al grupo de mayor valor.' },
+  { label: 'Valor Medio',       color: '#f4a533', desc: 'Nivel de gasto intermedio: ni entre los que más ni los que menos compran.' },
+  { label: 'Valor Medio-Bajo',  color: '#e8623a', desc: 'Gastan por debajo del promedio general del negocio.' },
+  { label: 'Bajo Valor',        color: '#e85c5c', desc: 'Menor gasto acumulado o compras muy esporádicas.' },
+];
+
+function MiningExplanation({ selected }) {
+  const box = {background:'rgba(58,176,232,0.06)', border:'1px solid rgba(70,165,220,0.15)',
+    borderRadius:10, padding:'14px 16px', marginTop:18};
+  const title = {fontSize:'0.72rem',fontWeight:700,color:'#4a90b8',marginBottom:10,
+    textTransform:'uppercase',letterSpacing:'0.4px'};
+  const item = {display:'flex',gap:8,alignItems:'flex-start',marginBottom:8,fontSize:'0.76rem',color:'#1a4a6a',lineHeight:1.4};
+  const dot = color => ({width:10,height:10,borderRadius:'50%',background:color,marginTop:3,flexShrink:0});
+
+  if (selected === 'rfm') return (
+    <div style={box}>
+      <div style={title}>¿Qué significa cada segmento?</div>
+      {RFM_DESC.map(s => (
+        <div key={s.label} style={item}><span style={dot(s.color)}/><span><b>{s.label}:</b> {s.desc}</span></div>
+      ))}
+    </div>
+  );
+
+  if (selected === 'clustering') return (
+    <div style={box}>
+      <div style={title}>¿Qué significa cada grupo?</div>
+      {CLUSTER_DESC.map(s => (
+        <div key={s.label} style={item}><span style={dot(s.color)}/><span><b>{s.label}:</b> {s.desc}</span></div>
+      ))}
+      <div style={{...item, marginTop:4, color:'#6b9ab8', fontStyle:'italic'}}>
+        Los grupos se arman comparando cuánto gasta cada cliente en total, cuántas veces compra y su ticket promedio;
+        no todos los niveles aparecen si tienes pocos clientes.
+      </div>
+    </div>
+  );
+
+  if (selected === 'correlaciones') return (
+    <div style={box}>
+      <div style={title}>¿Cómo leer la correlación?</div>
+      <div style={item}>La correlación va de -1 a 1 y mide qué tan relacionadas se mueven dos variables mes a mes.</div>
+      <div style={item}><span style={dot('#4ecb8d')}/><span><b>Fuerte (mayor a 0.7):</b> casi siempre se mueven juntas.</span></div>
+      <div style={item}><span style={dot('#f4a533')}/><span><b>Moderada (0.4 a 0.7):</b> relación notoria, pero no total.</span></div>
+      <div style={item}><span style={dot('#e85c5c')}/><span><b>Débil (menor a 0.4):</b> casi no se relacionan.</span></div>
+      <div style={item}><b>Positiva:</b> cuando una sube, la otra también. <b>Negativa:</b> cuando una sube, la otra baja.</div>
+    </div>
+  );
+
+  if (selected === 'forecast') return (
+    <div style={box}>
+      <div style={title}>¿Cómo se calcula esta predicción?</div>
+      <div style={item}>
+        Se toma la tendencia mediana entre meses (no un promedio simple), para que un mes fuera de lo común
+        no dispare la proyección hacia arriba o abajo.
+      </div>
+      <div style={item}>
+        Con pocos meses de historial o ventas muy irregulares, tómala como una referencia de tendencia,
+        no como una cifra exacta.
+      </div>
+    </div>
+  );
+
+  if (selected === 'anomalias') return (
+    <div style={box}>
+      <div style={title}>¿Qué es la "desviación"?</div>
+      <div style={item}>
+        Indica qué tan lejos está ese monto del promedio habitual, medido en desviaciones estándar.
+        Mientras más alto el número, más inusual es el monto.
+      </div>
+      <div style={item}>
+        Se marcan como anomalía los montos con desviación mayor a 2 (muy por encima o por debajo de lo normal),
+        para que puedas revisarlos manualmente.
+      </div>
+    </div>
+  );
+
+  return null;
 }
 
 function MiningTable({ data }) {
