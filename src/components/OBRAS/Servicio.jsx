@@ -172,6 +172,7 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
   const [productosFacturacion, setProductosFacturacion] = useState([]);
   const [tabPendientePostPago, setTabPendientePostPago] = useState('');
   const [tracking, setTracking] = useState({ aceptoPedido: false, maxStep: 0 });
+  const [rutaInfo, setRutaInfo] = useState({ presupuestoId: null, monto: 0 });
   const [disenoData, setDisenoData] = useState(null);
   const [clienteResuelto, setClienteResuelto] = useState(null);
   const permitirInstalacion = tracking.maxStep >= 5 || activeTab === 'INSTALACION';
@@ -186,6 +187,27 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
       .then(r => r.json())
       .then(d => { if (!cancelado && d?.cliente) setClienteResuelto(d.cliente); })
       .catch(() => {});
+    return () => { cancelado = true; };
+  }, [notifId]);
+
+  // Presupuesto + monto del servicio, para la ruta de entrega (visible en
+  // todos los tabs, detras del boton "Mostrar ruta de entrega").
+  useEffect(() => {
+    if (!notifId) { setRutaInfo({ presupuestoId: null, monto: 0 }); return; }
+    let cancelado = false;
+    fetch(`/api/presupuestos/notificacion/${notifId}/servicios`)
+      .then(r => r.json())
+      .then(data => {
+        if (cancelado) return;
+        const lista = Array.isArray(data) ? data : (data?.data || data?.servicios || []);
+        if (lista.length > 0) {
+          const monto = lista.reduce((acc, s) => acc + (Number(s.total) || 0), 0);
+          setRutaInfo({ presupuestoId: lista[0].id_presupuesto || lista[0].id || null, monto });
+        } else {
+          setRutaInfo({ presupuestoId: null, monto: 0 });
+        }
+      })
+      .catch(() => { if (!cancelado) setRutaInfo({ presupuestoId: null, monto: 0 }); });
     return () => { cancelado = true; };
   }, [notifId]);
 
@@ -450,6 +472,12 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
           </div>
         </header>
 
+        {rutaInfo.presupuestoId && (
+          <div style={{ borderRadius: 18, padding: '14px 18px', ...gc, animation: 'svUp .45s ease' }}>
+            <RutaEntrega presupuestoId={rutaInfo.presupuestoId} monto={rutaInfo.monto} />
+          </div>
+        )}
+
         <div style={{ borderRadius: 22, overflow: 'hidden', ...gcM, animation: 'svUp .45s ease', position: 'relative' }}>
           <div
             style={{
@@ -575,24 +603,17 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
               )}
 
               {activeTab === 'INSTALACION' && (
-                <>
-                  {carritoData?.carrito_id && (
-                    <div style={{ borderRadius: 18, padding: '14px 18px', marginBottom: 14, ...gc }}>
-                      <RutaEntrega carritoId={carritoData.carrito_id} />
-                    </div>
-                  )}
-                  <Instalacion
-                    notificacion={notificacion}
-                    onToast={showToast}
-                    tipoNotificacion="SERVICIO"
-                    carritoData={carritoData}
-                    onFinalizarServicio={async () => {
-                      await actualizarEstadoSeguimiento('instalado');
-                      showToast('Servicio culminado correctamente', 'success');
-                      onBack && onBack();
-                    }}
-                  />
-                </>
+                <Instalacion
+                  notificacion={notificacion}
+                  onToast={showToast}
+                  tipoNotificacion="SERVICIO"
+                  carritoData={carritoData}
+                  onFinalizarServicio={async () => {
+                    await actualizarEstadoSeguimiento('instalado');
+                    showToast('Servicio culminado correctamente', 'success');
+                    onBack && onBack();
+                  }}
+                />
               )}
             </div>
           </div>
