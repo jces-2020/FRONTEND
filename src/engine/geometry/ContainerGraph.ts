@@ -73,7 +73,12 @@ export interface ContainerGraph {
   nodes: Record<string, ZoneNode>;
 }
 
-const MIN_ZONE_CM = 10;
+// Tamaño mínimo de una zona resultante al dividir — no es una separación
+// respecto a la pared/marco (el hueco interior arranca justo después del
+// perfil exterior, sin holgura extra: ver `createFrame`). Es solo para
+// evitar crear una franja de vidrio/aluminio demasiado angosta para
+// fabricar en la práctica.
+const MIN_ZONE_CM = 3;
 
 let seq = 0;
 function nextId(prefix: string): string {

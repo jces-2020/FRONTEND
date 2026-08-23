@@ -59,11 +59,17 @@ function frameBars(rect: Rect, profileWidth: number, cornerAngle: CutAngle, role
 
 const VIDRIO: PanelMaterial = 'vidrio';
 
-/** Paño Fijo: un solo vidrio, con su propio sub-marco (contravidrio) dentro del hueco de la zona. */
+/**
+ * Paño Fijo: el hueco de la zona donde se inserta ya está delimitado por
+ * aluminio real (el marco exterior del vano, o un divisor creado al dividir
+ * la zona) — no se genera un marco nuevo. El vidrio va sostenido ahí con
+ * junquillo (una garra liviana de captura, no una barra estructural), por
+ * eso `profileWidth` solo se usa para calcular cuánto se mete el vidrio
+ * hacia adentro, sin producir perfiles nuevos para cortar.
+ */
 export function deduceFixedPanel(rect: Rect, config: SystemConfig): DeductionResult {
   const profileWidth = config.profileWidth;
   const holgura = config.holguraVidrio ?? DEFAULT_HOLGURA_VIDRIO;
-  const cornerAngle = config.cornerAngle ?? 90;
 
   const glassWidth = rect.width - 2 * profileWidth - 2 * holgura;
   const glassHeight = rect.height - 2 * profileWidth - 2 * holgura;
@@ -78,7 +84,7 @@ export function deduceFixedPanel(rect: Rect, config: SystemConfig): DeductionRes
     thickness: config.espesorVidrio,
   };
 
-  return { panels: [panel], profiles: frameBars(rect, profileWidth, cornerAngle, 'fijo') };
+  return { panels: [panel], profiles: [] };
 }
 
 /**
@@ -120,13 +126,26 @@ export function deduceSlidingSystem(rect: Rect, config: SystemConfig): Deduction
     profiles.push(...frameBars(hojaRect, hojaProfileWidth, cornerAngle, `hoja-${i + 1}`));
   }
 
-  // Riel/marco exterior propio del sistema corredizo (no confundir con el marco general del vano).
-  profiles.push(...frameBars(rect, trackProfileWidth, 90, 'riel'));
+  // Riel superior e inferior: el canal por donde deslizan las hojas es un
+  // perfil real y distinto (no un marco genérico), así que sí se cuenta.
+  // Los lados izquierdo/derecho NO generan perfil nuevo: ahí las hojas
+  // apoyan directo contra el marco o divisor que ya delimita la zona (mismo
+  // motivo que el paño fijo — no hay que volver a enmarcar un borde que ya
+  // es aluminio).
+  const rielSup = squareCutLength(rect.width, 0);
+  profiles.push(
+    { role: 'riel-superior', length: rielSup, shortPointLength: rielSup, angleStart: 90, angleEnd: 90, profileWidth: trackProfileWidth },
+    { role: 'riel-inferior', length: rielSup, shortPointLength: rielSup, angleStart: 90, angleEnd: 90, profileWidth: trackProfileWidth },
+  );
 
   return { panels, profiles };
 }
 
-/** Puerta Batiente: una jamba fija (mitrada) y una hoja con bisagras (con holgura de apertura) dentro. */
+/**
+ * Puerta Batiente: igual que el paño fijo, la jamba no genera perfil nuevo
+ * (el hueco ya está delimitado por el marco exterior o un divisor) — solo la
+ * hoja, la parte móvil con bisagras, es aluminio nuevo de verdad.
+ */
 export function deduceHingedDoor(rect: Rect, config: SystemConfig): DeductionResult {
   const jambProfileWidth = config.profileWidth;
   const doorProfileWidth = config.hojaProfileWidth ?? config.profileWidth;
@@ -155,10 +174,7 @@ export function deduceHingedDoor(rect: Rect, config: SystemConfig): DeductionRes
 
   return {
     panels: [panel],
-    profiles: [
-      ...frameBars(rect, jambProfileWidth, 45, 'jamba'),
-      ...frameBars(doorRect, doorProfileWidth, cornerAngle, 'hoja-batiente'),
-    ],
+    profiles: frameBars(doorRect, doorProfileWidth, cornerAngle, 'hoja-batiente'),
   };
 }
 

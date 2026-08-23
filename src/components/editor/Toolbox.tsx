@@ -102,14 +102,14 @@ export default function Toolbox({ node, defaultProfileWidth, onSplit, onInsertSy
             <div style={{ ...ROW, marginTop: 8 }}>
               <div style={FIELD}>
                 <span style={{ fontSize: 9, color: '#8aa8bc' }}>Vertical a (cm)</span>
-                <input style={INPUT} type="number" min={10} value={posV} onChange={(e) => setPosV(e.target.value)} placeholder={String(Math.round(node.rect.width / 2))} />
+                <input style={INPUT} type="number" min={3} value={posV} onChange={(e) => setPosV(e.target.value)} placeholder={String(Math.round(node.rect.width / 2))} />
               </div>
               <button style={BTN} onClick={() => handleSplit('vertical')}>+ División vertical</button>
             </div>
             <div style={{ ...ROW, marginTop: 8 }}>
               <div style={FIELD}>
                 <span style={{ fontSize: 9, color: '#8aa8bc' }}>Horizontal a (cm)</span>
-                <input style={INPUT} type="number" min={10} value={posH} onChange={(e) => setPosH(e.target.value)} placeholder={String(Math.round(node.rect.height / 2))} />
+                <input style={INPUT} type="number" min={3} value={posH} onChange={(e) => setPosH(e.target.value)} placeholder={String(Math.round(node.rect.height / 2))} />
               </div>
               <button style={BTN} onClick={() => handleSplit('horizontal')}>+ División horizontal</button>
             </div>
