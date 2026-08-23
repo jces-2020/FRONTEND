@@ -42,7 +42,6 @@ function AsistenteIA({ onToast }) {
   const [healthLoading, setHealthLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
-  const [useCloud, setUseCloud] = useState(false);
 
   const [messages, setMessages] = useState([
     {
@@ -112,10 +111,7 @@ function AsistenteIA({ onToast }) {
       await streamAiChat({
         message: trimmed,
         messages: contextMessages,
-        model: 'tinyllama:1.1b',
         temperature: 0.05,
-        keep_alive: '10m',
-        use_cloud: useCloud,
         onToken: (token) => {
           setStreamingMessage((prev) => prev + token);
         },
@@ -204,24 +200,6 @@ function AsistenteIA({ onToast }) {
               <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
 
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setUseCloud((prev) => !prev)}
-                  title="Cambiar entre Ollama Local y Nube"
-                  style={{
-                    border: '1px solid rgba(70,165,220,0.24)',
-                    background: useCloud ? 'rgba(16,185,129,0.14)' : 'rgba(255,255,255,0.9)',
-                    color: useCloud ? '#065f46' : '#16425b',
-                    borderRadius: '999px',
-                    padding: '6px 10px',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {useCloud ? 'Nube ON' : 'Local ON'}
-                </button>
-
                 <div style={statusBadge(Boolean(health?.available))}>
                   <span
                     style={{
@@ -238,9 +216,6 @@ function AsistenteIA({ onToast }) {
 
             <div style={{ color: '#527d99', fontSize: '0.74rem', marginTop: '6px' }}>
               {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelName}
-            </div>
-            <div style={{ color: '#527d99', fontSize: '0.72rem', marginTop: '4px' }}>
-              Modo activo: {useCloud ? 'Ollama Cloud' : 'Ollama Local'}
             </div>
           </header>
 
