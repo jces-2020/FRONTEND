@@ -4,12 +4,9 @@ import { FONTS } from '../../colors';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-// Origen fijo: local de VidrioBras (Jr. Los Comuneros 292, Huancayo).
-// Coordenadas aproximadas por geocodificación de la calle (Nominatim no
-// resuelve a nivel de número exacto para esta dirección) — reemplazar por
-// las coordenadas exactas si se consiguen (clic derecho sobre el local en
-// Google Maps > copiar coordenadas).
-const ORIGEN_TIENDA = { lat: -12.0690931, lng: -75.1996710 };
+// Origen fijo: local de VidrioBras Elescano (Jr. Los Comuneros 1286, Huancayo).
+// Coordenadas exactas confirmadas en Google Maps.
+const ORIGEN_TIENDA = { lat: -12.066397, lng: -75.200070 };
 
 const MONTO_MINIMO_RUTA_AUTOMATICA = 1000;
 const RADIO_LLEGADA_METROS = 60;
@@ -118,7 +115,11 @@ const RutaEntrega = ({ carritoId, presupuestoId, monto }) => {
       if (ubi?.success && ubi.latitud != null && ubi.longitud != null) {
         setUbicacion(ubi);
       }
-      setMostrarRuta(total > MONTO_MINIMO_RUTA_AUTOMATICA);
+      // Servicios (presupuestoId): el mapa queda oculto detras del boton
+      // "Mostrar ruta de entrega" (ocupa mucho espacio y se ve en todos los
+      // tabs de Servicio, no solo en Remetro). Los pedidos de producto
+      // (carritoId) siguen mostrandose solos cuando superan S/ 1000.
+      setMostrarRuta(presupuestoId ? false : total > MONTO_MINIMO_RUTA_AUTOMATICA);
     });
 
     return () => { cancelado = true; };
