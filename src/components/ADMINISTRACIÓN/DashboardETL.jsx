@@ -827,9 +827,16 @@ const CATEGORY_LABELS = {
   servicios:  '🔧 Servicios',
 };
 
+const REPORTE_CONSOLIDADO_TABLAS = [
+  'venta', 'productos', 'registro_pago', 'monto_empresa',
+  'caja', 'categoria', 'cliente', 'presupuesto', 'personal',
+];
+
 function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
   const [downloading, setDownloading] = useState({});
   const [rowCounts, setRowCounts]     = useState({});
+  const [modalTable, setModalTable]   = useState(null);
+  const [batchLoading, setBatchLoading] = useState(false);
 
   useEffect(() => {
     fetch(`${ETL_API}${ETL_PREFIX}/tables/stats`)
@@ -838,10 +845,13 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
       .then(d => setRowCounts(d.counts || {}));
   }, [ETL_API, ETL_PREFIX]);
 
-  const handleDownload = async (table) => {
+  const handleDownload = async (table, params = {}) => {
     setDownloading(prev => ({ ...prev, [table.name]: true }));
     try {
-      const res = await fetch(`${ETL_API}${ETL_PREFIX}/tables/${table.name}/export`);
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(params).filter(([,v]) => v !== '' && v != null))
+      ).toString();
+      const res = await fetch(`${ETL_API}${ETL_PREFIX}/tables/${table.name}/export${qs ? `?${qs}` : ''}`);
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -857,6 +867,28 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
     }
   };
 
+  const handleBatchDownload = async () => {
+    setBatchLoading(true);
+    try {
+      const res = await fetch(`${ETL_API}${ETL_PREFIX}/tables/export-batch`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tables: REPORTE_CONSOLIDADO_TABLAS, name: 'Reporte General' }),
+      });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte_consolidado_${new Date().toISOString().slice(0,10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert(`No se pudo generar el reporte consolidado: ${e.message}`);
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+
   if (!tables?.length) return null;
 
   const byCategory = tables.reduce((acc, t) => {
@@ -868,6 +900,24 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
 
   return (
     <div>
+      <div style={{background:'#fff', border:'1px solid rgba(70,165,220,0.15)', borderRadius:12,
+        padding:'14px 16px', marginBottom:24, display:'flex', alignItems:'center',
+        justifyContent:'space-between', gap:12, flexWrap:'wrap'}}>
+        <div>
+          <div style={{fontWeight:700,fontSize:'0.82rem',color:'#1a4a6a',marginBottom:2}}>📊 Reporte General</div>
+          <div style={{fontSize:'0.68rem',color:'#6b9ab8'}}>
+            Un solo Excel con ventas, productos, pagos, movimientos, caja, categorías, clientes, presupuestos y personal.
+          </div>
+        </div>
+        <button onClick={handleBatchDownload} disabled={batchLoading} style={{
+          padding:'9px 16px', borderRadius:9, fontSize:'0.78rem', fontWeight:700,
+          background: batchLoading ? 'rgba(58,176,232,0.4)' : 'linear-gradient(135deg,#3ab0e8,#1a7ab5)',
+          color:'#fff', border:'none', cursor: batchLoading ? 'not-allowed' : 'pointer',
+          whiteSpace:'nowrap'}}>
+          {batchLoading ? '⏳ Generando…' : '↓ Descargar Reporte'}
+        </button>
+      </div>
+
       {Object.entries(byCategory).map(([cat, tbls]) => (
         <div key={cat} style={{marginBottom:28}}>
           <div style={{fontSize:'0.8rem',fontWeight:700,textTransform:'uppercase',
@@ -918,7 +968,7 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleDownload(table)}
+                    onClick={() => setModalTable(table)}
                     disabled={isLoading}
                     style={{
                       marginTop:12, padding:'8px 12px', borderRadius:9, fontSize:'0.75rem', fontWeight:700,
@@ -926,7 +976,7 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
                       background: isLoading ? 'rgba(26,122,181,0.15)' : 'linear-gradient(135deg,rgba(26,122,181,0.15),rgba(58,176,232,0.08))',
                       color:'#1a7ab5', cursor: isLoading ? 'not-allowed' : 'pointer',
                       whiteSpace:'nowrap',transition:'all 0.15s'}}>
-                    {isLoading ? '⏳' : '↓ Descargar Excel'}
+                    {isLoading ? '⏳ Descargando…' : '↓ Descargar Excel'}
                   </button>
                 </div>
               );
@@ -934,6 +984,128 @@ function TableExportSection({ tables, ETL_API, ETL_PREFIX }) {
           </div>
         </div>
       ))}
+
+      {modalTable && (
+        <DownloadOptionsModal
+          table={modalTable}
+          count={rowCounts[modalTable.name]}
+          onClose={() => setModalTable(null)}
+          onDownload={(params) => { handleDownload(modalTable, params); setModalTable(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+const FILTER_OPS = [
+  { value: 'gt',  label: 'mayor que' },
+  { value: 'gte', label: 'mayor o igual que' },
+  { value: 'lt',  label: 'menor que' },
+  { value: 'lte', label: 'menor o igual que' },
+  { value: 'eq',  label: 'igual a' },
+];
+
+function DownloadOptionsModal({ table, count, onClose, onDownload }) {
+  const cols = Object.entries(table.columns || {}).map(([key, v]) => ({ key, ...v }));
+  const orderable = cols.filter(c => c.type === 'date' || c.type === 'number');
+  const numeric = cols.filter(c => c.type === 'number');
+
+  const [mode, setMode]           = useState('all');
+  const [limitValue, setLimit]    = useState(100);
+  const [orderBy, setOrderBy]     = useState(orderable[0]?.key || '');
+  const [orderDir, setOrderDir]   = useState('desc');
+  const [useFilter, setUseFilter] = useState(false);
+  const [filterField, setFilterField] = useState(numeric[0]?.key || '');
+  const [filterOp, setFilterOp]       = useState('gt');
+  const [filterValue, setFilterValue] = useState('');
+
+  const handleDownloadClick = () => {
+    const params = { order_by: orderBy || undefined, order_dir: orderDir };
+    if (mode === 'limit') params.limit = limitValue;
+    if (useFilter && filterField && filterValue !== '') {
+      params.filter_field = filterField;
+      params.filter_op = filterOp;
+      params.filter_value = filterValue;
+    }
+    onDownload(params);
+  };
+
+  return (
+    <div onClick={onClose} style={{position:'fixed', inset:0, background:'rgba(10,30,50,0.45)',
+      display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000, padding:16}}>
+      <div onClick={e => e.stopPropagation()} style={{background:'#fff', borderRadius:14, padding:'22px 24px',
+        width:'100%', maxWidth:420, boxShadow:'0 12px 40px rgba(0,0,0,0.25)'}}>
+        <div style={{fontWeight:800, fontSize:'0.95rem', color:'#0c4f7a', marginBottom:4}}>
+          {table.icon} Descargar {table.display_name}
+        </div>
+        <div style={{fontSize:'0.75rem', color:'#6b9ab8', marginBottom:16}}>
+          Esta tabla tiene {count != null ? count.toLocaleString('es-PE') : '—'} registros en total.
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label style={labelStyle}>¿Cuántos datos descargar?</label>
+          <div style={{display:'flex', gap:8}}>
+            <button onClick={() => setMode('all')} style={{...btnStyle(mode==='all'?'#3ab0e8':'#aaa'),
+              flex:1, padding:'7px 0', background: mode==='all' ? 'rgba(58,176,232,0.12)' : 'transparent'}}>
+              Todos los datos
+            </button>
+            <button onClick={() => setMode('limit')} style={{...btnStyle(mode==='limit'?'#3ab0e8':'#aaa'),
+              flex:1, padding:'7px 0', background: mode==='limit' ? 'rgba(58,176,232,0.12)' : 'transparent'}}>
+              Cantidad
+            </button>
+          </div>
+          {mode === 'limit' && (
+            <input type="number" min={1} max={20000} value={limitValue}
+              onChange={e => setLimit(e.target.value)}
+              style={{...inputStyle, marginTop:8}}/>
+          )}
+        </div>
+
+        {orderable.length > 0 && (
+          <div style={{marginBottom:14}}>
+            <label style={labelStyle}>Ordenar por</label>
+            <div style={{display:'flex', gap:8}}>
+              <select value={orderBy} onChange={e => setOrderBy(e.target.value)} style={{...inputStyle, flex:2}}>
+                {orderable.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+              <select value={orderDir} onChange={e => setOrderDir(e.target.value)} style={{...inputStyle, flex:1}}>
+                <option value="desc">Más reciente / mayor</option>
+                <option value="asc">Más antiguo / menor</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {numeric.length > 0 && (
+          <div style={{marginBottom:16}}>
+            <label style={{...labelStyle, display:'flex', alignItems:'center', gap:6}}>
+              <input type="checkbox" checked={useFilter} onChange={e => setUseFilter(e.target.checked)}/>
+              Filtrar por un campo numérico
+            </label>
+            {useFilter && (
+              <div style={{display:'flex', gap:6, marginTop:8}}>
+                <select value={filterField} onChange={e => setFilterField(e.target.value)} style={{...inputStyle, flex:2}}>
+                  {numeric.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+                <select value={filterOp} onChange={e => setFilterOp(e.target.value)} style={{...inputStyle, flex:2}}>
+                  {FILTER_OPS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <input type="number" value={filterValue} onChange={e => setFilterValue(e.target.value)}
+                  placeholder="Ej: 1000" style={{...inputStyle, flex:1}}/>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div style={{display:'flex', gap:8, marginTop:4}}>
+          <button onClick={onClose} style={{...btnStyle('#9bb'), flex:1, padding:'9px 0'}}>Cancelar</button>
+          <button onClick={handleDownloadClick} style={{
+            flex:2, padding:'9px 0', borderRadius:8, fontSize:'0.78rem', fontWeight:700,
+            background:'linear-gradient(135deg,#3ab0e8,#1a7ab5)', color:'#fff', border:'none', cursor:'pointer'}}>
+            ↓ Descargar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
