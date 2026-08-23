@@ -7,19 +7,6 @@ import { API_BASE_URL } from '../../config';
 const API_IA_BASE_URL = API_BASE_URL;
 const MAX_CONTEXT_MESSAGES = 8;
 
-const statusBadge = (online) => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '8px',
-  padding: '6px 10px',
-  borderRadius: '999px',
-  fontSize: '0.74rem',
-  fontWeight: 700,
-  color: online ? '#0f766e' : '#991b1b',
-  background: online ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-  border: `1px solid ${online ? 'rgba(16,185,129,0.22)' : 'rgba(239,68,68,0.22)'}`,
-});
-
 const messageBubble = (role) => ({
   maxWidth: '82%',
   alignSelf: role === 'user' ? 'flex-end' : 'flex-start',
@@ -196,23 +183,7 @@ function AsistenteIA({ onToast }) {
           }}
         >
           <header style={{ padding: '14px 14px 10px', borderBottom: '1px solid rgba(70,165,220,0.16)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
-              <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
-
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <div style={statusBadge(Boolean(health?.available))}>
-                  <span
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '999px',
-                      background: health?.available !== false ? COLORS.success : COLORS.error,
-                    }}
-                  />
-                  {healthLoading ? 'Verificando...' : (!health || health.available) ? 'Conectado' : 'Sin conexión'}
-                </div>
-              </div>
-            </div>
+            <div style={{ fontFamily: FONTS.heading, color: '#0c4f7a', fontSize: '1rem' }}>Asistente IA</div>
 
             <div style={{ color: '#527d99', fontSize: '0.74rem', marginTop: '6px' }}>
               {API_IA_BASE_URL} · {healthLoading ? 'Cargando modelo...' : modelName}
