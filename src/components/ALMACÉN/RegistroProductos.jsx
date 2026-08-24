@@ -707,8 +707,8 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
     setDesc(seleccionado.descripcion || '');
     setGrosor(seleccionado.grosor ?? '');
     setLugar(seleccionado.lugar || '');
-    setFila(seleccionado.fila ?? '');
-    setColumna(seleccionado.columna ?? '');
+    setFila(seleccionado.almacen?.fila ?? seleccionado.fila ?? '');
+    setColumna(seleccionado.almacen?.columna ?? seleccionado.columna ?? '');
     setImgFile(null);
     const img = seleccionado.IMG_P && seleccionado.IMG_P !== '' ? seleccionado.IMG_P : '';
     setPreview(img); setOrigImg(img);

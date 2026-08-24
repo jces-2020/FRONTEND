@@ -313,7 +313,7 @@ const productosData = [
   {
     nombre: 'Accesorios',
     descripcion: 'Herrajes, rieles, manijas y accesorios de instalación de alta durabilidad.',
-    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/JHG_edit_9bc147b2.png',
+    img: 'https://zoafuvjfzawhvdrwnydo.supabase.co/storage/v1/object/public/IMG/PRODUCTOS/accesorios/Bisagra_para_vidrio_1_1024x1024_proc_8fc4c183.png',
     slug: 'accesorios',
     color: '#ad7d00',
   },
