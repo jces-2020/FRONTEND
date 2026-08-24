@@ -826,11 +826,12 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
         setConfirmData(null);
         try {
           const res = await fetch(`/api/productos/${seleccionado.id_producto}`, { method: 'DELETE' });
-          if (!res.ok) throw new Error();
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(payload?.error || 'Error al eliminar producto');
           showToast('Producto eliminado correctamente');
           await cargarProductos();
           limpiar();
-        } catch { showToast('Error al eliminar producto', 'error'); }
+        } catch (err) { showToast(err?.message || 'Error al eliminar producto', 'error'); }
       },
     });
   };
