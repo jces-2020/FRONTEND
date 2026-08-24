@@ -956,7 +956,7 @@ const Obras = () => {
       .then(data => {
         if (cancelled) return;
         const area = (data?.personal?.area || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase().trim();
-        if (!data?.success || (area !== 'OBRAS' && area !== 'TRABAJO')) {
+        if (!data?.success || (area !== 'OBRAS' && area !== 'TRABAJO' && area !== 'OPERACIONES')) {
           localStorage.removeItem('personalToken');
           navigate('/personal', { replace: true });
         }
