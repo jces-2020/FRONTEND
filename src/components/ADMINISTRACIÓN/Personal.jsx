@@ -914,7 +914,7 @@ const Personal = () => {
                   )}
                 </div>
                 <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
-                  <strong>Fecha de nacimiento:</strong> {selectedPersonal.fecha_nacimiento || "-"}
+                  <strong>Inicio de trabajo:</strong> {selectedPersonal.fecha_nacimiento || "-"}
                 </div>
                 <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
                   <strong>Tipo:</strong> {selectedPersonal.tipo_personal?.descripcion || "Sin tipo"}

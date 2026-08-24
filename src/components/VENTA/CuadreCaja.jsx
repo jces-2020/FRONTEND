@@ -251,6 +251,7 @@ const CuadreCaja = () => {
   };
 
   const confirmarRetiro = () => {
+    if (loading) return;
     setLoading(true);
     apiFetch("/api/caja/retiro", {
       method: "POST",
@@ -764,19 +765,27 @@ const CuadreCaja = () => {
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Cantidad a Retirar</label>
               <input
-                type="number"
-                min={1}
-                max={baseCaja}
-                style={{ 
-                  border: `1px solid ${COLORS.border}`, 
-                  borderRadius: '8px', 
-                  padding: '8px 12px', 
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                style={{
+                  border: `1px solid ${COLORS.border}`,
+                  borderRadius: '8px',
+                  padding: '8px 12px',
                   width: '100%',
                   fontFamily: FONTS.body,
                   color: COLORS.text
                 }}
                 value={retiro}
-                onChange={e => setRetiro(e.target.value)}
+                onChange={e => {
+                  let val = e.target.value.replace(/[^0-9.]/g, "");
+                  const partes = val.split(".");
+                  if (partes.length > 2) val = partes[0] + "." + partes.slice(1).join("");
+                  if (partes[1]) val = partes[0] + "." + partes[1].slice(0, 2);
+                  if (val !== "" && Number(val) > baseCaja) val = String(baseCaja);
+                  setRetiro(val);
+                  setError("");
+                }}
               />
             </div>
             <button
@@ -886,33 +895,37 @@ const CuadreCaja = () => {
                   ¿Confirmar retiro de S/ {retiro}?
                 </h4>
                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
-                  <button 
-                    style={{ 
-                      background: COLORS.primary, 
-                      color: COLORS.white, 
-                      padding: '12px 20px', 
-                      borderRadius: '8px', 
-                      fontWeight: 700, 
-                      border: 'none', 
-                      cursor: 'pointer',
+                  <button
+                    style={{
+                      background: COLORS.primary,
+                      color: COLORS.white,
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.7 : 1,
                       fontFamily: FONTS.heading,
                       fontSize: '1rem'
-                    }} 
+                    }}
                     onClick={confirmarRetiro}
-                  >Confirmar</button>
-                  <button 
-                    style={{ 
-                      background: COLORS.border, 
-                      color: COLORS.text, 
-                      padding: '12px 20px', 
-                      borderRadius: '8px', 
-                      fontWeight: 700, 
-                      border: 'none', 
-                      cursor: 'pointer',
+                    disabled={loading}
+                  >{loading ? "Guardando..." : "Confirmar"}</button>
+                  <button
+                    style={{
+                      background: COLORS.border,
+                      color: COLORS.text,
+                      padding: '12px 20px',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.7 : 1,
                       fontFamily: FONTS.heading,
                       fontSize: '1rem'
-                    }} 
+                    }}
                     onClick={() => setModal(false)}
+                    disabled={loading}
                   >Cancelar</button>
                 </div>
               </div>

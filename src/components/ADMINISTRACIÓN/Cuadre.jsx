@@ -48,7 +48,6 @@ const Cuadre = ({ onToast }) => {
     );
   }, [pagos, search]);
 
-  const montoEnCajaCalculado = resumen ? parseFloat(resumen.monto_en_caja || 0) : 0;
 
   const semanaDeFecha = (f) => {
     if (!f) return '-';
@@ -69,7 +68,7 @@ const Cuadre = ({ onToast }) => {
         th { background: #111827; color: #fff; }
         .total { font-weight: bold; text-align: right; margin-top: 20px; }
       </style></head><body>
-      <h1>CUADRE DEL MES</h1>
+      <h1>CUADRE DE LA EMPRESA</h1>
       <p><strong>Mes:</strong> ${mes}</p>
 
       <h2>Pagos</h2>
@@ -141,7 +140,7 @@ const Cuadre = ({ onToast }) => {
             color: COLORS.text,
             margin: 0
           }}>
-            CUADRE DEL MES
+            CUADRE DE LA EMPRESA
           </h2>
           <div
             style={{
@@ -431,24 +430,6 @@ const Cuadre = ({ onToast }) => {
               <div style={{ color: COLORS.text }}>EGRESO</div>
               <div style={{ fontWeight: 700, color: COLORS.text, fontFamily: FONTS.heading }}>
                 S/ {parseFloat(resumen.egreso || 0).toFixed(2)}
-              </div>
-            </div>
-
-            {/* Monto en Caja */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: windowWidth < 640 ? '12px' : '14px',
-              backgroundColor: '#fff',
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: '6px',
-              fontFamily: FONTS.body,
-              fontSize: windowWidth < 640 ? '0.9rem' : '1rem'
-            }}>
-              <div style={{ color: COLORS.text }}>MONTO EN CAJA</div>
-              <div style={{ fontWeight: 700, color: COLORS.text, fontFamily: FONTS.heading }}>
-                S/ {montoEnCajaCalculado.toFixed(2)}
               </div>
             </div>
 

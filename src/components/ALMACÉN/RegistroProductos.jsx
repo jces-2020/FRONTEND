@@ -460,8 +460,13 @@ const CamposTecnicos = ({ esVidrio, esAluminio, det, setDet }) => {
   if (!esVidrio && !esAluminio) return null;
   const upd = (k, v) => setDet(prev => ({ ...prev, [k]: v }));
   const num = (k) => (
-    <input className="reg-input" type="number" step="0.01" min="0"
-      value={det[k] ?? ''} onChange={e => upd(k, e.target.value)} />
+    <input className="reg-input" type="text" inputMode="decimal"
+      value={det[k] ?? ''}
+      onChange={e => {
+        let v = e.target.value.replace(/[^0-9.]/g, '');
+        if ((v.match(/\./g) || []).length > 1) v = v.slice(0, v.lastIndexOf('.'));
+        upd(k, v);
+      }} />
   );
   return (
     <div className="reg-field reg-form-full" style={{ marginTop: 4 }}>
@@ -531,7 +536,7 @@ const CamposFormulario = ({ conGrosor, nombre, setNombre, codigo, setCodigo,
       <div className="reg-field">
         <label>Grosor</label>
         <input className="reg-input" value={grosor}
-          onChange={e => setGrosor(e.target.value.replace(/[^0-9.-]/g, ''))} />
+          onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, ''); if ((v.match(/\./g)||[]).length<=1) setGrosor(v); }} />
       </div>
     )}
     <div className="reg-field reg-form-full"><label>Lugar</label></div>

@@ -245,7 +245,7 @@ const Gastos = ({ onToast }) => {
           color: COLORS.text,
           margin: 0
         }}>
-          MONTO EN DE LA EMPRESA
+          CAJA POR MES
         </h2>
         <input
           type="date"

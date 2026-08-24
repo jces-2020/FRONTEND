@@ -659,11 +659,6 @@ export default function LoginInicioSesion() {
       fontFamily: "'Open Sans',sans-serif",
       background: "rgba(128,194,220,0.08)",
     }}>
-      {/* Fondos decorativos */}
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 80% 70% at 50% 50%, rgba(128,194,220,0.05) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", width: 200, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(128,194,220,0.05) 0%,transparent 70%)", top: "20%", left: "-3%", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", width: 180, height: 350, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(128,194,220,0.05) 0%,transparent 70%)", top: "25%", right: "-2%", pointerEvents: "none" }} />
-
       {/* ── CARD con respiración ── */}
       <div
         className="lb-card-breathe"

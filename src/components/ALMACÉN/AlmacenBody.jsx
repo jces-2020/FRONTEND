@@ -147,10 +147,23 @@ const AlmacenBody = () => {
     }
   }, []);
 
+  // Guard de sesión: token válido y área autorizada para este panel
   useEffect(() => {
-    if (!localStorage.getItem('personalToken')) {
-      navigate('/personal', { replace: true });
-    }
+    let cancelled = false;
+    const token = localStorage.getItem('personalToken');
+    if (!token) { navigate('/personal', { replace: true }); return; }
+    fetch('/api/personal/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return;
+        const area = (data?.personal?.area || '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase().trim();
+        if (!data?.success || area !== 'ALMACEN') {
+          localStorage.removeItem('personalToken');
+          navigate('/personal', { replace: true });
+        }
+      })
+      .catch(() => { if (!cancelled) navigate('/personal', { replace: true }); });
+    return () => { cancelled = true; };
   }, [navigate]);
 
   const showToast = useCallback((mensaje, tipo = 'success') => {

@@ -4,7 +4,7 @@ import {
   IconArrowLeft, IconBell, IconLogout,
   IconLayoutDashboard, IconScissors, IconBox, IconSettings,
   IconPower, IconPlayerPause, IconPlayerStop, IconRefresh, IconRuler,
-  IconAlertTriangle, IconPlus, IconUpload, IconActivity, IconCpu, IconVideo,
+  IconAlertTriangle, IconActivity, IconCpu, IconVideo,
   IconLock, IconCheck, IconLoader,
 } from '@tabler/icons-react';
 import { FONTS } from '../../colors';
@@ -527,10 +527,6 @@ const EntregaPedido = ({ notificacion, onBack }) => {
                           })}
                         </tbody>
                       </table>
-                      <div className="mes-table-actions">
-                        <button className="mes-tbl-btn primary"><IconPlus size={12}/> Añadir Pieza Manualmente</button>
-                        <button className="mes-tbl-btn secondary"><IconUpload size={12}/> Importar CSV</button>
-                      </div>
                       <div className="mes-table-actions">
                         <button className="mes-tbl-btn primary" onClick={handleFinalizarEntrega} disabled={finalizandoEntrega}
                           style={{ flex:'unset', width:'100%', background:'rgba(13,148,136,.14)' }}>
