@@ -8,7 +8,7 @@ import LoginInicioSesion from './components/LOGIN/LoginInicioSesion';
 import LoginResetPassword from './components/LOGIN/LoginResetPassword';
 import ComprobantePagoExito from './components/ADMINISTRACIÓN/ComprobantePagoExito';
 import LoginPersonal from './components/LoginPersonal';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import Carrito from './components/Carrito';
 import Almacen from './components/ALMACÉN/AlmacenBody';
@@ -120,6 +120,7 @@ function AppLayout() {
           <Route path="/dev/comprobante" element={<PreviewComprobante />} />
           <Route path="/dev/cad" element={<Workspace2D />} />
           <Route path="/acceso" element={<AccesoQR />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       {location.pathname !== "/login" && <Footer />}
