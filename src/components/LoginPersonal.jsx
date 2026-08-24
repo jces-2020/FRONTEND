@@ -333,7 +333,7 @@ const LoginPersonal = () => {
 
         {/* Footer */}
         <p className="nm-footer">
-          Acceso restringido · <span style={{ color:C, cursor:'pointer' }}>Vidriobras</span>
+          Solo puede ingresar personal autorizado con sus credenciales
         </p>
       </div>
     </div>
