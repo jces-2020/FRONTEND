@@ -737,7 +737,9 @@ const DetallePanel = ({ p, onClose, onAdd, blocked }) => {
 const Productos = () => {
   const [searchParams] = useSearchParams();
   const catFromUrl = searchParams.get('cat');
+  const buscarFromUrl = searchParams.get('buscar');
   const [catPreselected, setCatPreselected] = useState(false);
+  const [buscarAplicado, setBuscarAplicado] = useState(false);
   const [productos, setProductos] = useState([]);
   const [cats, setCats] = useState([]);
   const [search, setSearch] = useState('');
@@ -782,6 +784,18 @@ const Productos = () => {
       }, 250);
     }
   }, [catFromUrl, cats, catPreselected]);
+
+  // Si venimos desde la búsqueda del navbar (?buscar=termino), aplicamos el
+  // termino al filtro de texto y saltamos directo al catálogo con resultados.
+  useEffect(() => {
+    if (!buscarFromUrl || buscarAplicado) return;
+    setSearch(buscarFromUrl);
+    setCatSel(null);
+    setBuscarAplicado(true);
+    setTimeout(() => {
+      document.getElementById('productos-catalogo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+  }, [buscarFromUrl, buscarAplicado]);
 
   const fetchProductos = useCallback(async () => {
     setLoading(true);
@@ -1487,7 +1501,7 @@ const Productos = () => {
 
         {blocked && avisoEstado && <div className="wbanner" style={{ marginBottom: 28 }}>⚠️ Tienes un pedido pendiente. Termínalo antes de agregar más productos.</div>}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, paddingBottom: 28 }}>
+        <div id="productos-catalogo" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, paddingBottom: 28 }}>
           <div>
             <div className="slbl">Catálogo</div>
             <h2 className="sttl">{catSel || 'Todos los Productos'}</h2>
