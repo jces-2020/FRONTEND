@@ -436,7 +436,7 @@ const loadJsPDF = () => new Promise((resolve, reject) => {
 });
 
 /* ─── Modal de confirmación ─────────────────────────────── */
-const ConfirmModal = ({ nombreProducto, onAceptar, onCancelar }) => (
+const ConfirmModal = ({ nombreProducto, mensaje, onAceptar, onCancelar }) => (
   <div className="reg-confirm-backdrop" onClick={onCancelar}>
     <div className="reg-confirm-box" onClick={e => e.stopPropagation()}>
       <div className="reg-confirm-icon-wrap">
@@ -444,8 +444,10 @@ const ConfirmModal = ({ nombreProducto, onAceptar, onCancelar }) => (
       </div>
       <p className="reg-confirm-title">¿Eliminar producto?</p>
       <p className="reg-confirm-msg">
-        Esta acción no se puede deshacer. Se eliminará permanentemente{' '}
-        <strong>"{nombreProducto}"</strong> del inventario.
+        {mensaje || (
+          <>Esta acción no se puede deshacer. Se eliminará permanentemente{' '}
+          <strong>"{nombreProducto}"</strong> del inventario.</>
+        )}
       </p>
       <div className="reg-confirm-actions">
         <button className="reg-confirm-cancel" onClick={onCancelar}>Cancelar</button>
@@ -820,19 +822,36 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
 
   const handleEliminar = () => {
     if (!seleccionado) return showToast('Selecciona un producto para eliminar.', 'error');
-    setConfirmData({
-      nombre: seleccionado.nombre,
-      onAceptar: async () => {
-        setConfirmData(null);
-        try {
-          const res = await fetch(`/api/productos/${seleccionado.id_producto}`, { method: 'DELETE' });
-          const payload = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(payload?.error || 'Error al eliminar producto');
+
+    const ejecutarDelete = async (forzar) => {
+      try {
+        const url = `/api/productos/${seleccionado.id_producto}${forzar ? '?forzar=1' : ''}`;
+        const res = await fetch(url, { method: 'DELETE' });
+        const payload = await res.json().catch(() => ({}));
+
+        if (res.ok) {
           showToast('Producto eliminado correctamente');
           await cargarProductos();
           limpiar();
-        } catch (err) { showToast(err?.message || 'Error al eliminar producto', 'error'); }
-      },
+          return;
+        }
+
+        if (payload?.requiere_confirmacion && !forzar) {
+          setConfirmData({
+            nombre: seleccionado.nombre,
+            mensaje: payload.error,
+            onAceptar: () => { setConfirmData(null); ejecutarDelete(true); },
+          });
+          return;
+        }
+
+        showToast(payload?.error || 'Error al eliminar producto', 'error');
+      } catch (err) { showToast(err?.message || 'Error al eliminar producto', 'error'); }
+    };
+
+    setConfirmData({
+      nombre: seleccionado.nombre,
+      onAceptar: () => { setConfirmData(null); ejecutarDelete(false); },
     });
   };
 
@@ -992,6 +1011,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
       {confirmData && (
         <ConfirmModal
           nombreProducto={confirmData.nombre}
+          mensaje={confirmData.mensaje}
           onAceptar={confirmData.onAceptar}
           onCancelar={() => setConfirmData(null)}
         />
