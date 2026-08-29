@@ -511,7 +511,7 @@ const CamposTecnicos = ({ esVidrio, esAluminio, det, setDet }) => {
 
 /* ─── Campos reutilizables ──────────────────────────────── */
 const CamposFormulario = ({ conGrosor, nombre, setNombre, codigo, setCodigo,
-  cantidad, setCantidad, precio, setPrecio, grosor, setGrosor,
+  cantidad, setCantidad, precio, setPrecio, precioTienda, setPrecioTienda, grosor, setGrosor,
   fila, setFila, columna, setColumna, descripcion, setDesc }) => (
   <>
     <div className="reg-field">
@@ -530,9 +530,24 @@ const CamposFormulario = ({ conGrosor, nombre, setNombre, codigo, setCodigo,
         onChange={e => setCantidad(e.target.value.replace(/[^0-9]/g, ''))} />
     </div>
     <div className="reg-field">
-      <label>Precio Unitario</label>
+      <label>Precio del sistema</label>
       <input className="reg-input" value={precio}
         onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, ''); if((v.match(/\./g)||[]).length<=1) setPrecio(v); }} />
+    </div>
+    <div className="reg-field">
+      <label>Precio en tienda</label>
+      <input className="reg-input" value={precioTienda}
+        placeholder="Opcional"
+        onChange={e => {
+          const v = e.target.value.replace(/[^0-9.]/g, '');
+          if ((v.match(/\./g)||[]).length > 1) return;
+          setPrecioTienda(v);
+          // El precio del sistema se recalcula solo a partir del precio de
+          // tienda + la comisión de Mercado Pago (3.49% + S/ 1.00), para que
+          // la empresa reciba el precio de tienda íntegro tras la comisión.
+          const n = parseFloat(v);
+          if (!isNaN(n) && n > 0) setPrecio((n * 1.0349 + 1).toFixed(2));
+        }} />
     </div>
     {conGrosor && (
       <div className="reg-field">
@@ -571,6 +586,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
   const [categoriaId, setCatId] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [precio, setPrecio]     = useState('');
+  const [precioTienda, setPrecioTienda] = useState('');
   const [descripcion, setDesc]  = useState('');
   const [grosor, setGrosor]     = useState('');
   const [lugar, setLugar]       = useState('');
@@ -693,7 +709,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
 
   const limpiar = useCallback(() => {
     setNombre(''); setCodigo(''); setCatId(''); setCantidad('');
-    setPrecio(''); setDesc(''); setGrosor(''); setLugar(''); setFila(''); setColumna('');
+    setPrecio(''); setPrecioTienda(''); setDesc(''); setGrosor(''); setLugar(''); setFila(''); setColumna('');
     setImgFile(null); setPreview(''); setOrigImg(''); setSeleccionado(null);
     setProductoDetalle({});
     setFileKey(k => k + 1);
@@ -706,6 +722,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
     setCatId(String(seleccionado.categoria_id || seleccionado.id_categoria || ''));
     setCantidad(String(seleccionado.cantidad ?? ''));
     setPrecio(String((seleccionado.precio ?? seleccionado.precio_unitario) ?? ''));
+    setPrecioTienda(seleccionado.precio_tienda != null ? String(seleccionado.precio_tienda) : '');
     setDesc(seleccionado.descripcion || '');
     setGrosor(seleccionado.grosor ?? '');
     setLugar(seleccionado.lugar || '');
@@ -737,6 +754,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
 
     const existe = productosCache.find(p => p.codigo === codigo);
     const datos  = { nombre, codigo, categoria_id: categoriaId, cantidad, precio_unitario: precio,
+                     precio_tienda: precioTienda || null,
                      descripcion, grosor: esVidrio ? grosor : '', fila, columna };
 
     const specFields = ['plancha_ancho_cm','plancha_alto_cm','espesor_mm','rebaje_mm',
@@ -1003,7 +1021,7 @@ const RegistroProductos = ({ categoriasCache, productosCache, cargarProductos, s
   });
 
   const camposProps = { nombre, setNombre, codigo, setCodigo, cantidad, setCantidad,
-    precio, setPrecio, grosor, setGrosor, fila, setFila, columna, setColumna,
+    precio, setPrecio, precioTienda, setPrecioTienda, grosor, setGrosor, fila, setFila, columna, setColumna,
     descripcion, setDesc };
 
   return (

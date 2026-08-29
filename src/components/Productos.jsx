@@ -246,12 +246,13 @@ const QtyPop = ({ onConfirm, onClose, above = true, maxStock = Infinity }) => {
 /* ══════════════════════════════════════════════════════════════════
    STANDARD CARD
 ══════════════════════════════════════════════════════════════════ */
-const Card = ({ p, delay = 0, onAdd, onCorte, esCorte, blocked }) => {
+const Card = ({ p, delay = 0, onAdd, onCorte, esCorte, blocked, onDetalle }) => {
   const [hov, setHov] = useState(false);
   const [open, setOpen] = useState(false);
   const stock = Number(p.cantidad ?? 0);
   return (
-    <div className="pc" data-product-id={p.id_producto || p.id} style={{ position: 'relative', zIndex: open ? 100 : 1 }}
+    <div className="pc" data-product-id={p.id_producto || p.id} style={{ position: 'relative', zIndex: open ? 100 : 1, cursor: onDetalle ? 'pointer' : 'default' }}
+      onClick={() => onDetalle?.(p)}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
       <div className="pc-img-wrap">
         <span className="pc-chip">{p.categoria || 'General'}</span>
@@ -278,9 +279,11 @@ const Card = ({ p, delay = 0, onAdd, onCorte, esCorte, blocked }) => {
         <div className="pc-name">{p.nombre}</div>
         {p.descripcion && <div className="pc-desc">{p.descripcion}</div>}
         <div className="pc-foot">
-          {p.precio_unitario
-            ? <span className="pc-price"><span className="pc-curr">S/</span>{p.precio_unitario}</span>
-            : <span className="pc-consult">Consultar precio</span>}
+          {p.precio_tienda
+            ? <span className="pc-price"><span className="pc-curr">S/</span>{p.precio_tienda}</span>
+            : p.precio_unitario
+              ? <span className="pc-price"><span className="pc-curr">S/</span>{p.precio_unitario}</span>
+              : <span className="pc-consult">Consultar precio</span>}
           {stock > 0
             ? <span className="badge-stk">{stock <= 10 ? `Stock: ${stock}` : 'Stock'}</span>
             : <span className="badge-stk badge-stk-red">Agotado</span>}
@@ -557,7 +560,7 @@ const AnimatedGrid = ({ items, className = 'pgrid', style = {}, renderItem, anim
 /* ══════════════════════════════════════════════════════════════════
    DETALLE PANEL — desliza desde la izquierda, debajo del navbar
 ══════════════════════════════════════════════════════════════════ */
-const DetallePanel = ({ p, onClose, onAdd, blocked }) => {
+const DetallePanel = ({ p, onClose, onAdd, blocked, productos = [], onSelect }) => {
   const panelRef = useRef(null);
   const overlayRef = useRef(null);
   const stock = Number(p.cantidad ?? 0);
@@ -662,11 +665,11 @@ const DetallePanel = ({ p, onClose, onAdd, blocked }) => {
         <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
 
           {/* Precio */}
-          {p.precio_unitario && (
+          {(p.precio_tienda || p.precio_unitario) && (
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', fontFamily: "'DM Sans',sans-serif" }}>S/</span>
               <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 40, fontWeight: 800, color: '#941918', letterSpacing: '-.03em', lineHeight: 1 }}>
-                {p.precio_unitario}
+                {p.precio_tienda || p.precio_unitario}
               </span>
               <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: "'DM Sans',sans-serif" }}>/ unidad</span>
             </div>
@@ -703,6 +706,37 @@ const DetallePanel = ({ p, onClose, onAdd, blocked }) => {
               </div>
             </div>
           </div>
+
+          {/* Productos similares (misma categoría) */}
+          {(() => {
+            const similares = (productos || [])
+              .filter(x => x.categoria && x.categoria === p.categoria && (x.id_producto || x.id) !== (p.id_producto || p.id))
+              .slice(0, 6);
+            if (!similares.length) return null;
+            return (
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#94a3b8', marginBottom: 10, fontFamily: "'DM Sans',sans-serif" }}>
+                  Productos similares
+                </div>
+                <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+                  {similares.map(s => (
+                    <button key={s.id_producto || s.id} onClick={() => onSelect?.(s)}
+                      style={{ flex: '0 0 auto', width: 92, textAlign: 'left', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', padding: 0, fontFamily: "'DM Sans',sans-serif" }}>
+                      <img src={s.IMG_P?.startsWith('http') ? s.IMG_P : DEFAULT_IMG} alt={s.nombre}
+                        style={{ width: '100%', height: 70, objectFit: 'cover', display: 'block' }}
+                        onError={e => { e.target.onerror = null; e.target.src = DEFAULT_IMG; }} />
+                      <div style={{ padding: '6px 8px' }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.nombre}</div>
+                        {(s.precio_tienda || s.precio_unitario) && (
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#941918' }}>S/ {s.precio_tienda || s.precio_unitario}</div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* CTA */}
           {stock > 0 && !blocked && (
@@ -1095,7 +1129,7 @@ const Productos = () => {
   const g3    = vf.slice(29, 35);
   const rest  = vf.slice(35);
 
-  const cp = { onAdd: addPlancha, onCorte: openCorte, blocked: blocked && avisoEstado };
+  const cp = { onAdd: addPlancha, onCorte: openCorte, blocked: blocked && avisoEstado, onDetalle: setProductoDetalle };
 
   return (
     <div style={{ fontFamily: "'DM Sans',sans-serif", background: '#f9fafb', minHeight: '100vh', overflowX: 'hidden', width: '100%', boxSizing: 'border-box' }}>
@@ -1617,6 +1651,8 @@ const Productos = () => {
           onClose={() => setProductoDetalle(null)}
           onAdd={(p) => { if (isCorte(p)) { setProductoDetalle(null); openCorte(p); } else { addPlancha(p, 1); setProductoDetalle(null); } }}
           blocked={blocked && avisoEstado}
+          productos={productos}
+          onSelect={(s) => setProductoDetalle(s)}
         />
       )}
 
