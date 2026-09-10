@@ -664,6 +664,7 @@ const Proyectos = () => {
   const [loading, setLoading] = useState(true);
   const [realtimeNuevoServicio, setRealtimeNuevoServicio] = useState(null);
   const [servicioResaltadoId, setServicioResaltadoId] = useState(null);
+  const [categoriaActiva, setCategoriaActiva] = useState('TODAS');
 
   const cargarServicios = useCallback(async ({ silent = false } = {}) => {
     try {
@@ -779,7 +780,15 @@ const Proyectos = () => {
 
   const handleClose = () => { setSelectedServicio(null); setPresupuestoOpen(false); setDetalleOpen(false); };
 
-  const filtrados = servicios;
+  const categorias = useMemo(() => {
+    const set = new Set();
+    servicios.forEach((s) => { if (s.categoria) set.add(s.categoria); });
+    return Array.from(set);
+  }, [servicios]);
+
+  const filtrados = categoriaActiva === 'TODAS'
+    ? servicios
+    : servicios.filter((s) => s.categoria === categoriaActiva);
   const carousel = useWideOnly(filtrados, 8);
   const mosaic   = filtrados.slice(0, 5);
   const dark     = filtrados.slice(5, 8);
@@ -1087,6 +1096,36 @@ const Proyectos = () => {
           animation: 'srvRtIn .32s ease, srvGlow 1.7s ease-out 1'
         }}>
           Nuevo servicio en tiempo real: {realtimeNuevoServicio}
+        </div>
+      )}
+
+      {!loading && categorias.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '18px clamp(20px,5vw,60px) 0' }}>
+          {['TODAS', ...categorias].map((cat) => {
+            const active = categoriaActiva === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategoriaActiva(cat)}
+                style={{
+                  border: `1.5px solid ${active ? COLORS.primary : COLORS.border}`,
+                  background: active ? COLORS.primary : 'transparent',
+                  color: active ? '#fff' : COLORS.text,
+                  padding: '7px 16px',
+                  borderRadius: 999,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '.06em',
+                  textTransform: 'uppercase',
+                  fontFamily: FONTS.body,
+                  cursor: 'pointer',
+                  transition: 'background .2s,border-color .2s,color .2s',
+                }}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
       )}
 

@@ -244,8 +244,11 @@ const PresupuestoServicio = ({ selectedServicio, handleCloseSelected, initialPre
         cliente_documento: initialPresupuesto.cliente_documento || '',
         cliente_razon_social: ''
       });
+    } else if (selectedServicio?.precio_estimado) {
+      setPresupuesto((prev) => ({ ...prev, materiales: String(selectedServicio.precio_estimado) }));
     }
-  }, [initialPresupuesto]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPresupuesto, selectedServicio]);
 
   useEffect(() => {
     const updateInsets = () => {
