@@ -374,271 +374,28 @@ const ImmersiveCarousel = ({ servicios, onClick }) => {
   );
 };
 
-/* ══ MOSAIC ═══════════════════════════════════════════════════════ */
-const MosaicWall = ({ items, onClick }) => {
-  if (!items?.length) return null;
-  const [big, ...rest] = items;
-  return (
-    <div className="mw-root">
-      <MosCard p={big} big onClick={onClick} />
-      <div className="mw-right">{rest.slice(0, 4).map(s => <MosCard key={s.id_servicio} p={s} onClick={onClick} />)}</div>
-    </div>
-  );
-};
-const MosCard = ({ p, big = false, onClick }) => {
+/* ══════════════════════════════════════════════════════════════════
+   PROJECT CARD — la única tarjeta usada para todo el catálogo.
+   Prioridad a la imagen (sin oscurecerla), sombra en la tarjeta (no en
+   la foto), texto en su propia zona sólida debajo.
+══════════════════════════════════════════════════════════════════ */
+const ProjectCard = ({ s, onClick }) => {
   const [hov, setHov] = useState(false);
   return (
-    <div className={`mc-card ${big ? 'mc-big' : ''}`}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(p)}>
-      <img src={imgSrc(p)} alt={p.nombre} className="mc-img"
-        style={{ transform: hov ? 'scale(1.08)' : 'scale(1)', filter: hov ? 'brightness(.9)' : 'brightness(.68) grayscale(18%)' }} />
-      <div className="mc-ov" />
-      <div className="mc-accent" style={{ opacity: hov ? 1 : 0 }} />
-      <div className="mc-info" style={{ transform: hov ? 'translateY(0)' : 'translateY(8px)' }}>
-        <div className="mc-name">{p.nombre}</div>
-        <div className="mc-cta" style={{ opacity: hov ? 1 : 0 }}>Ver más ↗</div>
-      </div>
-    </div>
-  );
-};
-
-/* ══ DARK BAND ════════════════════════════════════════════════════ */
-const DarkBand = ({ items, startIdx, onClick }) => {
-  if (!items?.length) return null;
-  const accents = [COLORS.primary, COLORS.secondary, COLORS.accent];
-  return (
-    <div className="db-root">
-      <div style={{ height: 4, background: `linear-gradient(90deg,${COLORS.primary},${COLORS.secondary},${COLORS.accent})` }} />
-      <div className="db-inner">
-        <div className="db-header">
-          <div className="db-eyebrow">Especialidades</div>
-          <h2 className="db-title">EXPERTOS EN CADA DETALLE</h2>
-          <div className="db-line" />
-        </div>
-        <div className="db-grid">
-          {items.slice(0, 3).map((s, i) => (
-            <DarkBandCard key={servicioId(s) || i} s={s} i={i} startIdx={startIdx} onClick={onClick} accents={accents} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const DarkBandCard = ({ s, i, startIdx, onClick, accents }) => {
-  const [hov, setHov] = useState(false);
-  const ac = accents[i % 3];
-  return (
-    <div className="db-card"
+    <div className="pc-card"
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      onClick={() => onClick(s)}
-      style={{ borderBottom: `3px solid ${hov ? ac : 'transparent'}` }}>
-      <div className="db-img-wrap">
-        <img src={imgSrc(s)} alt={servicioNombre(s)} className="db-img"
-          style={{ transform: hov ? 'scale(1.07)' : 'scale(1)', filter: hov ? 'brightness(1.05)' : 'brightness(.62) grayscale(28%)' }} />
-        <div className="db-ov" />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: ac, opacity: hov ? 1 : 0, transition: 'opacity .3s', zIndex: 3 }} />
-      </div>
-      <div className="db-body">
-        <div className="db-num" style={{ color: ac }}>0{startIdx + i + 1}</div>
-        <div className="db-name">{servicioNombre(s)}</div>
-        {s.descripcion && <p className="db-desc">{s.descripcion.substring(0, 80)}…</p>}
-        <div className="db-bar" style={{ background: ac, width: hov ? '50%' : '20%' }} />
-      </div>
-    </div>
-  );
-};
-
-/* ══ CINEMATIC PAIR ═══════════════════════════════════════════════ */
-const CinematicPair = ({ servicio, idx, reverse, accentColor = COLORS.primary, onClick }) => {
-  const [hov, setHov] = useState(false);
-  if (!servicio) return null;
-  return (
-    <div className="cp-root" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(servicio)}>
-      <img src={imgSrc(servicio)} alt={servicio.nombre} className="cp-img" style={{ transform: hov ? 'scale(1.04)' : 'scale(1)' }} onError={e => { e.target.onerror = null; e.target.src = PH; }} />
-      <div className="cp-grad" style={{ background: reverse ? 'linear-gradient(to left,rgba(0,0,0,.88) 0%,rgba(0,0,0,.55) 40%,rgba(0,0,0,.08) 100%)' : 'linear-gradient(to right,rgba(0,0,0,.88) 0%,rgba(0,0,0,.55) 40%,rgba(0,0,0,.08) 100%)' }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: accentColor, zIndex: 4 }} />
-      <div className="cp-text" style={{ [reverse ? 'right' : 'left']: 'clamp(32px,7vw,100px)', textAlign: reverse ? 'right' : 'left' }}>
-        <div className="cp-eyebrow" style={{ color: accentColor, justifyContent: reverse ? 'flex-end' : 'flex-start' }}>
-          {!reverse && <div className="cp-ey-line" style={{ background: accentColor }} />}
-          <span>SERVICIO {String(idx + 1).padStart(2, '0')}</span>
-          {reverse && <div className="cp-ey-line" style={{ background: accentColor }} />}
-        </div>
-        <h2 className="cp-title">{servicio.nombre.toUpperCase()}</h2>
-        {servicio.descripcion && <p className="cp-desc">{servicio.descripcion.substring(0, 140)}{servicio.descripcion.length > 140 ? '…' : ''}</p>}
-      </div>
-      <div className="cp-num-bg" style={{ [reverse ? 'left' : 'right']: '-20px' }}>{String(idx + 1).padStart(2, '0')}</div>
-    </div>
-  );
-};
-
-/* ══ TRIO CARDS ═══════════════════════════════════════════════════ */
-const TrioCards = ({ items, onClick }) => {
-  if (!items?.length) return null;
-  const layouts = [
-    { textPos: 'bottom-left', bg: `rgba(148,25,24,0.92)` },          // rojo corporativo
-    { textPos: 'mid-dark', bg: null },
-    { textPos: 'bottom-light', bg: `rgba(128,194,220,0.92)` },       // celeste corporativo
-  ];
-  return (
-    <div className="trio-root">
-      {items.slice(0, 3).map((s, i) => (
-        <TrioCardItem key={servicioId(s) || i} s={s} i={i} onClick={onClick} layouts={layouts} />
-      ))}
-    </div>
-  );
-};
-
-const TrioCardItem = ({ s, i, onClick, layouts }) => {
-  const [hov, setHov] = useState(false);
-  const lo = layouts[i % 3];
-  const ac = [COLORS.primary, COLORS.secondary, COLORS.accent][i];
-  return (
-    <div className="trio-card"
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(s)}>
-      <img src={imgSrc(s)} alt={servicioNombre(s)} className="trio-img"
-        style={{ transform: hov ? 'scale(1.07)' : 'scale(1)', filter: lo.textPos === 'mid-dark' ? (hov ? 'brightness(.75)' : 'brightness(.6)') : (hov ? 'brightness(.88)' : 'brightness(.78)') }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: ac, zIndex: 4 }} />
-      {lo.textPos === 'bottom-left' && (
-        <div className="trio-box-white" style={{ background: lo.bg }}>
-          <div className="trio-box-tag" style={{ color: COLORS.accent }}>ESPECIAL</div>
-          <div className="trio-box-name">{servicioNombre(s)}</div>
-          <button className="trio-box-btn" style={{ background: '#fff', color: COLORS.primaryDark }}>Ver servicio</button>
-        </div>
-      )}
-      {lo.textPos === 'mid-dark' && (
-        <div className="trio-overlay-text">
-          <div className="trio-ov-tag">{s.categoria || 'Servicio'}</div>
-          <div className="trio-ov-name">{servicioNombre(s).toUpperCase()}</div>
-          {s.descripcion && <p className="trio-ov-desc">{s.descripcion.substring(0, 70)}…</p>}
-        </div>
-      )}
-      {lo.textPos === 'bottom-light' && (
-        <div className="trio-box-light" style={{ background: lo.bg }}>
-          <div className="trio-light-tag" style={{ color: COLORS.accent }}>DESTACADO</div>
-          <div className="trio-light-name">{servicioNombre(s)}</div>
-          <button className="trio-light-btn" style={{ background: '#fff', color: COLORS.primaryDark }}>Ver servicio</button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-/* ══ 3D CARDS ════════════════════════════════════════════════════ */
-const Card3D = ({ s, idx, onClick }) => {
-  const [rot, setRot] = useState({ x: 0, y: 0 });
-  const [hov, setHov] = useState(false);
-  const ref = useRef(null);
-  const bc = [COLORS.primary, COLORS.secondary, COLORS.accent][idx % 3];
-  const onMove = e => { const r = ref.current.getBoundingClientRect(); setRot({ x: ((e.clientY - r.top) / r.height - .5) * 16, y: -((e.clientX - r.left) / r.width - .5) * 16 }); };
-  return (
-    <div ref={ref} className="c3d-outer"
-      style={{ transform: hov ? `perspective(700px) rotateX(${rot.x}deg) rotateY(${rot.y}deg) scale(1.04)` : 'perspective(700px) scale(1)' }}
-      onMouseMove={onMove} onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => { setHov(false); setRot({ x: 0, y: 0 }); }}
       onClick={() => onClick(s)}>
-      <img src={imgSrc(s)} alt={s.nombre} className="c3d-img" style={{ filter: hov ? 'brightness(1.05) saturate(1.1)' : 'brightness(.75) grayscale(14%)' }} />
-      <div className="c3d-border" style={{ borderColor: bc, opacity: hov ? 1 : 0 }} />
-      <div className="c3d-gloss" style={{ opacity: hov ? .15 : 0 }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: bc, opacity: hov ? 1 : .4, transition: 'opacity .3s', zIndex: 4 }} />
-      <div className="c3d-num" style={{ color: bc }}>{String(idx + 1).padStart(2, '0')}</div>
-      <div className="c3d-info">
-        <div className="c3d-name">{s.nombre}</div>
-        <div className="c3d-arrow" style={{ color: bc, opacity: hov ? 1 : 0 }}>→</div>
+      <div className="pc-img-wrap">
+        <img src={imgSrc(s)} alt={servicioNombre(s)} className="pc-img"
+          style={{ transform: hov ? 'scale(1.045)' : 'scale(1)' }}
+          onError={e => { e.target.onerror = null; e.target.src = PH; }} />
       </div>
-    </div>
-  );
-};
-const Row3D = ({ items, startIdx, onClick }) => {
-  if (!items?.length) return null;
-  return (
-    <div className="r3d-root">
-      <div className="r3d-header">
-        <span className="r3d-tag">CATÁLOGO</span>
-        <h2 className="r3d-title">SOLUCIONES QUE TRANSFORMAN ESPACIOS</h2>
-        <div className="r3d-accent" />
+      <div className="pc-body">
+        {s.categoria && <div className="pc-cat">{s.categoria}</div>}
+        <div className="pc-name">{servicioNombre(s)}</div>
+        {s.descripcion && <p className="pc-desc">{s.descripcion.substring(0, 90)}{s.descripcion.length > 90 ? '…' : ''}</p>}
       </div>
-      <div className="r3d-grid">
-        {items.slice(0, 3).map((s, i) => <Card3D key={s.id_servicio} s={s} idx={startIdx + i} onClick={onClick} />)}
-      </div>
-    </div>
-  );
-};
-
-/* ══ SCATTERED ═══════════════════════════════════════════════════ */
-const ScatteredStrip = ({ items, startIdx, onClick }) => {
-  if (!items?.length) return null;
-  const heights = ['270px', '350px', '230px', '310px', '255px'];
-  const mts = ['0', '-55px', '25px', '-38px', '15px'];
-  return (
-    <div className="ss-root">
-      {items.slice(0, 5).map((s, i) => (
-        <ScatteredCard key={servicioId(s) || i} s={s} i={i} startIdx={startIdx} onClick={onClick} heights={heights} mts={mts} />
-      ))}
-    </div>
-  );
-};
-
-const ScatteredCard = ({ s, i, startIdx, onClick, heights, mts }) => {
-  const [hov, setHov] = useState(false);
-  return (
-    <div className="ss-card"
-      style={{ height: heights[i], marginTop: mts[i], zIndex: hov ? 10 : 1 }}
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(s)}>
-      <img src={imgSrc(s)} alt={servicioNombre(s)} className="ss-img"
-        style={{ transform: hov ? 'scale(1.12)' : 'scale(1)', filter: hov ? 'brightness(1) grayscale(0%)' : 'brightness(.72) grayscale(18%)' }} />
-      <div className="ss-ov" style={{ opacity: hov ? .88 : .55 }} />
-      <div className="ss-tag" style={{ opacity: hov ? 1 : 0, background: COLORS.accent, color: COLORS.primaryDark }}>
-        S-{String(startIdx + i + 1).padStart(2, '0')}
-      </div>
-      <div className="ss-info"><div className="ss-name">{servicioNombre(s)}</div></div>
-    </div>
-  );
-};
-
-/* ══ FULL BANNER ══════════════════════════════════════════════════ */
-const FullBanner = ({ servicio, idx, onClick }) => {
-  if (!servicio) return null;
-  return (
-    <div className="fb-root" onClick={() => onClick(servicio)}>
-      <img src={imgSrc(servicio)} alt={servicio.nombre} className="fb-img" onError={e => { e.target.onerror = null; e.target.src = PH; }} />
-      <div className="fb-ov" />
-      <div className="fb-content">
-        <div className="fb-num">{String(idx + 1).padStart(2, '0')}</div>
-        <h2 className="fb-title">{servicio.nombre.toUpperCase()}</h2>
-        {servicio.descripcion && <p className="fb-desc">{servicio.descripcion.substring(0, 100)}…</p>}
-      </div>
-      <div className="fb-deco" />
-    </div>
-  );
-};
-
-/* ══ REST GRID ════════════════════════════════════════════════════ */
-const RestGrid = ({ items, startIdx, onClick }) => {
-  if (!items?.length) return null;
-  return (
-    <div className="rg-root">
-      {items.map((s, i) => (
-        <RestGridCard key={servicioId(s) || i} s={s} i={i} startIdx={startIdx} onClick={onClick} />
-      ))}
-    </div>
-  );
-};
-
-const RestGridCard = ({ s, i, startIdx, onClick }) => {
-  const [hov, setHov] = useState(false);
-  const ac = [COLORS.primary, COLORS.secondary, COLORS.accent][i % 3];
-  return (
-    <div className="rg-card"
-      onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={() => onClick(s)}>
-      <img src={imgSrc(s)} alt={servicioNombre(s)} className="rg-img"
-        style={{ transform: hov ? 'scale(1.09)' : 'scale(1)', filter: hov ? 'brightness(.88)' : 'brightness(.62) grayscale(14%)' }} />
-      <div className="rg-ov" style={{ opacity: hov ? 1 : .65 }} />
-      <div className="rg-bar" style={{ background: ac, width: hov ? '100%' : '0%' }} />
-      <div className="rg-info">
-        <span className="rg-num" style={{ color: ac }}>{String(startIdx + i + 1).padStart(2, '0')}</span>
-        <span className="rg-name">{servicioNombre(s)}</span>
-      </div>
+      <div className="pc-bar" style={{ transform: hov ? 'scaleX(1)' : 'scaleX(0)' }} />
     </div>
   );
 };
@@ -790,14 +547,6 @@ const Proyectos = () => {
     ? servicios
     : servicios.filter((s) => s.categoria === categoriaActiva);
   const carousel = useWideOnly(filtrados, 8);
-  const mosaic   = filtrados.slice(0, 5);
-  const dark     = filtrados.slice(5, 8);
-  const fp1      = filtrados[8] || null;
-  const row3d    = filtrados.slice(9, 12);
-  const scat     = filtrados.slice(12, 17);
-  const fb1      = filtrados[17] || null;
-  const fp2      = filtrados[18] || null;
-  const rest     = filtrados.slice(19);
 
   return (
     <div style={{ fontFamily: FONTS.body, background: COLORS.backgroundLight, minHeight: '100vh', overflowX: 'hidden' }}>
@@ -854,125 +603,17 @@ const Proyectos = () => {
         .ic-arrow:hover{background:var(--r);border-color:var(--r);color:#fff}
         @media(max-width:640px){.ic-panel{left:10px;right:10px;bottom:10px;max-width:none}.ic-thumbs-row{flex-wrap:wrap}.ic-counter{order:2}.ic-arrows{order:3}.ic-thumbs-outer{order:1;flex-basis:100%}}
 
-        /* ══ MOSAIC ════ */
-        .mw-root{display:grid;grid-template-columns:1.1fr 1fr;grid-template-rows:clamp(360px,46vw,540px);gap:3px}
-        .mw-right{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px}
-        .mc-card{position:relative;overflow:hidden;cursor:pointer;background:#ddd}
-        .mc-big{grid-row:1}
-        .mc-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .52s,filter .4s}
-        .mc-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,10,10,.82) 0%,rgba(10,10,10,.06) 55%,transparent 100%)}
-        .mc-accent{position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--r),var(--c),var(--y));transition:opacity .3s}
-        .mc-info{position:absolute;bottom:0;left:0;right:0;padding:20px 22px;transition:transform .3s}
-        .mc-name{font-family:'Oswald',sans-serif;font-size:clamp(15px,2vw,22px);font-weight:600;color:var(--w);text-transform:uppercase;letter-spacing:.04em;line-height:1.1}
-        .mc-cta{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--y);text-transform:uppercase;margin-top:5px;transition:opacity .25s;font-family:'Open Sans',sans-serif}
-        @media(max-width:640px){.mw-root{grid-template-columns:1fr;grid-template-rows:auto}.mw-right{grid-template-columns:1fr 1fr;grid-template-rows:auto}.mc-card,.mc-big{height:200px}}
-
-        /* ══ DARK BAND ════ */
-        .db-root{background:linear-gradient(160deg,#0d0d0d 0%,#111827 100%)}
-        .db-inner{padding:clamp(52px,7vw,88px) clamp(20px,5vw,72px)}
-        .db-header{text-align:center;margin-bottom:52px}
-        .db-eyebrow{font-size:11px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--c);margin-bottom:10px;font-family:'Open Sans',sans-serif}
-        .db-title{font-family:'Oswald',sans-serif;font-size:clamp(26px,4.5vw,50px);font-weight:700;color:var(--w);margin:0 0 14px;text-transform:uppercase;letter-spacing:.03em}
-        .db-line{width:60px;height:3px;background:linear-gradient(90deg,var(--r),var(--c));margin:0 auto}
-        .db-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-        @media(max-width:640px){.db-grid{grid-template-columns:1fr}}
-        .db-card{cursor:pointer;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);transition:transform .3s,box-shadow .3s}
-        .db-card:hover{transform:translateY(-8px);box-shadow:0 24px 48px rgba(0,0,0,.6)}
-        .db-img-wrap{position:relative;overflow:hidden;aspect-ratio:4/3;background:#0b1220}
-        .db-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .5s,filter .4s}
-        .db-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 60%)}
-        .db-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:7px}
-        .db-num{font-family:'Oswald',sans-serif;font-size:42px;font-weight:700;line-height:1;opacity:.12;letter-spacing:-.03em}
-        .db-name{font-family:'Oswald',sans-serif;font-size:clamp(17px,2vw,22px);font-weight:600;color:var(--w);text-transform:uppercase;line-height:1.15}
-        .db-desc{font-size:13px;color:rgba(255,255,255,.46);line-height:1.55;margin:0;font-family:'Open Sans',sans-serif}
-        .db-bar{height:2px;transition:width .4s ease;margin-top:8px}
-
-        /* ══ CINEMATIC PAIR ════ */
-        .cp-root{position:relative;width:100%;height:clamp(380px,48vw,580px);overflow:hidden;cursor:pointer;background:#0b1220}
-        .cp-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transition:transform .65s ease}
-        .cp-grad{position:absolute;inset:0;z-index:2;pointer-events:none}
-        .cp-text{position:absolute;top:50%;transform:translateY(-50%);z-index:5;max-width:clamp(280px,38vw,460px);display:flex;flex-direction:column;gap:14px}
-        .cp-eyebrow{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;font-family:'Open Sans',sans-serif}
-        .cp-ey-line{width:22px;height:1.5px;flex-shrink:0}
-        .cp-title{font-family:'Oswald',sans-serif;font-size:clamp(30px,4.5vw,60px);font-weight:700;color:#fff;line-height:1;text-transform:uppercase;letter-spacing:.02em;margin:0}
-        .cp-desc{font-size:14px;color:rgba(255,255,255,.7);line-height:1.7;margin:0;font-family:'Open Sans',sans-serif;max-width:360px}
-        .cp-btn{display:inline-block;border:none;padding:12px 26px;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:opacity .22s,transform .22s}
-        .cp-btn:hover{opacity:.85;transform:translateX(4px)}
-        .cp-num-bg{position:absolute;top:50%;transform:translateY(-50%);font-family:'Oswald',sans-serif;font-size:clamp(100px,18vw,220px);font-weight:700;color:rgba(255,255,255,.04);line-height:1;letter-spacing:-.06em;pointer-events:none;z-index:3;overflow:hidden;max-width:50%}
-        @media(max-width:640px){.cp-text{left:20px!important;right:20px!important;text-align:left!important;max-width:none}.cp-eyebrow{justify-content:flex-start!important}.cp-btn{align-self:flex-start!important}}
-
-        /* ══ TRIO ════ */
-        .trio-root{display:grid;grid-template-columns:repeat(3,1fr);gap:0;height:clamp(420px,55vw,660px)}
-        @media(max-width:640px){.trio-root{grid-template-columns:1fr;height:auto}}
-        .trio-card{position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;background:#0b1220}
-        @media(max-width:640px){.trio-card{height:320px}}
-        .trio-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;transition:transform .55s ease,filter .4s ease}
-        .trio-box-white{position:absolute;bottom:0;left:0;right:0;padding:22px 24px 28px;z-index:4}
-        .trio-box-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-family:'Open Sans',sans-serif;margin-bottom:4px}
-        .trio-box-name{font-family:'Oswald',sans-serif;font-size:clamp(18px,2.2vw,26px);font-weight:700;color:#fff;text-transform:uppercase;line-height:1.1;margin-bottom:14px}
-        .trio-box-btn{display:inline-block;border:none;padding:10px 20px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:opacity .2s}
-        .trio-box-btn:hover{opacity:.82}
-        .trio-overlay-text{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;justify-content:flex-end;padding:28px 24px}
-        .trio-ov-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:${COLORS.accent};font-family:'Open Sans',sans-serif;margin-bottom:4px}
-        .trio-ov-name{font-family:'Oswald',sans-serif;font-size:clamp(18px,2.2vw,26px);font-weight:700;color:#fff;text-transform:uppercase;line-height:1.1;margin-bottom:8px}
-        .trio-ov-desc{font-size:12px;color:rgba(255,255,255,.62);line-height:1.5;margin:0;font-family:'Open Sans',sans-serif}
-        .trio-box-light{position:absolute;bottom:0;left:0;right:0;padding:22px 24px 28px;z-index:4;display:flex;flex-direction:column;align-items:center;text-align:center}
-        .trio-light-tag{font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-family:'Open Sans',sans-serif;margin-bottom:4px}
-        .trio-light-name{font-family:'Oswald',sans-serif;font-size:clamp(16px,2vw,24px);font-weight:700;color:#fff;text-transform:uppercase;line-height:1.1;margin-bottom:14px}
-        .trio-light-btn{display:inline-block;border:none;color:#fff;padding:10px 20px;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:opacity .2s}
-        .trio-light-btn:hover{opacity:.82}
-
-        /* ══ 3D ════ */
-        .r3d-root{padding:clamp(48px,6vw,80px) clamp(20px,5vw,60px);background:var(--w)}
-        .r3d-header{text-align:center;margin-bottom:48px}
-        .r3d-tag{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--c);display:block;margin-bottom:10px;font-family:'Open Sans',sans-serif}
-        .r3d-title{font-family:'Oswald',sans-serif;font-size:clamp(24px,4vw,44px);font-weight:700;color:var(--dk);text-transform:uppercase;margin:0 0 12px}
-        .r3d-accent{width:60px;height:3px;background:linear-gradient(90deg,var(--r),var(--c),var(--y));margin:0 auto}
-        .r3d-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-        @media(max-width:640px){.r3d-grid{grid-template-columns:1fr}}
-        .c3d-outer{position:relative;overflow:hidden;cursor:pointer;aspect-ratio:4/3;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;background:#12131a}
-        .c3d-outer:hover{box-shadow:0 28px 56px rgba(0,0,0,.28)}
-        .c3d-img{width:100%;height:100%;object-fit:contain;display:block;transition:filter .3s}
-        .c3d-border{position:absolute;inset:0;border-width:3px;border-style:solid;pointer-events:none;transition:opacity .3s;z-index:3}
-        .c3d-gloss{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.38) 0%,transparent 60%);pointer-events:none;z-index:4;transition:opacity .3s}
-        .c3d-num{position:absolute;top:14px;left:14px;font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:.18em;background:rgba(0,0,0,.32);padding:4px 10px;backdrop-filter:blur(6px);z-index:5}
-        .c3d-info{position:absolute;bottom:0;left:0;right:0;padding:20px 22px;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,transparent 100%);z-index:5}
-        .c3d-name{font-family:'Oswald',sans-serif;font-size:clamp(17px,2vw,24px);font-weight:600;color:var(--w);text-transform:uppercase;line-height:1.1}
-        .c3d-arrow{font-size:22px;transition:opacity .25s;margin-top:4px}
-
-        /* ══ SCATTERED ════ */
-        .ss-root{display:flex;gap:4px;overflow:hidden;align-items:flex-end}
-        .ss-card{flex:1;position:relative;overflow:hidden;cursor:pointer;transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;background:#0b1220}
-        .ss-card:hover{transform:scaleY(1.04);box-shadow:0 12px 32px rgba(0,0,0,.28)}
-        .ss-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .5s,filter .4s}
-        .ss-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.88) 0%,rgba(0,0,0,.05) 55%,transparent 100%);transition:opacity .3s}
-        .ss-tag{position:absolute;top:14px;left:14px;font-size:10px;font-weight:700;letter-spacing:.14em;padding:4px 10px;transition:opacity .25s;font-family:'Open Sans',sans-serif}
-        .ss-info{position:absolute;bottom:0;left:0;right:0;padding:16px 18px}
-        .ss-name{font-family:'Oswald',sans-serif;font-size:clamp(14px,1.8vw,19px);font-weight:600;color:var(--w);text-transform:uppercase;line-height:1.15}
-        @media(max-width:640px){.ss-root{flex-direction:column}.ss-card{height:200px!important;margin-top:0!important}}
-
-        /* ══ BANNER ════ */
-        .fb-root{position:relative;height:clamp(280px,36vw,420px);overflow:hidden;cursor:pointer;background:#0b1220}
-        .fb-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .65s;filter:grayscale(18%)}
-        .fb-root:hover .fb-img{transform:scale(1.04)}
-        .fb-ov{position:absolute;inset:0;background:linear-gradient(to right,rgba(148,25,24,.9) 0%,rgba(148,25,24,.52) 45%,rgba(0,0,0,.2) 100%)}
-        .fb-content{position:absolute;left:clamp(28px,6vw,80px);top:50%;transform:translateY(-50%);z-index:4;max-width:520px}
-        .fb-num{font-family:'Oswald',sans-serif;font-size:80px;font-weight:700;color:rgba(255,255,255,.1);line-height:1;letter-spacing:-.04em;margin-bottom:-18px}
-        .fb-title{font-family:'Oswald',sans-serif;font-size:clamp(28px,4.5vw,58px);font-weight:700;color:var(--w);text-transform:uppercase;margin:0 0 14px;line-height:1.05;letter-spacing:.02em}
-        .fb-desc{font-size:15px;color:rgba(255,255,255,.75);line-height:1.6;margin:0 0 24px;font-family:'Open Sans',sans-serif}
-        .fb-btn{background:var(--y);color:${COLORS.primaryDark};border:none;padding:13px 28px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:opacity .22s,transform .22s}
-        .fb-btn:hover{opacity:.88;transform:translateX(4px)}
-        .fb-deco{position:absolute;right:0;top:0;bottom:0;width:6px;background:linear-gradient(to bottom,var(--c),var(--y))}
-
-        /* ══ REST ════ */
-        .rg-root{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:3px}
-        .rg-card{position:relative;overflow:hidden;cursor:pointer;aspect-ratio:4/3;background:#ddd}
-        .rg-img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .45s,filter .4s}
-        .rg-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.82) 0%,rgba(0,0,0,.06) 55%,transparent 100%);transition:opacity .3s}
-        .rg-bar{position:absolute;bottom:0;left:0;height:3px;transition:width .4s ease;z-index:3}
-        .rg-info{position:absolute;bottom:0;left:0;right:0;padding:16px 18px;display:flex;flex-direction:column;gap:3px}
-        .rg-num{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-family:'Open Sans',sans-serif;margin-bottom:2px}
-        .rg-name{font-family:'Oswald',sans-serif;font-size:clamp(16px,2vw,20px);font-weight:600;color:var(--w);text-transform:uppercase;line-height:1.15}
+        /* ══ PROJECT CARD (única tarjeta para todo el catálogo) ════ */
+        .pc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:26px;padding:8px clamp(20px,5vw,60px) 0}
+        .pc-card{background:${COLORS.white};border-radius:18px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:0 10px 26px rgba(15,23,42,.10);transition:transform .25s ease,box-shadow .25s ease}
+        .pc-card:hover{transform:translateY(-5px);box-shadow:0 20px 42px rgba(15,23,42,.16)}
+        .pc-img-wrap{position:relative;aspect-ratio:4/3;overflow:hidden;background:${COLORS.surface}}
+        .pc-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease}
+        .pc-body{padding:16px 18px 18px;flex:1;display:flex;flex-direction:column}
+        .pc-cat{font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--r);margin-bottom:6px;font-family:'Open Sans',sans-serif}
+        .pc-name{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;color:${COLORS.text};text-transform:uppercase;line-height:1.22;margin-bottom:6px}
+        .pc-desc{font-size:12px;color:${COLORS.textLight};line-height:1.55;margin:0}
+        .pc-bar{height:3px;background:linear-gradient(90deg,var(--r),var(--c),var(--y));transform-origin:left;transition:transform .3s ease}
         .pz-sk{animation:shimmer 1.6s ease-in-out infinite}
 
         /* ══ RESPONSIVE GLOBAL ══════════════════════════════════════════ */
@@ -986,40 +627,8 @@ const Proyectos = () => {
           .ic-desc{display:none}
           .ic-thumb{width:clamp(80px,10vw,120px)}
 
-          /* mosaic */
-          .mw-root{grid-template-columns:1fr;grid-template-rows:auto}
-          .mw-right{grid-template-columns:1fr 1fr;grid-template-rows:auto}
-          .mc-card,.mc-big{height:clamp(180px,40vw,280px)}
-
-          /* dark band */
-          .db-grid{grid-template-columns:1fr 1fr}
-          .db-inner{padding:40px 20px}
-
-          /* cinematic pair */
-          .cp-root{height:clamp(320px,55vw,480px)}
-          .cp-text{left:20px!important;right:20px!important;text-align:left!important;max-width:none;bottom:20px;top:auto;transform:none}
-          .cp-eyebrow{justify-content:flex-start!important}
-          .cp-btn{align-self:flex-start!important}
-          .cp-num-bg{display:none}
-
-          /* trio */
-          .trio-root{height:auto}
-          .trio-card{height:280px}
-
-          /* 3d cards */
-          .r3d-grid{grid-template-columns:1fr 1fr}
-          .r3d-root{padding:40px 20px}
-
-          /* scattered */
-          .ss-root{flex-wrap:wrap}
-          .ss-card{flex:0 0 48%;min-height:200px;margin-top:0!important}
-
-          /* banner */
-          .fb-content{left:24px}
-          .fb-num{font-size:52px}
-
-          /* rest grid */
-          .rg-root{grid-template-columns:repeat(2,1fr)}
+          /* project card grid */
+          .pc-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
         }
 
         /* ── Mobile (≤480px) ── */
@@ -1031,40 +640,8 @@ const Proyectos = () => {
           .ic-eyebrow{margin-bottom:8px}
           .ic-discover-btn{padding:9px 18px;font-size:10px}
 
-          /* mosaic */
-          .mw-root{grid-template-columns:1fr}
-          .mw-right{grid-template-columns:1fr}
-          .mc-card,.mc-big{height:clamp(160px,48vw,240px)}
-
-          /* dark band */
-          .db-grid{grid-template-columns:1fr}
-          .db-inner{padding:32px 16px}
-          .db-title{font-size:clamp(22px,6vw,36px)}
-
-          /* cinematic pair */
-          .cp-root{height:clamp(280px,85vw,400px)}
-          .cp-title{font-size:clamp(22px,7vw,40px)}
-
-          /* trio */
-          .trio-root{grid-template-columns:1fr}
-          .trio-card{height:260px}
-
-          /* 3d cards */
-          .r3d-grid{grid-template-columns:1fr}
-          .r3d-root{padding:32px 16px}
-
-          /* scattered */
-          .ss-root{flex-direction:column}
-          .ss-card{height:200px!important;margin-top:0!important;width:100%}
-
-          /* banner */
-          .fb-root{height:clamp(220px,65vw,320px)}
-          .fb-title{font-size:clamp(22px,6vw,36px)}
-          .fb-desc{display:none}
-          .fb-num{display:none}
-
-          /* rest grid */
-          .rg-root{grid-template-columns:1fr}
+          /* project card grid */
+          .pc-grid{grid-template-columns:1fr;gap:16px}
 
           /* divider */
           .sdiv{margin:32px 16px 24px}
@@ -1146,15 +723,12 @@ const Proyectos = () => {
             <ImmersiveCarousel servicios={carousel} onClick={handleClick} />
           </div>
         )}
-        {mosaic.length > 1 && (<><SD label="Nuestros Servicios" color={COLORS.primary} /><MosaicWall items={mosaic} onClick={handleClick} /></>)}
-        {dark.length > 0 && (<><SD label="Especialidades" color={COLORS.secondary} /><DarkBand items={dark} startIdx={5} onClick={handleClick} /></>)}
-        {fp1 && (<><SD label="Servicio Destacado" color={COLORS.primary} /><CinematicPair servicio={fp1} idx={8} reverse={false} accentColor={COLORS.primary} onClick={handleClick} /></>)}
-        {row3d.length > 0 && <Row3D items={row3d} startIdx={9} onClick={handleClick} />}
-        {scat.length > 0 && (<><SD label="Más Servicios" color={COLORS.accent} /><ScatteredStrip items={scat} startIdx={12} onClick={handleClick} /></>)}
-        {fb1 && (<><SD label="Servicio Especial" color={COLORS.primary} /><FullBanner servicio={fb1} idx={17} onClick={handleClick} /></>)}
-        {fp2 && (<><SD label="Servicio Especial" color={COLORS.secondary} /><CinematicPair servicio={fp2} idx={18} reverse={true} accentColor={COLORS.secondary} onClick={handleClick} /></>)}
-        {rest.slice(0, 3).length > 0 && (<><SD label="También Ofrecemos" color={COLORS.accent} /><TrioCards items={rest.slice(0, 3)} onClick={handleClick} /></>)}
-        {rest.slice(3).length > 0 && (<><SD label="Todos los Servicios" color={COLORS.primary} /><RestGrid items={rest.slice(3)} startIdx={22} onClick={handleClick} /></>)}
+        <SD label="Nuestros Servicios" color={COLORS.primary} />
+        <div className="pc-grid">
+          {filtrados.map((s) => (
+            <ProjectCard key={servicioId(s)} s={s} onClick={handleClick} />
+          ))}
+        </div>
         <div style={{ paddingBottom: 80 }} />
       </>)}
 
