@@ -44,235 +44,87 @@ const useWideOnly = (items, limit) => {
 };
 
 /* ══════════════════════════════════════════════════════════════════
-   SERVICIO PANEL — desliza desde la IZQUIERDA, debajo del navbar
-   Animación spring entrada/salida con anime.js-style CSS
+   SERVICIO DETALLE — página de producto: imagen grande a la izquierda,
+   info a la derecha, selector de categoría + más proyectos debajo.
 ══════════════════════════════════════════════════════════════════ */
-const ServicioPanel = ({ servicio, servicios, onClose, onSelect }) => {
-  const panelRef = useRef(null);
-  const overlayRef = useRef(null);
-  const [navH, setNavH] = useState(64);
+const ServicioPanel = ({ servicio, servicios, onClose, onSelect, onCotizar }) => {
+  const scrollRef = useRef(null);
 
-  /* detectar -- navbar height */
   useEffect(() => {
-    const nav = document.querySelector('nav');
-    if (nav) setNavH(nav.getBoundingClientRect().height);
-  }, []);
-
-  /* entrada con CSS animation */
-  useEffect(() => {
-    if (panelRef.current) {
-      panelRef.current.style.transform = 'translateX(-100%)';
-      panelRef.current.style.opacity = '0';
-      requestAnimationFrame(() => {
-        panelRef.current.style.transition = 'transform 0.42s cubic-bezier(0.22,1,0.36,1), opacity 0.28s ease';
-        panelRef.current.style.transform = 'translateX(0)';
-        panelRef.current.style.opacity = '1';
-      });
-    }
-    if (overlayRef.current) {
-      overlayRef.current.style.opacity = '0';
-      requestAnimationFrame(() => {
-        overlayRef.current.style.transition = 'opacity 0.3s ease';
-        overlayRef.current.style.opacity = '1';
-      });
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [servicio?.id_servicio]);
 
-  /* salida animada */
-  const closeAnim = () => {
-    if (panelRef.current) {
-      panelRef.current.style.transition = 'transform 0.32s cubic-bezier(0.55,0,1,0.45), opacity 0.28s ease';
-      panelRef.current.style.transform = 'translateX(-105%)';
-      panelRef.current.style.opacity = '0';
-    }
-    if (overlayRef.current) {
-      overlayRef.current.style.transition = 'opacity 0.3s ease';
-      overlayRef.current.style.opacity = '0';
-    }
-    setTimeout(onClose, 340);
-  };
+  const categoriasDisponibles = useMemo(() => {
+    const set = new Set();
+    servicios.forEach((s) => { if (s.categoria) set.add(s.categoria); });
+    return Array.from(set);
+  }, [servicios]);
+
+  const [categoriaSel, setCategoriaSel] = useState(servicio?.categoria || 'TODAS');
+  useEffect(() => {
+    setCategoriaSel(servicio?.categoria || 'TODAS');
+  }, [servicio?.id_servicio]);
 
   if (!servicio) return null;
 
-  /* similares por palabras en común en el nombre */
-  const palabras = servicio.nombre.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const similares = servicios
-    .filter(s => s.id_servicio !== servicio.id_servicio)
-    .map(s => {
-      const nombreS = s.nombre.toLowerCase();
-      const coincidencias = palabras.filter(w => nombreS.includes(w)).length;
-      return { ...s, _score: coincidencias };
-    })
-    .filter(s => s._score > 0)
-    .sort((a, b) => b._score - a._score)
-    .slice(0, 6);
-
-  /* si no hay similares por nombre, mostrar los primeros */
-  const fallback = similares.length === 0
-    ? servicios.filter(s => s.id_servicio !== servicio.id_servicio).slice(0, 4)
-    : similares;
+  const relacionados = servicios
+    .filter((s) => servicioId(s) !== servicioId(servicio))
+    .filter((s) => categoriaSel === 'TODAS' || s.categoria === categoriaSel)
+    .slice(0, 8);
 
   return (
-    <>
-      {/* Overlay */}
-      <div ref={overlayRef}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(10,18,36,.44)', zIndex: 900, opacity: 0, cursor: 'pointer' }}
-        onClick={closeAnim} />
-
-      {/* Panel izquierdo */}
-      <div ref={panelRef} style={{
-        position: 'fixed',
-        top: navH,
-        left: 0,
-        bottom: 0,
-        width: 'min(480px, 100vw)',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        background: `linear-gradient(180deg,#fff 0%,${COLORS.surface} 100%)`,
-        boxShadow: '8px 0 48px rgba(10,18,54,.22)',
-        borderRight: `4px solid ${COLORS.primary}`,
-        transform: 'translateX(-100%)',
-        opacity: 0,
-      }}>
-
-        {/* ── IMAGEN HERO ── */}
-        <div style={{ position: 'relative', flexShrink: 0, height: 'clamp(200px,34vw,280px)', overflow: 'hidden', background: '#1a1a2e' }}>
-          <img src={imgSrc(servicio)} alt={servicio.nombre}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', filter: 'brightness(.88)' }}
-            onError={e => { e.target.onerror = null; e.target.src = PH; }} />
-
-          {/* Gradiente oscuro inferior */}
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.08) 55%,transparent 100%)' }} />
-
-          {/* Barra rojo→celeste→amarillo en top */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: `linear-gradient(90deg,${COLORS.primary},${COLORS.secondary},${COLORS.accent})` }} />
-
-          {/* Badge categoría flotante */}
-          {servicio.categoria && (
-            <div style={{
-              position: 'absolute', top: 16, left: 16,
-              background: 'rgba(255,255,255,.14)', backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,.32)',
-              padding: '4px 12px', borderRadius: 999,
-              fontSize: 9, fontWeight: 700, letterSpacing: '.18em',
-              textTransform: 'uppercase', color: '#fff',
-              fontFamily: FONTS.body,
-            }}>{servicio.categoria}</div>
-          )}
-
-          {/* Nombre flotante sobre imagen */}
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '14px 20px' }}>
-            <h2 style={{
-              fontFamily: FONTS.heading,
-              fontSize: 'clamp(20px,4vw,30px)', fontWeight: 700,
-              color: '#fff', margin: 0, lineHeight: 1.05,
-              textTransform: 'uppercase', letterSpacing: '.02em',
-              textShadow: '0 2px 12px rgba(0,0,0,.5)',
-            }}>{servicio.nombre}</h2>
-          </div>
-
-          {/* Botón ✕ */}
-          <button onClick={closeAnim} style={{
-            position: 'absolute', top: 12, right: 12,
-            width: 34, height: 34, borderRadius: '50%',
-            background: 'rgba(0,0,0,.42)', backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255,255,255,.3)',
-            color: '#fff', fontSize: 15, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            transition: 'background .2s',
-          }}
-            onMouseEnter={e => e.currentTarget.style.background = COLORS.primary}
-            onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,.42)'}>
-            ✕
-          </button>
+    <div className="sd-overlay" onClick={onClose}>
+      <div className="sd-panel" ref={scrollRef} onClick={e => e.stopPropagation()}>
+        <div className="sd-topbar">
+          <div className="sd-breadcrumb">Proyectos{servicio.categoria ? ` / ${servicio.categoria}` : ''}</div>
+          <button className="sd-close" onClick={onClose}>✕</button>
         </div>
 
-        {/* ── CONTENIDO scrollable ── */}
-        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', padding: '20px 22px 48px', display: 'flex', flexDirection: 'column', gap: 18, minHeight: 0, scrollbarWidth: 'thin', scrollbarColor: `${COLORS.primary}44 transparent` }}>
-
-          {/* Eyebrow */}
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: COLORS.primary, fontFamily: FONTS.body }}>
-            Detalle del Servicio
+        <div className="sd-hero">
+          <div className="sd-hero-img-wrap">
+            <img src={imgSrc(servicio)} alt={servicio.nombre} className="sd-hero-img"
+              onError={e => { e.target.onerror = null; e.target.src = PH; }} />
           </div>
+          <div className="sd-hero-info">
+            {servicio.categoria && <div className="sd-cat-pill">{servicio.categoria}</div>}
+            <h1 className="sd-title">{servicio.nombre}</h1>
+            {servicio.descripcion && <p className="sd-desc">{servicio.descripcion}</p>}
+            {servicio.grosor && (
+              <div className="sd-attr"><span>Grosor</span><b>{servicio.grosor}</b></div>
+            )}
+            {typeof onCotizar === 'function' && (
+              <button className="sd-cta" onClick={() => onCotizar(servicio)}>Solicitar cotización</button>
+            )}
+          </div>
+        </div>
 
-          {/* Descripción */}
-          {servicio.descripcion && (
-            <p style={{ fontSize: 14, color: COLORS.textLight, lineHeight: 1.72, margin: 0, fontFamily: FONTS.body }}>
-              {servicio.descripcion}
-            </p>
-          )}
-
-          {/* Divisor */}
-          <div style={{ height: 1, background: `linear-gradient(90deg,${COLORS.primary}44,${COLORS.secondary}22,transparent)` }} />
-
-          {/* Atributos en grid */}
-          {(servicio.grosor || servicio.categoria) && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              {servicio.categoria && (
-                <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: '10px 14px' }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: COLORS.steel, marginBottom: 3, fontFamily: FONTS.body }}>Categoría</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, fontFamily: FONTS.body }}>{servicio.categoria}</div>
-                </div>
-              )}
-              {servicio.grosor && (
-                <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: '10px 14px' }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: COLORS.steel, marginBottom: 3, fontFamily: FONTS.body }}>Grosor</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, fontFamily: FONTS.body }}>{servicio.grosor}</div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* CTA eliminado */}
-
-          {/* Servicios similares — masonry columns desordenado */}
-          {fallback.length > 0 && (
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                <div style={{ flex: 1, height: 1, background: COLORS.border }} />
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: COLORS.steel, fontFamily: FONTS.body, whiteSpace: 'nowrap' }}>
-                  {similares.length > 0 ? 'Servicios Similares' : 'Otros Servicios'}
-                </span>
-                <div style={{ flex: 1, height: 1, background: COLORS.border }} />
-              </div>
-
-              {/* Masonry: columnCount + aspect ratios variables = efecto desordenado */}
-              <div style={{ columnCount: 2, columnGap: 10 }}>
-                {fallback.map((s, i) => {
-                  const aspects = ['3/4', '4/3', '1/1', '3/2', '2/3', '16/9'];
-                  const aspect = aspects[i % aspects.length];
-                  const ac = [COLORS.primary, COLORS.secondary, COLORS.accent][i % 3];
-                  return (
-                    <div key={s.id_servicio}
-                      onClick={() => onSelect(s)}
-                      style={{ breakInside: 'avoid', marginBottom: 10, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', border: `1px solid ${COLORS.border}`, transition: 'transform .22s,box-shadow .22s', display: 'block' }}
-                      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,.15)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
-                      <div style={{ position: 'relative', aspectRatio: aspect, overflow: 'hidden', background: '#f1f5f9' }}>
-                        <img src={imgSrc(s)} alt={s.nombre}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .4s ease' }}
-                          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
-                          onMouseLeave={e => e.currentTarget.style.transform = ''}
-                          onError={e => { e.target.onerror = null; e.target.src = PH; }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(0,0,0,.58) 0%,transparent 55%)', pointerEvents: 'none' }} />
-                        <div style={{ position: 'absolute', top: 8, left: 8, width: 7, height: 7, borderRadius: '50%', background: ac, boxShadow: `0 0 8px ${ac}88` }} />
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 10px' }}>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: '#fff', fontFamily: FONTS.heading, textTransform: 'uppercase', letterSpacing: '.04em', lineHeight: 1.2 }}>
-                            {s.nombre}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
+        <div className="sd-related-header">
+          <h2 className="sd-related-title">Más proyectos</h2>
+          {categoriasDisponibles.length > 0 && (
+            <select
+              className="sd-select"
+              value={categoriaSel}
+              onChange={e => setCategoriaSel(e.target.value)}
+            >
+              <option value="TODAS">Todas las categorías</option>
+              {categoriasDisponibles.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           )}
         </div>
+
+        {relacionados.length > 0 ? (
+          <div className="pc-grid sd-related-grid">
+            {relacionados.map(s => (
+              <ProjectCard key={servicioId(s)} s={s} onClick={onSelect} />
+            ))}
+          </div>
+        ) : (
+          <div className="sd-empty">No hay más proyectos en esta categoría.</div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 
@@ -537,6 +389,12 @@ const Proyectos = () => {
 
   const handleClose = () => { setSelectedServicio(null); setPresupuestoOpen(false); setDetalleOpen(false); };
 
+  const handleCotizar = s => {
+    setSelectedServicio(s);
+    setDetalleOpen(false);
+    setPresupuestoOpen(true);
+  };
+
   const categorias = useMemo(() => {
     const set = new Set();
     servicios.forEach((s) => { if (s.categoria) set.add(s.categoria); });
@@ -615,6 +473,33 @@ const Proyectos = () => {
         .pc-desc{font-size:12px;color:${COLORS.textLight};line-height:1.55;margin:0}
         .pc-bar{height:3px;background:linear-gradient(90deg,var(--r),var(--c),var(--y));transform-origin:left;transition:transform .3s ease}
         .pz-sk{animation:shimmer 1.6s ease-in-out infinite}
+
+        /* ══ SERVICIO DETALLE (página de producto) ════ */
+        @keyframes sdIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .sd-overlay{position:fixed;inset:0;z-index:1000;background:rgba(15,23,42,.5);display:flex;justify-content:center;padding:clamp(12px,3vw,32px);overflow-y:auto}
+        .sd-panel{background:${COLORS.backgroundLight};border-radius:20px;max-width:1180px;width:100%;padding:18px clamp(16px,3vw,40px) 56px;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:sdIn .3s ease both;height:fit-content}
+        .sd-topbar{display:flex;align-items:center;justify-content:space-between;padding:4px 2px 18px}
+        .sd-breadcrumb{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:${COLORS.textLight};font-family:'Open Sans',sans-serif}
+        .sd-close{width:36px;height:36px;border-radius:50%;border:1px solid ${COLORS.border};background:${COLORS.white};color:${COLORS.text};font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,border-color .2s;flex-shrink:0}
+        .sd-close:hover{background:var(--r);border-color:var(--r);color:#fff}
+        .sd-hero{display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:start}
+        .sd-hero-img-wrap{border-radius:20px;overflow:hidden;background:${COLORS.surface};box-shadow:0 20px 50px rgba(15,23,42,.16);aspect-ratio:4/3}
+        .sd-hero-img{width:100%;height:100%;object-fit:cover;display:block}
+        .sd-hero-info{display:flex;flex-direction:column;gap:14px;padding-top:6px}
+        .sd-cat-pill{align-self:flex-start;background:${COLORS.primary}14;color:var(--r);font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:6px 14px;border-radius:999px;font-family:'Open Sans',sans-serif}
+        .sd-title{font-family:'Oswald',sans-serif;font-size:clamp(24px,3.4vw,38px);font-weight:700;color:${COLORS.text};text-transform:uppercase;line-height:1.12;margin:0}
+        .sd-desc{font-size:14.5px;color:${COLORS.textLight};line-height:1.75;margin:0}
+        .sd-attr{display:flex;gap:8px;align-items:baseline;font-size:13px;color:${COLORS.textLight}}
+        .sd-attr span{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:${COLORS.steel}}
+        .sd-attr b{color:${COLORS.text}}
+        .sd-cta{align-self:flex-start;margin-top:8px;background:var(--r);color:#fff;border:none;padding:13px 28px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:transform .18s,box-shadow .18s;box-shadow:0 12px 26px rgba(148,25,24,.28)}
+        .sd-cta:hover{transform:translateY(-2px)}
+        .sd-related-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:44px 0 18px}
+        .sd-related-title{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;color:${COLORS.text};text-transform:uppercase;margin:0}
+        .sd-select{border:1.5px solid ${COLORS.border};border-radius:10px;padding:8px 14px;font-size:12.5px;font-family:'Open Sans',sans-serif;color:${COLORS.text};background:${COLORS.white};cursor:pointer}
+        .sd-related-grid{padding:0}
+        .sd-empty{color:${COLORS.textLight};font-size:13px;padding:20px 4px}
+        @media(max-width:768px){.sd-hero{grid-template-columns:1fr}.sd-panel{border-radius:16px}}
 
         /* ══ RESPONSIVE GLOBAL ══════════════════════════════════════════ */
 
@@ -737,13 +622,14 @@ const Proyectos = () => {
         <PresupuestoServicio selectedServicio={selectedServicio} handleCloseSelected={handleClose} />
       )}
 
-      {/* PANEL IZQUIERDO CON ANIMACIÓN */}
+      {/* DETALLE DEL PROYECTO */}
       {detalleOpen && selectedServicio && (
         <ServicioPanel
           servicio={selectedServicio}
           servicios={servicios}
           onClose={handleClose}
           onSelect={s => setSelectedServicio(s)}
+          onCotizar={handleCotizar}
         />
       )}
     </div>
