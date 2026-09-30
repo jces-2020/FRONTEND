@@ -74,6 +74,9 @@ const Proyecto = ({ onToast }) => {
   const [previewServicio, setPreviewServicio] = useState('');
   const [categoriasServicio, setCategoriasServicio] = useState([]);
   const [nuevoTipoServicio, setNuevoTipoServicio] = useState('');
+  const [nuevoPrecioEstimado, setNuevoPrecioEstimado] = useState('');
+  const [editandoTipoId, setEditandoTipoId] = useState(null);
+  const [editPrecioEstimado, setEditPrecioEstimado] = useState('');
 
   useEffect(() => {
     fetchTiposServicio();
@@ -102,15 +105,38 @@ const Proyecto = ({ onToast }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          descripcion: nuevoTipoServicio
+          descripcion: nuevoTipoServicio,
+          precio_estimado: nuevoPrecioEstimado ? Number(nuevoPrecioEstimado) : 0
         })
       });
       if (!res.ok) throw new Error('No se pudo agregar tipo de servicio');
       setNuevoTipoServicio('');
+      setNuevoPrecioEstimado('');
       fetchTiposServicio();
       onToast?.('Tipo de servicio agregado correctamente');
     } catch (e) {
       onToast?.('Error al agregar tipo de servicio', 'error');
+    }
+  };
+
+  const handleIniciarEdicion = (t) => {
+    setEditandoTipoId(t.id_tipo);
+    setEditPrecioEstimado(t.precio_estimado != null ? String(t.precio_estimado) : '');
+  };
+
+  const handleGuardarEdicion = async (id) => {
+    try {
+      const res = await fetch(`/api/tipo_servicio/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ precio_estimado: editPrecioEstimado ? Number(editPrecioEstimado) : 0 })
+      });
+      if (!res.ok) throw new Error('No se pudo actualizar tipo de servicio');
+      setEditandoTipoId(null);
+      fetchTiposServicio();
+      onToast?.('Tipo de servicio actualizado correctamente');
+    } catch (e) {
+      onToast?.('Error al actualizar tipo de servicio', 'error');
     }
   };
 
@@ -262,8 +288,16 @@ const Proyecto = ({ onToast }) => {
           <input
             value={nuevoTipoServicio}
             onChange={e => setNuevoTipoServicio(e.target.value)}
-            placeholder="Nuevo tipo de servicio"
+            placeholder="Nuevo tipo de servicio (máx. 50 caracteres)"
+            maxLength={50}
             style={{ ...inputStyle, flex: 1, marginTop: 0 }}
+          />
+          <input
+            value={nuevoPrecioEstimado}
+            onChange={e => setNuevoPrecioEstimado(e.target.value.replace(/[^0-9.]/g, ''))}
+            placeholder="Precio estimado (S/)"
+            inputMode="decimal"
+            style={{ ...inputStyle, width: 160, marginTop: 0 }}
           />
           <button onClick={handleAgregarTipoServicio} style={buttonSecondaryStyle}>
             Agregar tipo de servicio
@@ -277,6 +311,9 @@ const Proyecto = ({ onToast }) => {
                 <th style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'left', fontFamily: FONTS.heading }}>
                   Tipo de Servicio
                 </th>
+                <th style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'left', fontFamily: FONTS.heading }}>
+                  Precio Estimado (S/)
+                </th>
                 <th style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'center', fontFamily: FONTS.heading }}>
                   Acción
                 </th>
@@ -285,7 +322,7 @@ const Proyecto = ({ onToast }) => {
             <tbody>
               {tiposServicio.length === 0 ? (
                 <tr>
-                  <td colSpan={2} style={{ textAlign: 'center', padding: 18, color: COLORS.textLight }}>
+                  <td colSpan={3} style={{ textAlign: 'center', padding: 18, color: COLORS.textLight }}>
                     Sin tipos de servicio registrados
                   </td>
                 </tr>
@@ -295,10 +332,38 @@ const Proyecto = ({ onToast }) => {
                     <td style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px' }}>
                       {t.descripcion || t.nombre || t.id_tipo}
                     </td>
+                    <td style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px' }}>
+                      {editandoTipoId === t.id_tipo ? (
+                        <input
+                          value={editPrecioEstimado}
+                          onChange={e => setEditPrecioEstimado(e.target.value.replace(/[^0-9.]/g, ''))}
+                          style={{ ...inputStyle, marginTop: 0, width: 120 }}
+                          autoFocus
+                        />
+                      ) : (
+                        t.precio_estimado != null ? Number(t.precio_estimado).toFixed(2) : '-'
+                      )}
+                    </td>
                     <td style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'center' }}>
-                      <button onClick={() => handleEliminarTipoServicio(t.id_tipo)} style={buttonDangerStyle}>
-                        Eliminar
-                      </button>
+                      {editandoTipoId === t.id_tipo ? (
+                        <>
+                          <button onClick={() => handleGuardarEdicion(t.id_tipo)} style={{ ...buttonDangerStyle, color: COLORS.success, marginRight: 12 }}>
+                            Guardar
+                          </button>
+                          <button onClick={() => setEditandoTipoId(null)} style={buttonDangerStyle}>
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => handleIniciarEdicion(t)} style={{ ...buttonDangerStyle, color: COLORS.primary, marginRight: 12 }}>
+                            Editar
+                          </button>
+                          <button onClick={() => handleEliminarTipoServicio(t.id_tipo)} style={buttonDangerStyle}>
+                            Eliminar
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))

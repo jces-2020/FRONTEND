@@ -304,34 +304,44 @@ const ImmersiveCarousel = ({ servicios, onClick }) => {
 
   return (
     <div className="ic-root">
-      {servicios.map((sv, i) => (
-        <div key={sv.id_servicio || i}
-          className={`ic-bg-layer ${i === active ? 'ic-bg-active' : ''}`}
-          style={{ backgroundImage: `url(${imgSrc(sv)})`, opacity: i === active ? 1 : 0, zIndex: i === active ? 2 : 1 }} />
-      ))}
-      <div className="ic-vignette" />
-      <div className="ic-left-grad" />
+      <div className="ic-stage">
+        <div className="ic-stage-accent" />
+        {servicios.map((sv, i) => (
+          <div key={sv.id_servicio || i}
+            className={`ic-bg-layer ${i === active ? 'ic-bg-active' : ''}`}
+            style={{ backgroundImage: `url(${imgSrc(sv)})`, opacity: i === active ? 1 : 0, zIndex: i === active ? 2 : 1 }} />
+        ))}
 
-      <div className="ic-text-zone" key={textKey}>
-        <div className="ic-eyebrow">
-          <div className="ic-ey-line" />
-          <span>{s.categoria || 'Vidriobras · Servicios'}</span>
-        </div>
-        <h1 className="ic-title">{s.nombre.toUpperCase()}</h1>
-        {s.descripcion && <p className="ic-desc">{s.descripcion.substring(0, 130)}{s.descripcion.length > 130 ? '…' : ''}</p>}
-        <div className="ic-actions">
-          <button className="ic-discover-btn" onClick={() => onClick(s)}>
-            <span className="ic-disc-icon">▶</span>
-            <span>DESCUBRIR SERVICIO</span>
-          </button>
+        <div className="ic-panel" key={textKey}>
+          <div className="ic-eyebrow">
+            <div className="ic-ey-line" />
+            <span>{s.categoria || 'Vidriobras · Servicios'}</span>
+          </div>
+          <h1 className="ic-title">{s.nombre.toUpperCase()}</h1>
+          {s.descripcion && <p className="ic-desc">{s.descripcion.substring(0, 130)}{s.descripcion.length > 130 ? '…' : ''}</p>}
+          <div className="ic-actions">
+            <button className="ic-discover-btn" onClick={() => onClick(s)}>
+              <span className="ic-disc-icon">▶</span>
+              <span>DESCUBRIR SERVICIO</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Thumbnails */}
-      <div className="ic-thumbs-zone">
+      {/* Franja inferior: progreso + miniaturas + contador */}
+      <div className="ic-progress-wrap">
+        {servicios.map((_, i) => (
+          <div key={i} className="ic-prog-seg">
+            <div className="ic-prog-fill"
+              style={{ background: i === active ? COLORS.primary : COLORS.border, width: i === active ? '100%' : (i < active ? '100%' : '0%'), transition: i === active ? 'width 5.5s linear' : 'none' }} />
+          </div>
+        ))}
+      </div>
+
+      <div className="ic-thumbs-row">
         <div className="ic-thumbs-outer">
           <div className="ic-thumbs-track"
-            style={{ transform: `translateX(${-Math.max(0, active - 2) * (145 + 10)}px)` }}>
+            style={{ transform: `translateX(${-Math.max(0, active - 2) * (130 + 10)}px)` }}>
             {servicios.map((sv, i) => {
               const isActive = i === active;
               return (
@@ -350,25 +360,15 @@ const ImmersiveCarousel = ({ servicios, onClick }) => {
             })}
           </div>
         </div>
+        <div className="ic-counter">
+          <span className="ic-counter-cur">{String(active + 1).padStart(2, '0')}</span>
+          <span className="ic-counter-sep" />
+          <span className="ic-counter-tot">{String(total).padStart(2, '0')}</span>
+        </div>
         <div className="ic-arrows">
           <button className="ic-arrow" onClick={() => { clearInterval(autoRef.current); goPrev(); }}>&#8249;</button>
           <button className="ic-arrow" onClick={() => { clearInterval(autoRef.current); goNext(); }}>&#8250;</button>
         </div>
-      </div>
-
-      <div className="ic-counter">
-        <span className="ic-counter-cur">{String(active + 1).padStart(2, '0')}</span>
-        <span className="ic-counter-sep" />
-        <span className="ic-counter-tot">{String(total).padStart(2, '0')}</span>
-      </div>
-
-      <div className="ic-progress-wrap">
-        {servicios.map((_, i) => (
-          <div key={i} className="ic-prog-seg">
-            <div className="ic-prog-fill"
-              style={{ background: i === active ? COLORS.accent : 'rgba(255,255,255,.25)', width: i === active ? '100%' : (i < active ? '100%' : '0%'), transition: i === active ? 'width 5.5s linear' : 'none' }} />
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -817,42 +817,42 @@ const Proyectos = () => {
         @keyframes srvGlow{0%{box-shadow:0 0 0 0 rgba(128,194,220,.48)}70%{box-shadow:0 0 0 10px rgba(128,194,220,0)}100%{box-shadow:0 0 0 0 rgba(128,194,220,0)}}
 
         /* ══ CAROUSEL ════ */
-        .ic-root{position:relative;width:100%;height:clamp(480px,58vw,680px);overflow:hidden}
-        .ic-bg-layer{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center;background-color:#0b0f1a;transition:opacity .9s ease}
+        .ic-root{position:relative;width:100%;padding:24px clamp(16px,4vw,48px) 8px}
+        .ic-stage{position:relative;width:100%;height:clamp(320px,44vw,520px);border-radius:20px;overflow:hidden;background:${COLORS.surface};box-shadow:0 24px 56px rgba(15,23,42,.16),0 2px 10px rgba(15,23,42,.08)}
+        .ic-stage-accent{position:absolute;top:0;left:0;right:0;height:4px;z-index:5;background:linear-gradient(90deg,var(--r),var(--c),var(--y))}
+        .ic-bg-layer{position:absolute;inset:0;background-size:contain;background-repeat:no-repeat;background-position:center;transition:opacity .9s ease}
         .ic-bg-active{animation:icZoom 6s ease-out forwards}
-        .ic-vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(to top,rgba(0,0,0,.78) 0%,rgba(0,0,0,.45) 28%,rgba(0,0,0,.12) 55%,transparent 100%)}
-        .ic-left-grad{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(to right,rgba(0,0,0,.55) 0%,rgba(0,0,0,.2) 38%,transparent 62%)}
-        .ic-text-zone{position:absolute;left:clamp(28px,6vw,80px);bottom:clamp(88px,14vw,140px);z-index:6;max-width:480px}
-        .ic-eyebrow{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:12px;font-family:'Open Sans',sans-serif;animation:icTextIn .55s .05s ease-out both}
-        .ic-ey-line{width:22px;height:1.5px;background:var(--y);flex-shrink:0}
-        .ic-title{font-family:'Oswald',sans-serif;font-size:clamp(34px,5.5vw,72px);font-weight:700;color:var(--w);line-height:1;letter-spacing:.01em;text-transform:uppercase;margin:0 0 14px;animation:icTextIn .55s .1s ease-out both}
-        .ic-desc{font-size:13.5px;color:rgba(255,255,255,.62);line-height:1.65;max-width:380px;margin:0 0 22px;font-family:'Open Sans',sans-serif;animation:icTextIn .55s .16s ease-out both}
+        .ic-panel{position:absolute;left:clamp(14px,3vw,28px);bottom:clamp(14px,3vw,28px);z-index:6;max-width:min(420px,86%);background:linear-gradient(120deg,var(--r),var(--r2));border-radius:16px;padding:18px 22px;box-shadow:0 18px 38px rgba(148,25,24,.32)}
+        .ic-eyebrow{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--y);margin-bottom:10px;font-family:'Open Sans',sans-serif;animation:icTextIn .55s .05s ease-out both}
+        .ic-ey-line{width:20px;height:1.5px;background:var(--y);flex-shrink:0}
+        .ic-title{font-family:'Oswald',sans-serif;font-size:clamp(20px,2.8vw,32px);font-weight:700;color:var(--w);line-height:1.08;letter-spacing:.01em;text-transform:uppercase;margin:0 0 10px;animation:icTextIn .55s .1s ease-out both}
+        .ic-desc{font-size:12.5px;color:rgba(255,255,255,.82);line-height:1.6;margin:0 0 16px;font-family:'Open Sans',sans-serif;animation:icTextIn .55s .16s ease-out both}
         .ic-actions{animation:icTextIn .55s .22s ease-out both}
-        .ic-discover-btn{display:inline-flex;align-items:center;gap:10px;background:transparent;color:var(--w);border:1.5px solid rgba(255,255,255,.5);padding:11px 22px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:background .22s,border-color .22s}
-        .ic-discover-btn:hover{background:var(--r);border-color:var(--r)}
-        .ic-disc-icon{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--y);color:var(--y);display:inline-flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0}
-        .ic-thumbs-zone{position:absolute;right:clamp(16px,3vw,40px);bottom:clamp(20px,3.5vw,40px);z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
-        .ic-arrows{display:flex;gap:7px}
-        .ic-arrow{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.28);color:var(--w);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;backdrop-filter:blur(6px);transition:background .2s,border-color .2s;line-height:1}
-        .ic-arrow:hover{background:var(--r);border-color:var(--r)}
-        .ic-thumbs-outer{overflow:hidden;max-width:clamp(280px,38vw,520px)}
-        .ic-thumbs-track{display:flex;gap:10px;transition:transform .55s cubic-bezier(.22,1,.36,1);will-change:transform}
-        .ic-thumb{flex-shrink:0;width:clamp(100px,11vw,145px);border-radius:8px;overflow:hidden;cursor:pointer;position:relative;aspect-ratio:16/10;transition:opacity .35s,border-color .35s,transform .45s cubic-bezier(.22,1,.36,1),box-shadow .35s;opacity:.55;border:2px solid transparent}
-        .ic-thumb:hover{opacity:.82}
-        .ic-thumb-active{opacity:1;border-color:var(--y);transform:translateY(-5px) scale(1.06);box-shadow:0 10px 24px rgba(0,0,0,.5),0 0 0 2px var(--y)}
-        .ic-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
-        .ic-thumb-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 65%)}
-        .ic-thumb-info{position:absolute;bottom:0;left:0;right:0;padding:8px 9px}
-        .ic-thumb-name{font-family:'Oswald',sans-serif;font-size:clamp(10px,1.1vw,13px);font-weight:600;color:var(--w);line-height:1.1;text-transform:uppercase}
-        .ic-thumb-bar{position:absolute;top:0;left:0;right:0;height:2.5px;background:var(--y);transition:opacity .25s}
-        .ic-counter{position:absolute;bottom:clamp(22px,3vw,38px);left:clamp(28px,6vw,80px);z-index:7;display:flex;align-items:center;gap:8px}
-        .ic-counter-cur{font-family:'Oswald',sans-serif;font-size:22px;font-weight:600;color:var(--w);line-height:1;letter-spacing:.02em}
-        .ic-counter-sep{width:24px;height:1px;background:rgba(255,255,255,.35);flex-shrink:0}
-        .ic-counter-tot{font-family:'Oswald',sans-serif;font-size:13px;font-weight:400;color:rgba(255,255,255,.42)}
-        .ic-progress-wrap{position:absolute;bottom:0;left:0;right:0;height:2px;display:flex;z-index:8}
-        .ic-prog-seg{flex:1;overflow:hidden;background:rgba(255,255,255,.12)}
+        .ic-discover-btn{display:inline-flex;align-items:center;gap:9px;background:var(--w);color:var(--r);border:none;padding:10px 20px;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;border-radius:999px;transition:transform .18s,box-shadow .18s}
+        .ic-discover-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.22)}
+        .ic-disc-icon{width:20px;height:20px;border-radius:50%;background:var(--r);color:var(--w);display:inline-flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0}
+        .ic-progress-wrap{display:flex;gap:4px;margin-top:12px}
+        .ic-prog-seg{flex:1;height:2.5px;border-radius:2px;overflow:hidden;background:${COLORS.border}}
         .ic-prog-fill{height:100%}
-        @media(max-width:640px){.ic-thumbs-zone{right:10px;bottom:14px}.ic-thumb{width:85px}.ic-title{font-size:clamp(28px,8vw,44px)}.ic-text-zone{bottom:72px;left:16px}.ic-counter{left:16px}}
+        .ic-thumbs-row{display:flex;align-items:center;gap:14px;margin-top:12px}
+        .ic-thumbs-outer{overflow:hidden;flex:1}
+        .ic-thumbs-track{display:flex;gap:10px;transition:transform .55s cubic-bezier(.22,1,.36,1);will-change:transform}
+        .ic-thumb{flex-shrink:0;width:clamp(84px,9vw,130px);border-radius:8px;overflow:hidden;cursor:pointer;position:relative;aspect-ratio:16/10;transition:opacity .35s,border-color .35s,transform .45s cubic-bezier(.22,1,.36,1),box-shadow .35s;opacity:.55;border:2px solid transparent}
+        .ic-thumb:hover{opacity:.85}
+        .ic-thumb-active{opacity:1;border-color:var(--r);transform:translateY(-3px);box-shadow:0 8px 18px rgba(15,23,42,.2)}
+        .ic-thumb-img{width:100%;height:100%;object-fit:cover;display:block}
+        .ic-thumb-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.58) 0%,transparent 65%)}
+        .ic-thumb-info{position:absolute;bottom:0;left:0;right:0;padding:6px 8px}
+        .ic-thumb-name{font-family:'Oswald',sans-serif;font-size:10px;font-weight:600;color:var(--w);line-height:1.1;text-transform:uppercase}
+        .ic-thumb-bar{position:absolute;top:0;left:0;right:0;height:2.5px;background:var(--r);transition:opacity .25s}
+        .ic-counter{display:flex;align-items:center;gap:7px;flex-shrink:0}
+        .ic-counter-cur{font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:${COLORS.text};line-height:1}
+        .ic-counter-sep{width:16px;height:1px;background:${COLORS.border};flex-shrink:0}
+        .ic-counter-tot{font-family:'Oswald',sans-serif;font-size:12px;font-weight:400;color:${COLORS.textLight}}
+        .ic-arrows{display:flex;gap:7px;flex-shrink:0}
+        .ic-arrow{width:32px;height:32px;border-radius:50%;border:1px solid ${COLORS.border};background:${COLORS.white};color:${COLORS.text};display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:background .2s,border-color .2s,color .2s;line-height:1}
+        .ic-arrow:hover{background:var(--r);border-color:var(--r);color:#fff}
+        @media(max-width:640px){.ic-panel{left:10px;right:10px;bottom:10px;max-width:none}.ic-thumbs-row{flex-wrap:wrap}.ic-counter{order:2}.ic-arrows{order:3}.ic-thumbs-outer{order:1;flex-basis:100%}}
 
         /* ══ MOSAIC ════ */
         .mw-root{display:grid;grid-template-columns:1.1fr 1fr;grid-template-rows:clamp(360px,46vw,540px);gap:3px}
@@ -980,13 +980,11 @@ const Proyectos = () => {
         /* ── Tablet (≤768px) ── */
         @media(max-width:768px){
           /* carousel */
-          .ic-root{height:clamp(360px,72vw,520px)}
-          .ic-text-zone{left:20px;bottom:clamp(80px,18vw,120px);max-width:calc(100% - 40px)}
-          .ic-title{font-size:clamp(28px,7vw,52px)}
+          .ic-stage{height:clamp(300px,64vw,420px)}
+          .ic-panel{left:16px;right:16px;bottom:16px;max-width:none}
+          .ic-title{font-size:clamp(22px,6vw,34px)}
           .ic-desc{display:none}
-          .ic-thumbs-zone{right:10px;bottom:12px;gap:7px}
           .ic-thumb{width:clamp(80px,10vw,120px)}
-          .ic-counter{left:20px}
 
           /* mosaic */
           .mw-root{grid-template-columns:1fr;grid-template-rows:auto}
@@ -1027,13 +1025,11 @@ const Proyectos = () => {
         /* ── Mobile (≤480px) ── */
         @media(max-width:480px){
           /* carousel */
-          .ic-root{height:clamp(300px,90vw,420px)}
-          .ic-title{font-size:clamp(24px,8vw,40px)}
-          .ic-thumbs-zone{display:none}
-          .ic-text-zone{left:16px;right:16px;bottom:52px;max-width:none}
+          .ic-stage{height:clamp(240px,80vw,340px)}
+          .ic-title{font-size:clamp(19px,6.5vw,26px)}
+          .ic-thumbs-outer{display:none}
           .ic-eyebrow{margin-bottom:8px}
           .ic-discover-btn{padding:9px 18px;font-size:10px}
-          .ic-counter{bottom:16px;left:16px}
 
           /* mosaic */
           .mw-root{grid-template-columns:1fr}
