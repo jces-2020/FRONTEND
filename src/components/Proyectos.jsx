@@ -47,7 +47,7 @@ const useWideOnly = (items, limit) => {
    SERVICIO DETALLE — página de producto: imagen grande a la izquierda,
    info a la derecha, selector de categoría + más proyectos debajo.
 ══════════════════════════════════════════════════════════════════ */
-const ServicioPanel = ({ servicio, servicios, onClose, onSelect, onCotizar }) => {
+const ServicioPanel = ({ servicio, servicios, onClose, onSelect }) => {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -91,9 +91,6 @@ const ServicioPanel = ({ servicio, servicios, onClose, onSelect, onCotizar }) =>
             {servicio.descripcion && <p className="sd-desc">{servicio.descripcion}</p>}
             {servicio.grosor && (
               <div className="sd-attr"><span>Grosor</span><b>{servicio.grosor}</b></div>
-            )}
-            {typeof onCotizar === 'function' && (
-              <button className="sd-cta" onClick={() => onCotizar(servicio)}>Solicitar cotización</button>
             )}
           </div>
         </div>
@@ -389,12 +386,6 @@ const Proyectos = () => {
 
   const handleClose = () => { setSelectedServicio(null); setPresupuestoOpen(false); setDetalleOpen(false); };
 
-  const handleCotizar = s => {
-    setSelectedServicio(s);
-    setDetalleOpen(false);
-    setPresupuestoOpen(true);
-  };
-
   const categorias = useMemo(() => {
     const set = new Set();
     servicios.forEach((s) => { if (s.categoria) set.add(s.categoria); });
@@ -492,8 +483,6 @@ const Proyectos = () => {
         .sd-attr{display:flex;gap:8px;align-items:baseline;font-size:13px;color:${COLORS.textLight}}
         .sd-attr span{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:10.5px;color:${COLORS.steel}}
         .sd-attr b{color:${COLORS.text}}
-        .sd-cta{align-self:flex-start;margin-top:8px;background:var(--r);color:#fff;border:none;padding:13px 28px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;font-family:'Open Sans',sans-serif;transition:transform .18s,box-shadow .18s;box-shadow:0 12px 26px rgba(148,25,24,.28)}
-        .sd-cta:hover{transform:translateY(-2px)}
         .sd-related-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:44px 0 18px}
         .sd-related-title{font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;color:${COLORS.text};text-transform:uppercase;margin:0}
         .sd-select{border:1.5px solid ${COLORS.border};border-radius:10px;padding:8px 14px;font-size:12.5px;font-family:'Open Sans',sans-serif;color:${COLORS.text};background:${COLORS.white};cursor:pointer}
@@ -629,7 +618,6 @@ const Proyectos = () => {
           servicios={servicios}
           onClose={handleClose}
           onSelect={s => setSelectedServicio(s)}
-          onCotizar={handleCotizar}
         />
       )}
     </div>
