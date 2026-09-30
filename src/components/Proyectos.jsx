@@ -452,6 +452,16 @@ const Proyectos = () => {
         .ic-arrow:hover{background:var(--r);border-color:var(--r);color:#fff}
         @media(max-width:640px){.ic-panel{left:10px;right:10px;bottom:10px;max-width:none}.ic-thumbs-row{flex-wrap:wrap}.ic-counter{order:2}.ic-arrows{order:3}.ic-thumbs-outer{order:1;flex-basis:100%}}
 
+        /* ══ FILTRO DE CATEGORÍA (debajo del carrusel) ════ */
+        .cat-filter{display:flex;align-items:center;gap:16px;padding:22px clamp(20px,5vw,60px) 4px;flex-wrap:wrap}
+        .cat-filter-label{font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:${COLORS.textLight};flex-shrink:0}
+        .cat-filter-track{display:flex;gap:9px;flex-wrap:wrap;flex:1}
+        .cat-chip{border:1.5px solid ${COLORS.border};background:${COLORS.white};color:${COLORS.text};padding:8px 18px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Open Sans',sans-serif;cursor:pointer;transition:border-color .2s,background .2s,color .2s,box-shadow .2s,transform .2s;box-shadow:0 2px 6px rgba(15,23,42,.05)}
+        .cat-chip:hover{border-color:var(--r);color:var(--r);transform:translateY(-1px)}
+        .cat-chip-active{background:var(--r);border-color:var(--r);color:#fff;box-shadow:0 10px 22px rgba(148,25,24,.28)}
+        .cat-chip-active:hover{color:#fff;transform:none}
+        @media(max-width:640px){.cat-filter{gap:10px}.cat-filter-label{width:100%}}
+
         /* ══ PROJECT CARD (única tarjeta para todo el catálogo) ════ */
         .pc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:26px;padding:8px clamp(20px,5vw,60px) 0}
         .pc-card{background:${COLORS.white};border-radius:18px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:0 10px 26px rgba(15,23,42,.10);transition:transform .25s ease,box-shadow .25s ease}
@@ -546,36 +556,6 @@ const Proyectos = () => {
         </div>
       )}
 
-      {!loading && categorias.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, padding: '18px clamp(20px,5vw,60px) 0' }}>
-          {['TODAS', ...categorias].map((cat) => {
-            const active = categoriaActiva === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setCategoriaActiva(cat)}
-                style={{
-                  border: `1.5px solid ${active ? COLORS.primary : COLORS.border}`,
-                  background: active ? COLORS.primary : 'transparent',
-                  color: active ? '#fff' : COLORS.text,
-                  padding: '7px 16px',
-                  borderRadius: 999,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '.06em',
-                  textTransform: 'uppercase',
-                  fontFamily: FONTS.body,
-                  cursor: 'pointer',
-                  transition: 'background .2s,border-color .2s,color .2s',
-                }}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {loading && (
         <div style={{ paddingTop: 80, display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 3 }}>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -597,6 +577,24 @@ const Proyectos = () => {
             <ImmersiveCarousel servicios={carousel} onClick={handleClick} />
           </div>
         )}
+
+        {categorias.length > 0 && (
+          <div className="cat-filter">
+            <span className="cat-filter-label">Categorías</span>
+            <div className="cat-filter-track">
+              {['TODAS', ...categorias].map((cat) => (
+                <button
+                  key={cat}
+                  className={`cat-chip ${categoriaActiva === cat ? 'cat-chip-active' : ''}`}
+                  onClick={() => setCategoriaActiva(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <SD label="Nuestros Servicios" color={COLORS.primary} />
         <div className="pc-grid">
           {filtrados.map((s) => (
