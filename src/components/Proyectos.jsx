@@ -474,8 +474,8 @@ const Proyectos = () => {
         .sd-close{width:36px;height:36px;border-radius:50%;border:1px solid ${COLORS.border};background:${COLORS.white};color:${COLORS.text};font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s,border-color .2s;flex-shrink:0}
         .sd-close:hover{background:var(--r);border-color:var(--r);color:#fff}
         .sd-hero{display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:start}
-        .sd-hero-img-wrap{border-radius:20px;overflow:hidden;background:${COLORS.surface};box-shadow:0 20px 50px rgba(15,23,42,.16);aspect-ratio:4/3}
-        .sd-hero-img{width:100%;height:100%;object-fit:cover;display:block}
+        .sd-hero-img-wrap{border-radius:20px;overflow:hidden;background:${COLORS.surface};box-shadow:0 20px 50px rgba(15,23,42,.16);display:flex;align-items:center;justify-content:center;max-height:min(72vh,640px)}
+        .sd-hero-img{width:100%;height:min(72vh,640px);object-fit:contain;display:block}
         .sd-hero-info{display:flex;flex-direction:column;gap:14px;padding-top:6px}
         .sd-cat-pill{align-self:flex-start;background:${COLORS.primary}14;color:var(--r);font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:6px 14px;border-radius:999px;font-family:'Open Sans',sans-serif}
         .sd-title{font-family:'Oswald',sans-serif;font-size:clamp(24px,3.4vw,38px);font-weight:700;color:${COLORS.text};text-transform:uppercase;line-height:1.12;margin:0}
