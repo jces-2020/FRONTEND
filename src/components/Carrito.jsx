@@ -612,7 +612,7 @@ const Carrito = () => {
           </thead>
           <tbody>
             {carritoLocal.map((row, idx) => (
-              <tr key={`${row.id_producto || row.id}-${idx}`} className="font-body cart-row" style={{ backgroundColor: idx % 2 === 0 ? COLORS.white : COLORS.gray[50] }}>
+              <tr key={`${row.id_producto || row.id}-${idx}`} className="font-body cart-row" style={{ backgroundColor: idx % 2 === 0 ? COLORS.white : 'rgba(128,194,220,0.12)' }}>
                 <td className="px-4 py-2 font-body cart-mobile-name" style={{ minWidth: 250, whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', wordBreak: 'break-word', borderColor: COLORS.border, color: COLORS.text, fontFamily: FONTS.body }} title={row.nombre}>{row.nombre}</td>
                 <td className="px-4 py-2 font-body cart-mobile-hide" style={{ borderColor: COLORS.border, color: COLORS.text, fontFamily: FONTS.body }}>{row.grosor}</td>
                 <td className="px-4 py-2 font-body cart-mobile-hide" style={{ borderColor: COLORS.border, color: COLORS.text, fontFamily: FONTS.body }}>{row.codigo}</td>
