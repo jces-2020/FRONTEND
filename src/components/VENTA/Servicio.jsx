@@ -1,50 +1,39 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { IconUser, IconBuilding, IconTrash, IconEdit, IconPlus, IconCheck, IconAlertTriangle, IconX } from "@tabler/icons-react";
+import { IconUser, IconBuilding, IconTrash, IconEdit, IconPlus, IconCheck, IconAlertTriangle, IconMapPin, IconClipboardList } from "@tabler/icons-react";
 import { COLORS, FONTS } from "../../colors";
 import { getPresupuestos, updatePresupuesto, removePresupuesto, clearPresupuestos } from "../../utils/ramPresupuestos";
 import PresupuestoServicio from "../PresupuestoServicio";
 import MapaUbicacion from "./MapaUbicacion";
+import BrandCard from "../UI/BrandCard";
+import BrandCtaButton from "../UI/BrandCtaButton";
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd, StripedTableSummaryRow } from "../UI/StripedTable";
+import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
 
 // --- CSS -----------------------------------------------------------------------
 const SERVICIO_CSS = `
 @keyframes svFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes svPickerIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.sv-root{font-family:${FONTS.body};padding:20px;display:grid;gap:18px;animation:svFadeUp .32s ease both}
-.sv-card{background:rgba(255,255,255,.66);backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);border:1.5px solid rgba(128,194,220,.36);border-radius:18px;box-shadow:0 10px 28px rgba(90,139,168,.14),inset 0 1px 0 rgba(255,255,255,.9);padding:18px}
-.sv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.sv-title{font-family:${FONTS.heading};font-size:1.15rem;font-weight:700;color:${COLORS.text};letter-spacing:.2px}
-.sv-btn{border:none;border-radius:11px;cursor:pointer;font-weight:700;font-family:${FONTS.heading};transition:all .18s ease;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-.sv-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(90,139,168,.2)}
-.sv-btn:active{transform:translateY(0) scale(.98)}
-.sv-btn-add{background:rgba(23,173,110,.12);color:#0b8a58;border:1px solid rgba(23,173,110,.3);padding:9px 16px}
-.sv-btn-clear{background:rgba(128,194,220,.18);color:${COLORS.secondaryDark};border:1px solid rgba(128,194,220,.4);padding:10px 16px}
-.sv-btn-save{background:rgba(148,25,24,.85);color:${COLORS.white};padding:10px 22px}
-.sv-grid{display:grid;grid-template-columns:minmax(300px,520px) minmax(340px,560px);gap:14px;align-items:start;margin-bottom:10px}
-.sv-field label{font-size:.8rem;color:${COLORS.textLight};margin-bottom:5px;display:block}
-.sv-input{width:100%;padding:10px 12px;border:1.5px solid ${COLORS.border};border-radius:11px;font-family:${FONTS.body};font-size:.98rem;color:${COLORS.text};background:rgba(255,255,255,.88);outline:none;transition:all .18s ease}
-.sv-input:focus{border-color:${COLORS.secondary};box-shadow:0 0 0 3px rgba(128,194,220,.18)}
-.sv-doc-row{display:flex;gap:4px;flex-wrap:nowrap;align-items:center}
+.sv-root{font-family:${FONTS.body};padding:24px;display:grid;gap:22px;animation:svFadeUp .32s ease both;max-width:1180px;margin:0 auto}
+.sv-body{padding:20px 22px 22px}
+.sv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.sv-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:9px 16px;border:1.5px solid rgba(128,194,220,.35);background:#ffffff;font-weight:700;font-family:${FONTS.heading};font-size:.95rem;color:${COLORS.textLight};cursor:pointer;transition:all .18s ease}
+.sv-pill:hover{background:rgba(128,194,220,.12)}
+.sv-grid{display:grid;grid-template-columns:minmax(300px,520px) minmax(340px,560px);gap:20px;align-items:start;margin-bottom:14px}
+.sv-field label{font-size:.82rem;color:${COLORS.textLight};margin-bottom:7px;display:block;font-weight:600}
+.sv-doc-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .sv-doc-row .sv-radio-row{flex:1 1 180px}
-.sv-doc-row .sv-input{width:190px;max-width:100%}
+.sv-doc-row .nm-input{width:190px;max-width:100%}
 .sv-radio-row{display:flex;gap:9px;flex-wrap:wrap}
-.sv-radio-chip{display:flex;align-items:center;gap:7px;border-radius:999px;padding:7px 14px;border:1.5px solid ${COLORS.border};background:rgba(255,255,255,.82);font-weight:700;font-family:${FONTS.heading};font-size:.95rem;color:${COLORS.textLight};cursor:pointer;transition:all .2s ease}
-.sv-radio-chip.active{border-color:${COLORS.primary};background:rgba(148,25,24,.08);color:${COLORS.primary};box-shadow:0 4px 12px rgba(148,25,24,.12)}
-.sv-status{font-size:.9rem;font-weight:600;margin:8px 0 10px;display:flex;align-items:center;gap:6px}
+.sv-status{font-size:.9rem;font-weight:600;margin:12px 0 0;display:flex;align-items:center;gap:6px}
 .sv-status.ok{color:#0b8a58}
 .sv-status.bad{color:${COLORS.error}}
-.sv-notice{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;border:1px solid transparent;font-size:.92rem;font-weight:700;margin-bottom:10px;animation:svFadeUp .2s ease both}
+.sv-notice{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:11px;border:1px solid transparent;font-size:.92rem;font-weight:700;margin-bottom:16px;animation:svFadeUp .2s ease both}
 .sv-notice.warn{background:rgba(242,189,36,.14);color:#8f5c00;border-color:rgba(242,189,36,.38)}
 .sv-notice.ok{background:rgba(23,173,110,.12);color:#0b8a58;border-color:rgba(23,173,110,.3)}
 .sv-notice.err{background:rgba(148,25,24,.12);color:${COLORS.primary};border-color:rgba(148,25,24,.34)}
-.sv-name-row{display:flex;align-items:center;gap:10px;max-width:520px}
-.sv-name-row .sv-input{flex:1}
-.sv-icon-dot{width:34px;height:34px;border-radius:10px;background:rgba(128,194,220,.14);border:1px solid rgba(128,194,220,.35);display:flex;align-items:center;justify-content:center;color:${COLORS.secondaryDark};flex-shrink:0}
-.sv-table-wrap{overflow:auto;border-radius:14px;border:1px solid rgba(128,194,220,.28);background:rgba(255,255,255,.72)}
-.sv-table{width:100%;border-collapse:collapse;min-width:620px}
-.sv-table th{background:rgba(232,246,252,.9);border-bottom:1px solid rgba(128,194,220,.3);padding:11px 12px;font-family:${FONTS.heading};font-size:.9rem;color:${COLORS.text};text-align:left;white-space:nowrap}
-.sv-table td{padding:9px 12px;border-bottom:1px solid rgba(128,194,220,.18);font-size:.92rem;color:${COLORS.text};vertical-align:middle}
-.sv-table tr:last-child td{border-bottom:none}
-.sv-table tr:hover td{background:rgba(128,194,220,.06)}
+.sv-name-row{display:flex;align-items:center;gap:12px;max-width:520px}
+.sv-name-row .nm-input{flex:1}
+.sv-icon-dot{width:38px;height:38px;border-radius:11px;background:rgba(128,194,220,.14);border:1px solid rgba(128,194,220,.35);display:flex;align-items:center;justify-content:center;color:${COLORS.secondaryDark};flex-shrink:0}
 .sv-svc-cell{display:flex;align-items:center;gap:9px}
 .sv-svc-thumb{width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid rgba(128,194,220,.3);flex-shrink:0}
 .sv-svc-thumb-ph{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(128,194,220,.2),rgba(90,139,168,.12));display:flex;align-items:center;justify-content:center;font-size:.7rem;color:${COLORS.textLight};flex-shrink:0;border:1px solid rgba(128,194,220,.2)}
@@ -53,9 +42,8 @@ const SERVICIO_CSS = `
 .sv-chip-del{background:rgba(148,25,24,.1);color:${COLORS.primary};border:1px solid rgba(148,25,24,.28)}
 .sv-chip-btn:hover{transform:scale(1.1)}
 .sv-empty{padding:36px 12px;text-align:center;color:${COLORS.textLight};font-size:.95rem}
-.sv-total-row td{background:rgba(232,246,252,.7);font-family:${FONTS.heading};font-weight:700}
-.sv-foot{margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.sv-foot-actions{display:flex;gap:10px;flex-wrap:wrap}
+.sv-foot{margin-top:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.sv-foot-actions{display:flex;gap:12px;flex-wrap:wrap}
 /* Picker de servicio */
 .sv-picker-wrap{position:relative;display:inline-block}
 .sv-picker{position:absolute;right:0;top:calc(100% + 8px);width:320px;max-height:360px;overflow-y:auto;background:rgba(255,255,255,.97);border:1.5px solid rgba(128,194,220,.4);border-radius:16px;box-shadow:0 20px 48px rgba(8,21,38,.18),0 6px 16px rgba(90,139,168,.14);z-index:200;animation:svPickerIn .2s ease both;padding:8px}
@@ -66,14 +54,12 @@ const SERVICIO_CSS = `
 .sv-picker-img-ph{width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,rgba(128,194,220,.2),rgba(90,139,168,.1));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;color:${COLORS.textLight};border:1px solid rgba(128,194,220,.18)}
 .sv-picker-name{font-weight:600;font-size:.9rem;color:${COLORS.text}}
 @media(max-width:900px){
-  .sv-root{padding:12px;gap:14px}
-  .sv-card{padding:14px}
+  .sv-root{padding:14px;gap:16px}
+  .sv-body{padding:16px}
   .sv-grid{grid-template-columns:1fr}
-  .sv-doc-row .sv-input{width:100%}
+  .sv-doc-row .nm-input{width:100%}
   .sv-name-row{max-width:100%}
-  .sv-table{min-width:520px}
   .sv-picker{width:calc(100vw - 32px);right:auto;left:0}
-  .sv-btn-save,.sv-btn-clear{width:100%}
   .sv-foot{flex-direction:column}
   .sv-foot-actions{width:100%;flex-direction:column}
 }
@@ -90,9 +76,12 @@ function injectCSS() {
   document.head.appendChild(el);
 }
 
+const nmInputStyle = { padding: '11px 16px', fontFamily: FONTS.body, fontSize: '.98rem' };
+
 // --- Componente ----------------------------------------------------------------
 export default function Servicio() {
   injectCSS();
+  injectNeumorphicStyles();
 
   // Catalogo de servicios
   const [catalogo, setCatalogo]     = useState([]);
@@ -387,175 +376,175 @@ export default function Servicio() {
     <div className="sv-root">
 
       {/* -- Datos del cliente ----------------------------------------------- */}
-      <div className="sv-card">
-        {notice && <div className={`sv-notice ${notice.type}`}>{notice.message}</div>}
+      <BrandCard icon={<IconUser size={14} />} title="Servicio - Datos del cliente">
+        <div className="sv-body">
+          {notice && <div className={`sv-notice ${notice.type}`}>{notice.message}</div>}
 
-        <div className="sv-head">
-          <div className="sv-title">Servicio - Datos del cliente</div>
-        </div>
-
-        <div className="sv-grid">
-          <div className="sv-field">
-            <label>Nombre / Razon social</label>
-            <div className="sv-name-row">
-              <div className="sv-icon-dot">
-                {tipoDesc === 'RUC' ? <IconBuilding size={18} /> : <IconUser size={18} />}
+          <div className="sv-grid">
+            <div className="sv-field">
+              <label>Nombre / Razón social</label>
+              <div className="sv-name-row">
+                <div className="sv-icon-dot">
+                  {tipoDesc === 'RUC' ? <IconBuilding size={18} /> : <IconUser size={18} />}
+                </div>
+                <input
+                  type="text"
+                  value={nombreCliente}
+                  onChange={e => setNombreCliente(e.target.value)}
+                  placeholder="Se completa automáticamente o escribe manualmente"
+                  className="nm-input"
+                  style={nmInputStyle}
+                />
               </div>
-              <input
-                type="text"
-                value={nombreCliente}
-                onChange={e => setNombreCliente(e.target.value)}
-                placeholder="Se completa automaticamente o escribe manualmente"
-                className="sv-input"
-                style={{ borderColor: busquedaOk ? '#17ad6e' : undefined }}
-              />
+            </div>
+
+            <div className="sv-field">
+              <label>Tipo y número de documento</label>
+              <div className="sv-doc-row">
+                <div className="sv-radio-row">
+                  {tiposDoc.map(t => (
+                    tipoSel === t.id_tipo ? (
+                      <BrandCtaButton
+                        key={t.id_tipo || t.descripcion}
+                        variant="primary"
+                        size="sm"
+                        onClick={() => { setTipoSel(t.id_tipo); setDigitos(''); setBusquedaEstado(''); setBusquedaOk(false); }}
+                      >
+                        {t.descripcion}
+                      </BrandCtaButton>
+                    ) : (
+                      <button
+                        key={t.id_tipo || t.descripcion}
+                        className="sv-pill"
+                        onClick={() => { setTipoSel(t.id_tipo); setDigitos(''); setBusquedaEstado(''); setBusquedaOk(false); }}
+                      >
+                        {t.descripcion}
+                      </button>
+                    )
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Número"
+                  value={digitos}
+                  onChange={e => setDigitos(e.target.value.replace(/\D/g, ''))}
+                  maxLength={tipoDesc === 'RUC' ? 11 : 8}
+                  disabled={!tipoSel}
+                  className="nm-input"
+                  style={{ ...nmInputStyle, opacity: tipoSel ? 1 : 0.5 }}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="sv-field">
-            <label>Tipo y numero de documento</label>
-            <div className="sv-doc-row">
-              <div className="sv-radio-row">
-                {tiposDoc.map(t => (
-                  <label
-                    key={t.id_tipo || t.descripcion}
-                    className={`sv-radio-chip${tipoSel === t.id_tipo ? ' active' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="tipo_documento"
-                      value={t.id_tipo}
-                      checked={tipoSel === t.id_tipo}
-                      onChange={() => { setTipoSel(t.id_tipo); setDigitos(''); setBusquedaEstado(''); setBusquedaOk(false); }}
-                      style={{ accentColor: COLORS.primary, width: 15, height: 15 }}
-                    />
-                    {t.descripcion}
-                  </label>
-                ))}
-              </div>
-              <input
-                type="text"
-                placeholder="Numero"
-                value={digitos}
-                onChange={e => setDigitos(e.target.value.replace(/\D/g, ''))}
-                maxLength={tipoDesc === 'RUC' ? 11 : 8}
-                disabled={!tipoSel}
-                className="sv-input"
-                style={{ opacity: tipoSel ? 1 : 0.5 }}
-              />
+          {busquedaEstado && (
+            <div className={`sv-status ${busquedaOk ? 'ok' : 'bad'}`}>
+              {busquedaOk ? <IconCheck size={16} /> : <IconAlertTriangle size={16} />}
+              {cargandoDoc ? 'Consultando...' : busquedaEstado}
             </div>
-          </div>
+          )}
         </div>
-
-        {busquedaEstado && (
-          <div className={`sv-status ${busquedaOk ? 'ok' : 'bad'}`}>
-            {busquedaOk ? <IconCheck size={16} /> : <IconAlertTriangle size={16} />}
-            {cargandoDoc ? 'Consultando...' : busquedaEstado}
-          </div>
-        )}
-      </div>
+      </BrandCard>
 
       {/* -- Remetro: fecha y ubicacion de la visita -------------------------- */}
-      <div className="sv-card">
-        <div className="sv-head">
-          <div className="sv-title">Remetro — visita para tomar medidas exactas</div>
-        </div>
+      <BrandCard icon={<IconMapPin size={14} />} title="Remetro — visita para tomar medidas exactas">
+        <div className="sv-body">
+          <div className="sv-grid">
+            <div className="sv-field">
+              <label>Fecha y hora del remetro</label>
+              <input
+                type="datetime-local"
+                value={fechaRemetro}
+                onChange={e => setFechaRemetro(e.target.value)}
+                className="nm-input"
+                style={nmInputStyle}
+              />
+            </div>
 
-        <div className="sv-grid">
-          <div className="sv-field">
-            <label>Fecha y hora del remetro</label>
-            <input
-              type="datetime-local"
-              value={fechaRemetro}
-              onChange={e => setFechaRemetro(e.target.value)}
-              className="sv-input"
-            />
+            <div className="sv-field">
+              <label>Dirección de la visita</label>
+              <input
+                ref={direccionRemetroRef}
+                type="text"
+                value={ubicacionRemetro.direccion}
+                onChange={e => setUbicacionRemetro(prev => ({ ...prev, direccion: e.target.value }))}
+                placeholder="Escribe la dirección o usa el mapa"
+                autoComplete="off"
+                className="nm-input"
+                style={nmInputStyle}
+              />
+            </div>
           </div>
 
-          <div className="sv-field">
-            <label>Dirección de la visita</label>
-            <input
-              ref={direccionRemetroRef}
-              type="text"
-              value={ubicacionRemetro.direccion}
-              onChange={e => setUbicacionRemetro(prev => ({ ...prev, direccion: e.target.value }))}
-              placeholder="Escribe la dirección o usa el mapa"
-              autoComplete="off"
-              className="sv-input"
-            />
-          </div>
+          <MapaUbicacion
+            direccion={ubicacionRemetro.direccion}
+            referencia={ubicacionRemetro.referencia}
+            latitud={ubicacionRemetro.latitud}
+            longitud={ubicacionRemetro.longitud}
+            onChange={({ distritoSugerido, ...resto }) => setUbicacionRemetro(prev => ({ ...prev, ...resto }))}
+            apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+            inputRef={direccionRemetroRef}
+          />
         </div>
-
-        <MapaUbicacion
-          direccion={ubicacionRemetro.direccion}
-          referencia={ubicacionRemetro.referencia}
-          latitud={ubicacionRemetro.latitud}
-          longitud={ubicacionRemetro.longitud}
-          onChange={({ distritoSugerido, ...resto }) => setUbicacionRemetro(prev => ({ ...prev, ...resto }))}
-          apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-          inputRef={direccionRemetroRef}
-        />
-      </div>
+      </BrandCard>
 
       {/* -- Tabla de servicios (RAM) ----------------------------------------- */}
-      <div className="sv-card">
-        <div className="sv-head">
-          <div className="sv-title">Servicios a presupuestar</div>
+      <BrandCard icon={<IconClipboardList size={14} />} title="Servicios a presupuestar">
+        <div className="sv-body">
+          <div className="sv-head">
+            <div />
+            {/* Picker */}
+            <div className="sv-picker-wrap" ref={pickerRef}>
+              <BrandCtaButton
+                variant="secondary"
+                size="sm"
+                onClick={() => { setPickerOpen(o => !o); setPickerQuery(''); }}
+              >
+                <IconPlus size={16} /> Agregar servicio
+              </BrandCtaButton>
 
-          {/* Picker */}
-          <div className="sv-picker-wrap" ref={pickerRef}>
-            <button
-              className="sv-btn sv-btn-add"
-              onClick={() => { setPickerOpen(o => !o); setPickerQuery(''); }}
-            >
-              <IconPlus size={16} /> Agregar servicio
-            </button>
-
-            {pickerOpen && (
-              <div className="sv-picker">
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="Buscar servicio..."
-                  value={pickerQuery}
-                  onChange={e => setPickerQuery(e.target.value)}
-                  className="sv-picker-search"
-                />
-                {catalogoFiltrado.length === 0 && (
-                  <div style={{ padding: '12px 10px', color: COLORS.textLight, fontSize: '.88rem' }}>
-                    Sin resultados
-                  </div>
-                )}
-                {catalogoFiltrado.map(svc => (
-                  <div
-                    key={svc.id_servicio}
-                    className="sv-picker-item"
-                    onClick={() => seleccionarServicioParaModal(svc)}
-                  >
-                    {svc.imagen_public_url
-                      ? <img src={svc.imagen_public_url} alt="" className="sv-picker-img" />
-                      : <div className="sv-picker-img-ph">img</div>
-                    }
-                    <span className="sv-picker-name">{svc.nombre}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+              {pickerOpen && (
+                <div className="sv-picker">
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Buscar servicio..."
+                    value={pickerQuery}
+                    onChange={e => setPickerQuery(e.target.value)}
+                    className="sv-picker-search"
+                  />
+                  {catalogoFiltrado.length === 0 && (
+                    <div style={{ padding: '12px 10px', color: COLORS.textLight, fontSize: '.88rem' }}>
+                      Sin resultados
+                    </div>
+                  )}
+                  {catalogoFiltrado.map(svc => (
+                    <div
+                      key={svc.id_servicio}
+                      className="sv-picker-item"
+                      onClick={() => seleccionarServicioParaModal(svc)}
+                    >
+                      {svc.imagen_public_url
+                        ? <img src={svc.imagen_public_url} alt="" className="sv-picker-img" />
+                        : <div className="sv-picker-img-ph">img</div>
+                      }
+                      <span className="sv-picker-name">{svc.nombre}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="sv-table-wrap">
-          <table className="sv-table">
-            <thead>
-              <tr>
-                <th style={{ width: 44 }}></th>
-                <th>Servicio</th>
-                <th style={{ width: 90 }}>Ancho (cm)</th>
-                <th style={{ width: 90 }}>Alto (cm)</th>
-                <th style={{ width: 100 }}>Total (S/)</th>
-                <th style={{ width: 72 }}>Opciones</th>
-              </tr>
-            </thead>
+          <StripedTable minWidth={620}>
+            <StripedTableHead>
+              <StripedTh width={44}></StripedTh>
+              <StripedTh>Servicio</StripedTh>
+              <StripedTh width={90}>Ancho (cm)</StripedTh>
+              <StripedTh width={90}>Alto (cm)</StripedTh>
+              <StripedTh width={100}>Total (S/)</StripedTh>
+              <StripedTh width={72}>Opciones</StripedTh>
+            </StripedTableHead>
             <tbody>
               {filas.length === 0 && (
                 <tr>
@@ -564,23 +553,23 @@ export default function Servicio() {
                   </td>
                 </tr>
               )}
-              {filas.map(p => (
-                <tr key={p.__ram_id}>
-                  <td>
+              {filas.map((p, idx) => (
+                <StripedTableRow key={p.__ram_id} index={idx}>
+                  <StripedTd>
                     {p.imagen_public_url
                       ? <img src={p.imagen_public_url} alt="" className="sv-svc-thumb" />
                       : <div className="sv-svc-thumb-ph">img</div>
                     }
-                  </td>
-                  <td>
+                  </StripedTd>
+                  <StripedTd>
                     <div className="sv-svc-cell">
                       <strong>{p.descripcion || '-'}</strong>
                     </div>
-                  </td>
-                  <td>{p.ancho || '-'}</td>
-                  <td>{p.alto  || '-'}</td>
-                  <td>S/ {parseFloat(p.total || 0).toFixed(2)}</td>
-                  <td>
+                  </StripedTd>
+                  <StripedTd>{p.ancho || '-'}</StripedTd>
+                  <StripedTd>{p.alto  || '-'}</StripedTd>
+                  <StripedTd>S/ {parseFloat(p.total || 0).toFixed(2)}</StripedTd>
+                  <StripedTd>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="sv-chip-btn sv-chip-edit" onClick={() => handleEditar(p)} title="Editar">
                         <IconEdit size={15} stroke={1.5} />
@@ -589,38 +578,30 @@ export default function Servicio() {
                         <IconTrash size={15} stroke={1.5} />
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </StripedTd>
+                </StripedTableRow>
               ))}
               {filas.length > 0 && (
-                <tr className="sv-total-row">
-                  <td colSpan="4" style={{ textAlign: 'right', paddingRight: 14 }}>TOTAL</td>
-                  <td>S/ {totalGeneral.toFixed(2)}</td>
-                  <td />
-                </tr>
+                <StripedTableSummaryRow tone="total" emphasis colSpan={4} label="TOTAL" value={`S/ ${totalGeneral.toFixed(2)}`} />
               )}
             </tbody>
-          </table>
-        </div>
+          </StripedTable>
 
-        <div className="sv-foot">
-          <div style={{ fontSize: '.86rem', color: COLORS.textLight }}>
-            {filas.length} servicio{filas.length !== 1 ? 's' : ''} en lista
-          </div>
-          <div className="sv-foot-actions">
-            {filas.length > 0 && (
-              <button className="sv-btn sv-btn-clear" onClick={handleLimpiar}>Limpiar</button>
-            )}
-            <button
-              className="sv-btn sv-btn-save"
-              onClick={handleGuardar}
-              disabled={guardando}
-            >
-              {guardando ? 'Guardando...' : 'Guardar servicios'}
-            </button>
+          <div className="sv-foot">
+            <div style={{ fontSize: '.86rem', color: COLORS.textLight }}>
+              {filas.length} servicio{filas.length !== 1 ? 's' : ''} en lista
+            </div>
+            <div className="sv-foot-actions">
+              {filas.length > 0 && (
+                <BrandCtaButton variant="primary" size="sm" onClick={handleLimpiar}>Limpiar</BrandCtaButton>
+              )}
+              <BrandCtaButton variant="secondary" onClick={handleGuardar} disabled={guardando}>
+                {guardando ? 'Guardando...' : 'Guardar servicios'}
+              </BrandCtaButton>
+            </div>
           </div>
         </div>
-      </div>
+      </BrandCard>
 
       {/* -- Modal PresupuestoServicio ---------------------------------------- */}
       {servicioSeleccionado && (
