@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { IconTrash } from '@tabler/icons-react';
+import { IconTrash, IconPackage, IconClipboardList } from '@tabler/icons-react';
 import { COLORS, FONTS } from '../../colors';
+import BrandCard from '../UI/BrandCard';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from '../UI/StripedTable';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
-const INSET_STYLE = {
-  padding: '10px 12px',
-  border: '1.5px solid rgba(128, 194, 220, 0.28)',
-  borderRadius: '8px',
-  fontFamily: FONTS.body,
-  fontSize: '0.9rem',
-  color: COLORS.text,
-  backgroundColor: 'rgba(255, 255, 255, 0.75)',
-  boxShadow: 'inset 0 2px 6px rgba(90, 139, 168, 0.08), inset 0 1px 0 rgba(255,255,255, 0.8)',
-  transition: 'all 0.2s ease',
-  outline: 'none'
-};
+const nmInputStyle = { padding: '10px 14px', fontFamily: FONTS.body, fontSize: '.9rem' };
 
 const loadJsPDF = () => new Promise((resolve, reject) => {
   if (window.jspdf?.jsPDF) return resolve(window.jspdf.jsPDF);
@@ -31,13 +24,15 @@ const loadJsPDF = () => new Promise((resolve, reject) => {
 });
 
 const ControlStock = ({ productosCache, categoriasCache }) => {
+  injectNeumorphicStyles();
+
   const [pedidoCantidades, setPedidoCantidades] = useState({});
   const [generandoPDF, setGenerandoPDF] = useState(false);
   const [selectedProductos, setSelectedProductos] = useState(new Set());
   const [excludedProductos, setExcludedProductos] = useState(new Set());
   const [productosNuevos, setProductosNuevos] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  
+
   // Formulario para nuevo producto
   const [formNombre, setFormNombre] = useState('');
   const [formCodigo, setFormCodigo] = useState('');
@@ -54,7 +49,7 @@ const ControlStock = ({ productosCache, categoriasCache }) => {
   }, []);
 
   const enStock = productosCache.filter(p => Number(p.cantidad) > 10);
-  const seleccionados = Array.from(selectedProductos).map(id => 
+  const seleccionados = Array.from(selectedProductos).map(id =>
     productosCache.find(p => p.id_producto === id)
   ).filter(Boolean);
   const bajoPedido = [
@@ -79,12 +74,12 @@ const ControlStock = ({ productosCache, categoriasCache }) => {
 
     setProductosNuevos(prev => [...prev, nuevoProducto]);
     setPedidoCantidades(prev => ({ ...prev, [nuevoProducto.id_producto]: formCantidad }));
-    
+
     // Guardar en localStorage
     const productosGuardados = JSON.parse(localStorage.getItem('productosNuevosPedido') || '[]');
     productosGuardados.push(nuevoProducto);
     localStorage.setItem('productosNuevosPedido', JSON.stringify(productosGuardados));
-    
+
     // Limpiar formulario
     setFormNombre('');
     setFormCodigo('');
@@ -99,7 +94,7 @@ const ControlStock = ({ productosCache, categoriasCache }) => {
       delete next[id];
       return next;
     });
-    
+
     // Actualizar localStorage
     const productosGuardados = JSON.parse(localStorage.getItem('productosNuevosPedido') || '[]');
     const actualizado = productosGuardados.filter(p => p.id_producto !== id);
@@ -271,296 +266,66 @@ const ControlStock = ({ productosCache, categoriasCache }) => {
     <div style={{
       display: 'grid',
       gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-      gap: isMobile ? '1.5rem' : '2rem',
-      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(243, 251, 255, 0.2) 100%)',
-      padding: isMobile ? '16px' : '24px',
-      borderRadius: '14px',
-      border: '1px solid rgba(128, 194, 220, 0.15)'
+      gap: isMobile ? '1.2rem' : '1.5rem',
     }}>
       {/* EN STOCK */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(10px)',
-        padding: isMobile ? '16px' : '20px',
-        borderRadius: '12px',
-        border: '1.5px solid rgba(128, 194, 220, 0.25)',
-        boxShadow: '0 4px 12px rgba(90, 139, 168, 0.08)',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <h3 style={{
-          fontSize: isMobile ? '0.9rem' : '1rem',
-          fontWeight: 'bold',
-          marginBottom: '1.5rem',
-          color: COLORS.primary,
-          fontFamily: FONTS.heading,
-          letterSpacing: '0.5px',
-          textTransform: 'uppercase'
-        }}>
-          En Stock (&gt; 10 unidades)
-        </h3>
-
-        <div style={{
-          flexGrow: 1,
-          overflowY: 'auto',
-          overflowX: 'auto',
-          borderRadius: '8px',
-          border: '1.5px solid rgba(128, 194, 220, 0.25)',
-          backgroundColor: 'rgba(243, 251, 255, 0.3)',
-          boxShadow: 'inset 0 2px 4px rgba(90, 139, 168, 0.06)'
-        }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: isMobile ? '0.75rem' : '0.9rem',
-            fontFamily: FONTS.body,
-            minWidth: isMobile ? '280px' : 'auto'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: 'rgba(128, 194, 220, 0.15)', position: 'sticky', top: 0 }}>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'center',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.65rem' : '0.8rem',
-                  width: isMobile ? '35px' : '40px'
-                }}>
-                  ✓
-                </th>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'left',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.65rem' : '0.8rem'
-                }}>
-                  Nombre
-                </th>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'left',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.65rem' : '0.8rem'
-                }}>
-                  Cantidad
-                </th>
-              </tr>
-            </thead>
+      <BrandCard icon={<IconPackage size={14} />} title={`En Stock (> 10 unidades)`}>
+        <div style={{ padding: isMobile ? '14px' : '18px 20px 20px' }}>
+          <StripedTable minWidth={0}>
+            <StripedTableHead>
+              <StripedTh width={40} align="center">✓</StripedTh>
+              <StripedTh>Nombre</StripedTh>
+              <StripedTh>Cantidad</StripedTh>
+            </StripedTableHead>
             <tbody>
-              {productosCache.filter(p => Number(p.cantidad) > 10).length === 0 ? (
-                <tr>
-                  <td colSpan={3} style={{
-                    textAlign: 'center',
-                    color: COLORS.textLight,
-                    padding: isMobile ? '1rem' : '1.5rem',
-                    fontFamily: FONTS.body,
-                    fontSize: isMobile ? '0.75rem' : 'inherit'
-                  }}>
-                    Todos los productos están bajo stock
-                  </td>
-                </tr>
+              {enStock.length === 0 ? (
+                <tr><td colSpan={3} style={{ textAlign: 'center', color: COLORS.textLight, padding: '1.25rem', fontFamily: FONTS.body }}>Todos los productos están bajo stock</td></tr>
               ) : (
-                productosCache.filter(p => Number(p.cantidad) > 10).map(p => {
+                enStock.map((p, idx) => {
                   const isSelected = selectedProductos.has(p.id_producto);
                   return (
-                    <tr key={p.id_producto} style={{
-                      borderBottom: '1px solid rgba(128, 194, 220, 0.12)',
-                      backgroundColor: isSelected ? 'rgba(148, 25, 24, 0.08)' : 'rgba(255, 255, 255, 0.5)',
-                      transition: 'background 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = isSelected ? 'rgba(148, 25, 24, 0.12)' : 'rgba(128, 194, 220, 0.05)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isSelected ? 'rgba(148, 25, 24, 0.08)' : 'rgba(255, 255, 255, 0.5)'; }}>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem',
-                        textAlign: 'center'
-                      }}>
-                        <input 
-                          type="checkbox" 
+                    <StripedTableRow key={p.id_producto} index={idx} style={isSelected ? { backgroundColor: 'rgba(148,25,24,0.08)' } : undefined}>
+                      <StripedTd align="center">
+                        <input
+                          type="checkbox"
                           checked={isSelected}
                           onChange={() => handleToggleProducto(p.id_producto)}
-                          style={{ cursor: 'pointer', width: '14px', height: '14px' }}
+                          style={{ cursor: 'pointer', width: 14, height: 14 }}
                         />
-                      </td>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem',
-                        color: COLORS.text,
-                        fontWeight: 500,
-                        fontSize: isMobile ? '0.75rem' : 'inherit',
-                        wordBreak: 'break-word'
-                      }}>
-                        {p.nombre}
-                      </td>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem',
-                        fontWeight: 700,
-                        color: '#0b8a58',
-                        fontSize: isMobile ? '0.75rem' : 'inherit'
-                      }}>
-                        {p.cantidad}
-                      </td>
-                    </tr>
+                      </StripedTd>
+                      <StripedTd style={{ fontWeight: 500, wordBreak: 'break-word' }}>{p.nombre}</StripedTd>
+                      <StripedTd style={{ fontWeight: 700, color: '#0b8a58' }}>{p.cantidad}</StripedTd>
+                    </StripedTableRow>
                   );
                 })
               )}
             </tbody>
-          </table>
+          </StripedTable>
         </div>
-      </div>
+      </BrandCard>
 
       {/* PENDIENTE */}
-      <div style={{
-        background: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(10px)',
-        padding: isMobile ? '16px' : '20px',
-        borderRadius: '12px',
-        border: '1.5px solid rgba(128, 194, 220, 0.25)',
-        boxShadow: '0 4px 12px rgba(90, 139, 168, 0.08)',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <h3 style={{
-          fontSize: isMobile ? '0.9rem' : '1rem',
-          fontWeight: 'bold',
-          marginBottom: '1.5rem',
-          color: COLORS.primary,
-          fontFamily: FONTS.heading,
-          letterSpacing: '0.5px',
-          textTransform: 'uppercase'
-        }}>
-          Pendiente de Pedido (≤ 10 unidades)
-        </h3>
-
-        <div style={{
-          flexGrow: 1,
-          overflowY: 'auto',
-          overflowX: 'auto',
-          borderRadius: '8px',
-          border: '1.5px solid rgba(128, 194, 220, 0.25)',
-          backgroundColor: 'rgba(243, 251, 255, 0.3)',
-          boxShadow: 'inset 0 2px 4px rgba(90, 139, 168, 0.06)',
-          marginBottom: '1rem'
-        }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: isMobile ? '0.7rem' : '0.9rem',
-            fontFamily: FONTS.body,
-            minWidth: isMobile ? '350px' : 'auto'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: 'rgba(128, 194, 220, 0.15)', position: 'sticky', top: 0 }}>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'left',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.6rem' : '0.8rem'
-                }}>
-                  Nombre
-                </th>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'left',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.6rem' : '0.8rem'
-                }}>
-                  Cantidad
-                </th>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'left',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.6rem' : '0.8rem'
-                }}>
-                  Cantidad a pedir
-                </th>
-                <th style={{
-                  border: '1px solid rgba(128, 194, 220, 0.2)',
-                  padding: isMobile ? '0.5rem' : '0.75rem',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  color: COLORS.text,
-                  textAlign: 'center',
-                  textTransform: 'uppercase',
-                  fontSize: isMobile ? '0.6rem' : '0.8rem',
-                  width: isMobile ? '40px' : '50px'
-                }}>
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {bajoPedido.length === 0 ? (
-                <tr>
-                  <td colSpan={4} style={{
-                    textAlign: 'center',
-                    color: COLORS.textLight,
-                    padding: isMobile ? '1rem' : '1.5rem',
-                    fontFamily: FONTS.body,
-                    fontSize: isMobile ? '0.75rem' : 'inherit'
-                  }}>
-                    Todos los productos tienen buena existencia
-                  </td>
-                </tr>
-              ) : (
-                bajoPedido.map(p => {
-                  return (
-                    <tr key={p.id_producto} style={{
-                      borderBottom: '1px solid rgba(128, 194, 220, 0.12)',
-                      backgroundColor: p.esNuevo ? 'rgba(144, 202, 249, 0.2)' : 'rgba(255, 250, 240, 0.5)',
-                      borderLeft: p.esNuevo ? '4px solid #2196F3' : 'none',
-                      transition: 'background 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = p.esNuevo ? 'rgba(144, 202, 249, 0.35)' : 'rgba(255, 190, 100, 0.08)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = p.esNuevo ? 'rgba(144, 202, 249, 0.2)' : 'rgba(255, 250, 240, 0.5)'; }}>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem',
-                        color: COLORS.text,
-                        fontWeight: 500,
-                        fontSize: isMobile ? '0.7rem' : 'inherit',
-                        wordBreak: 'break-word'
-                      }}>
+      <BrandCard icon={<IconClipboardList size={14} />} title={`Pendiente de Pedido (≤ 10 unidades)`}>
+        <div style={{ padding: isMobile ? '14px' : '18px 20px 20px' }}>
+          <div style={{ marginBottom: 16 }}>
+            <StripedTable minWidth={0}>
+              <StripedTableHead>
+                <StripedTh>Nombre</StripedTh>
+                <StripedTh>Cantidad</StripedTh>
+                <StripedTh>Cantidad a pedir</StripedTh>
+                <StripedTh width={50} align="center">Acciones</StripedTh>
+              </StripedTableHead>
+              <tbody>
+                {bajoPedido.length === 0 ? (
+                  <tr><td colSpan={4} style={{ textAlign: 'center', color: COLORS.textLight, padding: '1.25rem', fontFamily: FONTS.body }}>Todos los productos tienen buena existencia</td></tr>
+                ) : (
+                  bajoPedido.map((p, idx) => (
+                    <StripedTableRow key={p.id_producto} index={idx} style={p.esNuevo ? { backgroundColor: 'rgba(33,150,243,0.1)', borderLeft: '4px solid #2196F3' } : undefined}>
+                      <StripedTd style={{ fontWeight: 500, wordBreak: 'break-word' }}>
                         {p.nombre} {p.esNuevo && <span style={{ color: '#2196F3', fontWeight: 700 }}>●</span>}
-                      </td>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem',
-                        fontWeight: 700,
-                        color: '#c97f00',
-                        fontSize: isMobile ? '0.7rem' : 'inherit'
-                      }}>
-                        {p.cantidad}
-                      </td>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem'
-                      }}>
+                      </StripedTd>
+                      <StripedTd style={{ fontWeight: 700, color: '#c97f00' }}>{p.cantidad}</StripedTd>
+                      <StripedTd>
                         <input
                           type="text"
                           inputMode="numeric"
@@ -569,186 +334,102 @@ const ControlStock = ({ productosCache, categoriasCache }) => {
                             const val = e.target.value.replace(/[^0-9]/g, '');
                             setPedidoCantidades(prev => ({ ...prev, [p.id_producto]: val }));
                           }}
-                          style={{
-                            ...INSET_STYLE,
-                            width: '100%',
-                            boxSizing: 'border-box',
-                            fontSize: isMobile ? '0.7rem' : 'inherit',
-                            padding: isMobile ? '6px 8px' : '10px 12px'
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = 'rgba(128, 194, 220, 0.55)';
-                            e.target.style.boxShadow = 'inset 0 2px 6px rgba(90, 139, 168, 0.1), 0 0 0 3px rgba(128, 194, 220, 0.15)';
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = 'rgba(128, 194, 220, 0.28)';
-                            e.target.style.boxShadow = 'inset 0 2px 6px rgba(90, 139, 168, 0.08), inset 0 1px 0 rgba(255,255,255, 0.8)';
-                          }}
+                          className="nm-input"
+                          style={{ ...nmInputStyle, padding: '7px 12px', width: '100%' }}
                         />
-                      </td>
-                      <td style={{
-                        border: '1px solid rgba(128, 194, 220, 0.12)',
-                        padding: isMobile ? '0.5rem' : '0.75rem',
-                        textAlign: 'center'
-                      }}>
+                      </StripedTd>
+                      <StripedTd align="center">
                         <button
                           onClick={() => handleEliminarDelPedido(p.id_producto)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: '#e8443a',
-                            transition: 'transform 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '4px'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.15)';
-                            e.currentTarget.style.color = '#cc3830';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)';
-                            e.currentTarget.style.color = '#e8443a';
-                          }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e8443a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4 }}
                           title="Eliminar del pedido"
                         >
                           <IconTrash size={isMobile ? 14 : 18} stroke={2} />
                         </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Formulario para agregar producto nuevo */}
-        <div style={{
-          background: 'rgba(243, 251, 255, 0.5)',
-          border: '1px dashed rgba(128, 194, 220, 0.5)',
-          borderRadius: '8px',
-          padding: isMobile ? '12px' : '1.5rem',
-          marginBottom: isMobile ? '0.5rem' : '1rem'
-        }}>
-          <h4 style={{
-            fontSize: isMobile ? '0.8rem' : '0.9rem',
-            fontWeight: 700,
-            color: COLORS.primary,
-            marginBottom: '1rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            AGREGAR PRODUCTO
-          </h4>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: isMobile ? '8px' : '10px',
-            marginBottom: '1rem'
-          }}>
-            <input
-              type="text"
-              placeholder="Nombre del producto"
-              value={formNombre}
-              onChange={e => setFormNombre(e.target.value)}
-              style={{ ...INSET_STYLE, gridColumn: isMobile ? '1' : '1 / -1', fontSize: isMobile ? '0.85rem' : 'inherit' }}
-            />
-            <input
-              type="text"
-              placeholder="Código"
-              value={formCodigo}
-              onChange={e => setFormCodigo(e.target.value)}
-              style={{ ...INSET_STYLE, fontSize: isMobile ? '0.85rem' : 'inherit' }}
-            />
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="Cantidad"
-              value={formCantidad}
-              onChange={e => {
-                const val = e.target.value.replace(/[^0-9]/g, '');
-                setFormCantidad(val);
-              }}
-              style={{ ...INSET_STYLE, fontSize: isMobile ? '0.85rem' : 'inherit' }}
-            />
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="Grosor (opcional)"
-              value={formGrosor}
-              onChange={e => {
-                const val = e.target.value;
-                const cleanVal = val.replace(/[^0-9.]/g, '');
-                const parts = cleanVal.split('.');
-                const finalVal = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanVal;
-                setFormGrosor(finalVal);
-              }}
-              style={{ ...INSET_STYLE, fontSize: isMobile ? '0.85rem' : 'inherit' }}
-            />
+                      </StripedTd>
+                    </StripedTableRow>
+                  ))
+                )}
+              </tbody>
+            </StripedTable>
           </div>
 
-          <button
-            onClick={handleAgregarProductoNuevo}
-            style={{
-              width: '100%',
-              backgroundColor: 'rgba(128, 194, 220, 0.7)',
-              color: COLORS.text,
-              padding: isMobile ? '8px' : '10px',
-              borderRadius: '6px',
-              border: 'none',
+          {/* Formulario para agregar producto nuevo */}
+          <div style={{
+            background: 'rgba(128,194,220,0.06)',
+            border: '1.5px dashed rgba(128,194,220,0.4)',
+            borderRadius: 12,
+            padding: isMobile ? '14px' : '18px',
+            marginBottom: 16,
+          }}>
+            <h4 style={{
+              fontSize: isMobile ? '0.8rem' : '0.9rem',
               fontWeight: 700,
-              fontSize: isMobile ? '0.8rem' : '0.88rem',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(128, 194, 220, 0.9)';
-              e.currentTarget.style.transform = 'scale(1.02)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(128, 194, 220, 0.7)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            Agregar a tabla
-          </button>
-        </div>
+              color: COLORS.primary,
+              marginBottom: 12,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              fontFamily: FONTS.heading,
+            }}>
+              Agregar producto
+            </h4>
 
-        <button
-          style={{
-            width: '100%',
-            backgroundColor: COLORS.secondary,
-            color: COLORS.white,
-            padding: isMobile ? '10px 12px' : '12px 16px',
-            borderRadius: '8px',
-            fontWeight: 700,
-            border: 'none',
-            cursor: 'pointer',
-            fontFamily: FONTS.heading,
-            fontSize: isMobile ? '0.8rem' : '0.95rem',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 4px 8px rgba(128, 194, 220, 0.2)'
-          }}
-          onClick={handleGenerarPDF}
-          disabled={generandoPDF}
-          onMouseEnter={(e) => {
-            if (!generandoPDF) {
-              e.currentTarget.style.boxShadow = '0 6px 12px rgba(128, 194, 220, 0.3)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = '0 4px 8px rgba(128, 194, 220, 0.2)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          {generandoPDF ? '⏳ Generando PDF…' : 'Crear PDF'}
-        </button>
-      </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: isMobile ? 8 : 10,
+              marginBottom: 14,
+            }}>
+              <input
+                type="text"
+                placeholder="Nombre del producto"
+                value={formNombre}
+                onChange={e => setFormNombre(e.target.value)}
+                className="nm-input"
+                style={{ ...nmInputStyle, gridColumn: isMobile ? '1' : '1 / -1' }}
+              />
+              <input
+                type="text"
+                placeholder="Código"
+                value={formCodigo}
+                onChange={e => setFormCodigo(e.target.value)}
+                className="nm-input"
+                style={nmInputStyle}
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Cantidad"
+                value={formCantidad}
+                onChange={e => setFormCantidad(e.target.value.replace(/[^0-9]/g, ''))}
+                className="nm-input"
+                style={nmInputStyle}
+              />
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="Grosor (opcional)"
+                value={formGrosor}
+                onChange={e => {
+                  const cleanVal = e.target.value.replace(/[^0-9.]/g, '');
+                  const parts = cleanVal.split('.');
+                  setFormGrosor(parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleanVal);
+                }}
+                className="nm-input"
+                style={nmInputStyle}
+              />
+            </div>
+
+            <BrandCtaButton variant="secondary" style={{ width: '100%' }} onClick={handleAgregarProductoNuevo}>
+              Agregar a tabla
+            </BrandCtaButton>
+          </div>
+
+          <BrandCtaButton variant="primary" style={{ width: '100%' }} onClick={handleGenerarPDF} disabled={generandoPDF}>
+            {generandoPDF ? '⏳ Generando PDF…' : 'Crear PDF'}
+          </BrandCtaButton>
+        </div>
+      </BrandCard>
     </div>
   );
 };
