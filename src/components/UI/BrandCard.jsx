@@ -22,7 +22,7 @@ const BC_STYLES = `
     padding: 12px 16px 11px;
     background: rgba(var(--bcard-accent-rgb,128,194,220),.16);
     border-bottom: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.3);
-    box-shadow: inset 0 2px 6px rgba(90,139,168,.1);
+    box-shadow: inset 3px 3px 8px rgba(90,139,168,.14), inset -3px -3px 8px rgba(255,255,255,.6);
     display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   }
   .bcard-icon {
@@ -33,7 +33,7 @@ const BC_STYLES = `
   .bcard-title { font-weight: 700; font-size: 13px; color: var(--bcard-title-color,#2f6f8f); flex: 1; }
   .bcard-body {
     background: rgba(148,25,24,.08);
-    box-shadow: inset 0 2px 8px rgba(148,25,24,.08);
+    box-shadow: inset 3px 3px 8px rgba(148,25,24,.12), inset -3px -3px 8px rgba(255,255,255,.6);
   }
 `;
 
