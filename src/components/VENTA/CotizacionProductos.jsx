@@ -25,6 +25,7 @@ import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd }
 import BrandCtaButton from "../UI/BrandCtaButton";
 import ProductCard from "../UI/ProductCard";
 import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
+import BrandCard from "../UI/BrandCard";
 
 const RED    = '#941918';
 const CELESTE  = '#80C2DC';
@@ -41,7 +42,6 @@ const FB    = FONTS.body;
 const FM    = "'IBM Plex Mono',monospace";
 
 const CSS = `
-@keyframes cqFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes cqRow{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
 @keyframes cqCard{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 @keyframes cqAura{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(10px,-8px) scale(1.06)}}
@@ -94,29 +94,6 @@ const CSS = `
 .cq-main{flex:1.2;min-width:0;display:flex;flex-direction:column;gap:14px;}
 .cq-side{flex:1.25;min-width:0;max-width:560px;display:flex;flex-direction:column;gap:12px;}
 
-.cq-card{
-  border-radius:16px;position:relative;overflow:hidden;
-  background:linear-gradient(160deg,rgba(255,255,255,.78),rgba(243,251,255,.62));
-  backdrop-filter:blur(20px) saturate(180%);
-  -webkit-backdrop-filter:blur(20px) saturate(180%);
-  border:1.5px solid rgba(128,194,220,.30);
-  box-shadow:0 10px 28px rgba(90,139,168,.15),0 1px 0 rgba(255,255,255,.9) inset;
-  animation:cqFade .28s ease both;
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.cq-card:hover{
-  transform:translateY(-2px);
-  border-color:rgba(128,194,220,.50);
-  box-shadow:0 14px 30px rgba(90,139,168,.22),0 1px 0 rgba(255,255,255,.9) inset;
-}
-
-.cq-card-head{
-  padding:12px 16px 11px;
-  background:linear-gradient(90deg,rgba(128,194,220,.15),rgba(255,255,255,.45) 40%,rgba(255,214,0,.10));
-  border-bottom:1px solid rgba(128,194,220,.20);
-  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
-}
 
 .cq-scroll-t{max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(128,194,220,.35) transparent;}
 .cq-scroll-t::-webkit-scrollbar{width:4px}
@@ -829,12 +806,7 @@ const CotizacionView = () => {
       <div className="cq-main">
 
         {/* Datos cliente */}
-        <div className="cq-card">
-          <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:'linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent)',pointerEvents:'none'}}/>
-          <div className="cq-card-head">
-            <IconPackage size={14} color={CELESTE}/>
-            <span style={{fontFamily:FH,fontWeight:700,fontSize:13,color:TXT,flex:1}}>Cotización</span>
-          </div>
+        <BrandCard icon={<IconPackage size={14}/>} title="Cotización">
           <div style={{padding:'14px 16px 16px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,alignItems:'start'}}>
             <div>
               <label className="cq-label">Nombre / Razón social</label>
@@ -874,15 +846,13 @@ const CotizacionView = () => {
               </div>
             </div>
           </div>
-        </div>
+        </BrandCard>
 
         {/* Tabla */}
-        <div className="cq-card">
-          <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:'linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent)',pointerEvents:'none'}}/>
-          <div className="cq-card-head">
-            <span style={{fontFamily:FH,fontWeight:700,fontSize:13,color:TXT,flex:1}}>Productos en cotizaci\u00f3n</span>
-            {cotizacionProductos.length>0&&<span className="cq-chip">{cotizacionProductos.length} \u00edtem{cotizacionProductos.length!==1?'s':''}</span>}
-          </div>
+        <BrandCard
+          title="Productos en cotizaci\u00f3n"
+          meta={cotizacionProductos.length>0&&<span className="cq-chip">{cotizacionProductos.length} \u00edtem{cotizacionProductos.length!==1?'s':''}</span>}
+        >
           <div style={{padding:'10px 12px 14px'}}>
             <div className="cq-scroll-t">
               <StripedTable minWidth={0}>
@@ -960,18 +930,17 @@ const CotizacionView = () => {
               </div>
             </div>
           </div>
-        </div>
+        </BrandCard>
       </div>
 
             {/* ══ DERECHA: catálogo ══ */}
       <div className="cq-side">
-        <div className="cq-card" style={{flex:1}}>
-          <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:'linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent)',pointerEvents:'none'}}/>
-          <div className="cq-card-head">
-            <IconTag size={13} color={RED}/>
-            <span style={{fontFamily:FH,fontWeight:700,fontSize:13,color:TXT,flex:1}}>Catálogo</span>
-            <span style={{fontSize:10,fontFamily:FM,color:TXTD}}>{filteredProductsFiltered.length} producto{filteredProductsFiltered.length!==1?'s':''}</span>
-          </div>
+        <BrandCard
+          icon={<IconTag size={13}/>}
+          title="Catálogo"
+          meta={<span style={{fontSize:10,fontFamily:FB,color:TXTD}}>{filteredProductsFiltered.length} producto{filteredProductsFiltered.length!==1?'s':''}</span>}
+          style={{flex:1}}
+        >
           <div style={{padding:'12px 14px 0'}}>
             <div style={{position:'relative',marginBottom:10}}>
               <IconSearch size={13} color={TXTD} style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}/>
@@ -1024,7 +993,7 @@ const CotizacionView = () => {
               )}
             </div>
           </div>
-        </div>
+        </BrandCard>
       </div>
 
             {/* ── Popover flotante ── */}
