@@ -4,7 +4,7 @@ import { realizarCompra } from "../../services/compraService";
 import { animate, spring, stagger } from "animejs";
 import QRCodeLib from "qrcode";
 import {
-  IconPlus, IconTrash, IconEdit, IconSearch,
+  IconTrash, IconEdit, IconSearch,
   IconCheck, IconPackage, IconX, IconShoppingCartPlus, IconTag, IconExclamationMark, IconAlarm,
 } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
@@ -23,6 +23,7 @@ import {
 import { consultarDocumentoApi } from "../../config";
 import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from "../UI/StripedTable";
 import BrandCtaButton from "../UI/BrandCtaButton";
+import ProductCard from "../UI/ProductCard";
 
 const RED    = '#941918';
 const CELESTE  = '#80C2DC';
@@ -233,40 +234,6 @@ const CSS = `
 .cq-cat.active{background:rgba(148,25,24,.08);border-color:rgba(148,25,24,.30);color:#941918;}
 .cq-cat.active{box-shadow:0 5px 12px rgba(148,25,24,.12);}
 
-.cq-prod-card{
-  position:relative;border-radius:14px;overflow:hidden;
-  background:rgba(255,255,255,.72);
-  border:1.5px solid rgba(128,194,220,.25);
-  box-shadow:0 4px 16px rgba(90,139,168,.10);
-  transition:all .20s cubic-bezier(.4,0,.2,1);animation:cqCard .22s ease both;
-}
-.cq-prod-card:hover{transform:translateY(-3px) scale(1.012);box-shadow:0 12px 32px rgba(90,139,168,.20);border-color:rgba(128,194,220,.55);}
-
-.cq-prod-card::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:linear-gradient(110deg,transparent 0%,rgba(255,255,255,.36) 45%,transparent 85%);
-  transform:translateX(-130%);
-  pointer-events:none;
-}
-
-.cq-prod-card:hover::after{animation:cqShimmer .8s ease;}
-
-.cq-prod-img-wrap{width:100%;height:130px;background:linear-gradient(135deg,rgba(232,246,252,.80),rgba(210,236,248,.60));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
-.cq-prod-img-wrap img{width:100%;height:100%;object-fit:cover;}
-.cq-prod-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 10px 6px;background:linear-gradient(0deg,rgba(26,42,58,.72) 0%,transparent 100%);}
-
-.cq-prod-body{padding:8px 10px 10px;}
-
-.cq-plus-btn{
-  width:100%;padding:7px 0;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:5px;
-  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
-  background:linear-gradient(135deg,rgba(148,25,24,.12),rgba(148,25,24,.20));
-  border:1.5px solid rgba(148,25,24,.28);color:#941918;cursor:pointer;transition:all .15s;
-}
-.cq-plus-btn:hover{background:linear-gradient(135deg,rgba(148,25,24,.18),rgba(148,25,24,.28));border-color:rgba(148,25,24,.45);transform:translateY(-1px);}
-
 .cq-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;background:rgba(128,194,220,.12);border:1px solid rgba(128,194,220,.30);color:#5a7a90;}
 
 .cq-popover{position:fixed;z-index:1500;background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(236,248,255,.96));backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);border:1.5px solid rgba(128,194,220,.50);border-radius:20px;box-shadow:0 24px 48px rgba(26,42,58,.28),0 4px 12px rgba(128,194,220,.18),0 1px 0 rgba(255,255,255,.95) inset;padding:18px 16px 16px;width:230px;animation:cqPopIn .22s cubic-bezier(.34,1.4,.64,1) both;}
@@ -299,8 +266,7 @@ const CSS = `
 
 @media (prefers-reduced-motion: reduce){
   .cq-wrap::before,.cq-wrap::after,
-  .cq-total-row::before,
-  .cq-prod-card::after{animation:none !important;}
+  .cq-total-row::before{animation:none !important;}
 }
 
 .cq-print-sheet{display:none;}
@@ -1026,47 +992,25 @@ const CotizacionView = () => {
                   {productosVisibles.map(p=>{
                     const sinStock = Number(p.cantidad??-1) === 0;
                     return (
-                    <div key={p.id_producto} className="cq-prod-card" style={{position:'relative'}}>
-                      {/* Imagen con nombre encima */}
-                      <div className="cq-prod-img-wrap">
-                        {p.IMG_P?<img src={p.IMG_P} alt={p.nombre}/>:(
-                          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:6}}>
-                            <IconPackage size={36} color={CELESTE} style={{opacity:.45}}/>
-                          </div>
-                        )}
-                        <div className="cq-prod-overlay">
-                          <div style={{fontFamily:FH,fontWeight:700,fontSize:11.5,color:'rgba(255,255,255,.96)',lineHeight:1.25,textShadow:'0 1px 3px rgba(0,0,0,.5)',overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>
-                            {p.nombre}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Cuerpo */}
-                      <div className="cq-prod-body">
-                        <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:4}}>
-                          {p.codigo&&<span className="cq-chip" style={{fontSize:9}}>{p.codigo}</span>}
-                          {p.categoria&&<span className="cq-chip" style={{fontSize:9}}>{p.categoria}</span>}
-                        </div>
-                        {p.descripcion&&(
-                          <div style={{fontFamily:FB,fontSize:10.5,color:TXTL,marginBottom:5,lineHeight:1.35,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>
-                            {p.descripcion}
-                          </div>
-                        )}
-                        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:7}}>
-                          <div style={{fontFamily:FM,fontWeight:800,fontSize:13,color:RED}}>S/ {Number(p.precio_unitario||0).toFixed(2)}</div>
-                          <div style={{fontSize:9,fontFamily:FM,color:TXTD}}>Stock: <strong style={{color:Number(p.cantidad||0)>0?CELESTE2:RED}}>{p.cantidad??'N/A'}</strong></div>
-                        </div>
-                        <button className="cq-plus-btn"
-                          disabled={sinStock}
-                          style={sinStock?{opacity:.45,cursor:'not-allowed',background:'rgba(180,180,180,.10)',borderColor:'rgba(180,180,180,.28)',color:'#9ca3af'}:{}}
-                          onClick={()=>{
-                            if(sinStock)return;
-                            if (p.categoria==='VIDRIOS'||p.categoria==='ALUMINIOS'){setProductoSeleccionadoTipo(p);setModalTipoProductoVisible(true);}
-                            else{setPopoverProducto(p);setPopoverCantidad(1);}
-                          }}>
-                          <IconPlus size={11}/> {sinStock?'Sin stock':'Agregar'}
-                        </button>
-                      </div>
-                    </div>
+                      <ProductCard
+                        key={p.id_producto}
+                        size="sm"
+                        image={p.IMG_P}
+                        fallback={<IconPackage size={36} color={CELESTE} style={{opacity:.45}}/>}
+                        badge={p.categoria}
+                        codeBadge={p.codigo}
+                        name={p.nombre}
+                        description={p.descripcion}
+                        price={Number(p.precio_unitario||0)}
+                        stock={p.cantidad}
+                        disabled={sinStock}
+                        revealOnHover={false}
+                        onAdd={()=>{
+                          if(sinStock)return;
+                          if (p.categoria==='VIDRIOS'||p.categoria==='ALUMINIOS'){setProductoSeleccionadoTipo(p);setModalTipoProductoVisible(true);}
+                          else{setPopoverProducto(p);setPopoverCantidad(1);}
+                        }}
+                      />
                     );
                   })}
                 </div>
