@@ -13,8 +13,14 @@ import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
 const SERVICIO_CSS = `
 @keyframes svFadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes svPickerIn{from{opacity:0;transform:translateY(-8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.sv-root{font-family:${FONTS.body};padding:24px;display:grid;gap:22px;animation:svFadeUp .32s ease both;max-width:1180px;margin:0 auto}
+.sv-root{font-family:${FONTS.body};padding:24px;animation:svFadeUp .32s ease both;max-width:1440px;margin:0 auto}
+.sv-cols{display:grid;grid-template-columns:minmax(360px,1fr) minmax(420px,1.3fr);gap:22px;align-items:start}
+.sv-col-left{display:grid;gap:22px;min-width:0}
+.sv-col-right{min-width:0}
 .sv-body{padding:20px 22px 22px}
+@media(max-width:1100px){
+  .sv-cols{grid-template-columns:1fr}
+}
 .sv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .sv-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:9px 16px;border:1.5px solid rgba(128,194,220,.35);background:#ffffff;font-weight:700;font-family:${FONTS.heading};font-size:.95rem;color:${COLORS.textLight};cursor:pointer;transition:all .18s ease}
 .sv-pill:hover{background:rgba(128,194,220,.12)}
@@ -54,7 +60,9 @@ const SERVICIO_CSS = `
 .sv-picker-img-ph{width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,rgba(128,194,220,.2),rgba(90,139,168,.1));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;color:${COLORS.textLight};border:1px solid rgba(128,194,220,.18)}
 .sv-picker-name{font-weight:600;font-size:.9rem;color:${COLORS.text}}
 @media(max-width:900px){
-  .sv-root{padding:14px;gap:16px}
+  .sv-root{padding:14px}
+  .sv-cols{gap:16px}
+  .sv-col-left{gap:16px}
   .sv-body{padding:16px}
   .sv-grid{grid-template-columns:1fr}
   .sv-doc-row .nm-input{width:100%}
@@ -374,6 +382,8 @@ export default function Servicio() {
   // -- Render -----------------------------------------------------------------
   return (
     <div className="sv-root">
+      <div className="sv-cols">
+      <div className="sv-col-left">
 
       {/* -- Datos del cliente ----------------------------------------------- */}
       <BrandCard icon={<IconUser size={14} />} title="Servicio - Datos del cliente">
@@ -487,6 +497,9 @@ export default function Servicio() {
           />
         </div>
       </BrandCard>
+
+      </div>
+      <div className="sv-col-right">
 
       {/* -- Tabla de servicios (RAM) ----------------------------------------- */}
       <BrandCard icon={<IconClipboardList size={14} />} title="Servicios a presupuestar">
@@ -602,6 +615,9 @@ export default function Servicio() {
           </div>
         </div>
       </BrandCard>
+
+      </div>
+      </div>
 
       {/* -- Modal PresupuestoServicio ---------------------------------------- */}
       {servicioSeleccionado && (
