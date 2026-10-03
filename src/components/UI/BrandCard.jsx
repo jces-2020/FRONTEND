@@ -6,29 +6,29 @@ const BC_STYLES = `
     position: relative;
     border-radius: 16px;
     overflow: hidden;
-    background: linear-gradient(165deg, #ffffff 0%, #f1f6f9 100%);
-    border: 1px solid rgba(var(--bcard-accent-rgb,128,194,220),.25);
-    box-shadow: 0 8px 24px rgba(15,23,42,.07);
+    background: linear-gradient(165deg, #ffffff 0%, #eaf2f6 100%);
+    border: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.45);
+    box-shadow: 0 10px 28px rgba(15,23,42,.14);
     transition: box-shadow .2s ease, border-color .2s ease;
   }
   .bcard-accent {
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
     background: linear-gradient(90deg, var(--bcard-from,#941918) 0%, var(--bcard-mid,#80C2DC) 55%, var(--bcard-to,#ffd600) 100%);
   }
   .bcard-head {
     padding: 12px 16px 11px;
-    background: rgba(var(--bcard-accent-rgb,128,194,220),.07);
-    border-bottom: 1px solid rgba(var(--bcard-accent-rgb,128,194,220),.18);
+    background: rgba(var(--bcard-accent-rgb,128,194,220),.18);
+    border-bottom: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.35);
     display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   }
   .bcard-icon {
     display: flex; align-items: center; justify-content: center;
     width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
-    background: rgba(148,25,24,.08); color: #941918;
+    background: rgba(148,25,24,.16); color: #941918;
   }
-  .bcard-title { font-weight: 700; font-size: 13px; color: var(--bcard-title-color,#5a8ba8); flex: 1; }
+  .bcard-title { font-weight: 700; font-size: 13px; color: var(--bcard-title-color,#2f6f8f); flex: 1; }
   .bcard-body {
-    background: linear-gradient(180deg, rgba(148,25,24,.055) 0%, rgba(148,25,24,.02) 100%);
+    background: linear-gradient(180deg, rgba(148,25,24,.14) 0%, rgba(148,25,24,.05) 100%);
   }
 `;
 
@@ -75,4 +75,3 @@ export default function BrandCard({
     </div>
   );
 }
-
