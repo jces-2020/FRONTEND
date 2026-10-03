@@ -1,9 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { IconFileTypePdf } from '@tabler/icons-react';
+import { IconFileTypePdf, IconReportMoney, IconClipboardList, IconSearch } from '@tabler/icons-react';
 import { COLORS, FONTS } from "../../colors";
 import { apiFetch, buildApiUrl } from "../../config";
+import BrandCard from "../UI/BrandCard";
+import BrandCtaButton from "../UI/BrandCtaButton";
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from "../UI/StripedTable";
+import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
+
+const nmInputStyle = { padding: '11px 16px', fontFamily: FONTS.body, fontSize: '.95rem' };
 
 const CuadreCaja = () => {
+  injectNeumorphicStyles();
   const usuario = "Juan Pérez"; // Temporal
   const [totales, setTotales] = useState({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
   const [totalesAnimados, setTotalesAnimados] = useState({ tarjeta: 0, contado: 0, yape: 0, total: 0 });
@@ -97,16 +104,6 @@ const CuadreCaja = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const cardGlassStyle = {
-    background: 'linear-gradient(145deg, rgba(186, 232, 255, 0.45), rgba(120, 206, 245, 0.18))',
-    borderRadius: '16px',
-    boxShadow: '0 14px 32px rgba(77, 147, 199, 0.18)',
-    padding: '24px',
-    border: '1px solid rgba(140, 212, 247, 0.55)',
-    backdropFilter: 'blur(8px)',
-    animation: 'cardFloatIn 420ms ease-out both'
   };
 
   useEffect(() => {
@@ -524,190 +521,158 @@ const CuadreCaja = () => {
   };
 
   return (
-    <div style={{ 
-      background: COLORS.backgroundLight, 
-      minHeight: '100vh', 
+    <div style={{
+      background: COLORS.backgroundLight,
+      minHeight: '100vh',
       padding: '24px',
       fontFamily: FONTS.body
     }}>
       <style>{`
-        @keyframes cardFloatIn {
-          from { opacity: 0; transform: translateY(14px) scale(0.99); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes rowFadeIn {
-          from { opacity: 0; transform: translateX(-8px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
         @keyframes livePulseGlow {
           0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.28); }
           100% { box-shadow: 0 0 0 14px rgba(13, 148, 136, 0); }
         }
       `}</style>
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '0 auto', 
-        display: 'grid', 
-        gridTemplateColumns: '1fr 1fr', 
-        gap: '32px' 
+      <div style={{
+        maxWidth: '1200px',
+        margin: '0 auto',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '32px'
       }}>
         {/* Panel izquierdo: Totales y comprobantes */}
-        <div>
-          <div style={{ 
-            background: COLORS.white, 
-            borderRadius: '16px', 
-            boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08)`, 
-            padding: '24px', 
-            marginBottom: '32px' 
-          }}>
-            <h2 style={{ 
-              fontSize: '2.2rem', 
-              fontWeight: 700, 
-              marginBottom: '20px',
-              fontFamily: FONTS.heading,
-              color: COLORS.text
-            }}>Cuadre de Caja</h2>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(13, 148, 136, 0.08)', border: '1px solid rgba(13, 148, 136, 0.22)' }}>
-              <span style={{ width: '9px', height: '9px', borderRadius: '999px', background: estadoRealtime === 'conectado' ? '#0d9488' : '#f59e0b', animation: pulsoRealtime ? 'livePulseGlow 850ms ease-out' : 'none' }} />
-              <span style={{ fontSize: '0.85rem', color: '#0f766e', fontFamily: FONTS.body, fontWeight: 700 }}>
-                {estadoRealtime === 'conectado' ? 'Tiempo real activo' : 'Reconectando tiempo real...'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <span style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Por Tarjeta:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ 
-                    width: '100%', 
-                    height: '12px', 
-                    background: COLORS.border, 
-                    borderRadius: '999px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      width: `${totalesAnimados.total > 0 ? (totalesAnimados.tarjeta / totalesAnimados.total) * 100 : 0}%`,
-                      height: '100%',
-                      background: COLORS.primary,
-                      transition: 'width 0.7s cubic-bezier(.22,1,.36,1)'
-                    }} />
-                  </div>
-                  <span style={{ fontWeight: 700, color: COLORS.primary, fontFamily: FONTS.body }}>S/ {totalesAnimados.tarjeta.toFixed(2)}</span>
-                </div>
+        <div style={{ display: 'grid', gap: '32px' }}>
+          <BrandCard icon={<IconReportMoney size={14} />} title="Cuadre de Caja">
+            <div style={{ padding: '20px 22px 22px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '18px', padding: '6px 12px', borderRadius: '999px', background: 'rgba(13, 148, 136, 0.08)', border: '1px solid rgba(13, 148, 136, 0.22)' }}>
+                <span style={{ width: '9px', height: '9px', borderRadius: '999px', background: estadoRealtime === 'conectado' ? '#0d9488' : '#f59e0b', animation: pulsoRealtime ? 'livePulseGlow 850ms ease-out' : 'none' }} />
+                <span style={{ fontSize: '0.85rem', color: '#0f766e', fontFamily: FONTS.body, fontWeight: 700 }}>
+                  {estadoRealtime === 'conectado' ? 'Tiempo real activo' : 'Reconectando tiempo real...'}
+                </span>
               </div>
-              <div>
-                <span style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Al Contado:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ 
-                    width: '100%', 
-                    height: '12px', 
-                    background: COLORS.border, 
-                    borderRadius: '999px',
-                    overflow: 'hidden'
-                  }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <span style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Por Tarjeta:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{
-                      width: `${totalesAnimados.total > 0 ? (totalesAnimados.contado / totalesAnimados.total) * 100 : 0}%`,
-                      height: '100%',
-                      background: COLORS.success,
-                      transition: 'width 0.7s cubic-bezier(.22,1,.36,1)'
-                    }} />
+                      width: '100%',
+                      height: '12px',
+                      background: COLORS.border,
+                      borderRadius: '999px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${totalesAnimados.total > 0 ? (totalesAnimados.tarjeta / totalesAnimados.total) * 100 : 0}%`,
+                        height: '100%',
+                        background: COLORS.primary,
+                        transition: 'width 0.7s cubic-bezier(.22,1,.36,1)'
+                      }} />
+                    </div>
+                    <span style={{ fontWeight: 700, color: COLORS.primary, fontFamily: FONTS.body }}>S/ {totalesAnimados.tarjeta.toFixed(2)}</span>
                   </div>
-                  <span style={{ fontWeight: 700, color: COLORS.success, fontFamily: FONTS.body }}>S/ {totalesAnimados.contado.toFixed(2)}</span>
                 </div>
-              </div>
-              <div>
-                <span style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Por Yape:</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ 
-                    width: '100%', 
-                    height: '12px', 
-                    background: COLORS.border, 
-                    borderRadius: '999px',
-                    overflow: 'hidden'
-                  }}>
+                <div>
+                  <span style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Al Contado:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{
-                      width: `${totalesAnimados.total > 0 ? (totalesAnimados.yape / totalesAnimados.total) * 100 : 0}%`,
-                      height: '100%',
-                      background: COLORS.secondary,
-                      transition: 'width 0.7s cubic-bezier(.22,1,.36,1)'
-                    }} />
+                      width: '100%',
+                      height: '12px',
+                      background: COLORS.border,
+                      borderRadius: '999px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${totalesAnimados.total > 0 ? (totalesAnimados.contado / totalesAnimados.total) * 100 : 0}%`,
+                        height: '100%',
+                        background: COLORS.success,
+                        transition: 'width 0.7s cubic-bezier(.22,1,.36,1)'
+                      }} />
+                    </div>
+                    <span style={{ fontWeight: 700, color: COLORS.success, fontFamily: FONTS.body }}>S/ {totalesAnimados.contado.toFixed(2)}</span>
                   </div>
-                  <span style={{ fontWeight: 700, color: COLORS.secondary, fontFamily: FONTS.body }}>S/ {totalesAnimados.yape.toFixed(2)}</span>
                 </div>
-              </div>
-              <div style={{ marginTop: '20px', fontSize: '1.6rem', fontWeight: 700, color: COLORS.text, fontFamily: FONTS.heading }}>
-                Total General: S/ {totalesAnimados.total.toFixed(2)}
+                <div>
+                  <span style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Por Yape:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '100%',
+                      height: '12px',
+                      background: COLORS.border,
+                      borderRadius: '999px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        width: `${totalesAnimados.total > 0 ? (totalesAnimados.yape / totalesAnimados.total) * 100 : 0}%`,
+                        height: '100%',
+                        background: COLORS.secondary,
+                        transition: 'width 0.7s cubic-bezier(.22,1,.36,1)'
+                      }} />
+                    </div>
+                    <span style={{ fontWeight: 700, color: COLORS.secondary, fontFamily: FONTS.body }}>S/ {totalesAnimados.yape.toFixed(2)}</span>
+                  </div>
+                </div>
+                <div style={{ marginTop: '20px', fontSize: '1.6rem', fontWeight: 700, color: COLORS.text, fontFamily: FONTS.heading }}>
+                  Total General: S/ {totalesAnimados.total.toFixed(2)}
+                </div>
               </div>
             </div>
-          </div>
+          </BrandCard>
 
           {/* Totales por Tipo de Venta */}
           {Object.keys(totalesPorTipo).length > 0 && (
-            <div style={{ 
-              background: COLORS.white, 
-              borderRadius: '16px', 
-              boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08)`, 
-              padding: '24px', 
-              marginBottom: '32px' 
-            }}>
-              <h3 style={{ 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                fontFamily: FONTS.heading, 
-                color: COLORS.text,
-                marginBottom: '16px'
-              }}>Totales por Tipo de Venta</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {Object.entries(totalesPorTipo).map(([tipo, monto]) => (
-                  <div key={tipo} style={{ 
-                    background: 'rgba(13, 148, 136, 0.08)',
-                    border: '1px solid rgba(13, 148, 136, 0.22)',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    fontFamily: FONTS.body
-                  }}>
-                    <div style={{ fontSize: '0.9rem', color: COLORS.textLight, fontWeight: 500 }}>{tipo}</div>
-                    <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0d9488', marginTop: '4px' }}>S/ {Number(monto).toFixed(2)}</div>
-                  </div>
-                ))}
+            <BrandCard title="Totales por Tipo de Venta">
+              <div style={{ padding: '20px 22px 22px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  {Object.entries(totalesPorTipo).map(([tipo, monto]) => (
+                    <div key={tipo} style={{
+                      background: 'rgba(13, 148, 136, 0.08)',
+                      border: '1px solid rgba(13, 148, 136, 0.22)',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      fontFamily: FONTS.body
+                    }}>
+                      <div style={{ fontSize: '0.9rem', color: COLORS.textLight, fontWeight: 500 }}>{tipo}</div>
+                      <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#0d9488', marginTop: '4px' }}>S/ {Number(monto).toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </BrandCard>
           )}
 
-          <div style={cardGlassStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 700, fontFamily: FONTS.heading, color: COLORS.text }}>Comprobantes</h3>
-              <input
-                type="text"
-                placeholder="Buscar comprobante..."
-                style={{ 
-                  border: '1px solid rgba(117, 199, 236, 0.7)', 
-                  borderRadius: '8px', 
-                  padding: '8px 12px',
-                  fontFamily: FONTS.body,
-                  color: COLORS.text,
-                  background: 'rgba(240, 251, 255, 0.65)',
-                  backdropFilter: 'blur(4px)'
-                }}
-                value={busqueda}
-                onChange={e => setBusqueda(e.target.value)}
-              />
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', fontSize: '0.9rem', fontFamily: FONTS.body }}>
-                <thead>
-                  <tr style={{ background: 'rgba(175, 228, 248, 0.45)' }}>
-                    <th style={{ padding: '8px', color: COLORS.text, fontFamily: FONTS.heading }}>Comprobante</th>
-                    <th style={{ padding: '8px', color: COLORS.text, fontFamily: FONTS.heading }}>Cliente</th>
-                    <th style={{ padding: '8px', color: COLORS.text, fontFamily: FONTS.heading }}>Monto</th>
-                    <th style={{ padding: '8px', color: COLORS.text, fontFamily: FONTS.heading }}>Fecha</th>
-                  </tr>
-                </thead>
+          <BrandCard
+            icon={<IconFileTypePdf size={14} />}
+            title="Comprobantes"
+            meta={
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: COLORS.textLight, pointerEvents: 'none', display: 'flex' }}>
+                  <IconSearch size={14} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar comprobante..."
+                  className="nm-input"
+                  style={{ ...nmInputStyle, padding: '8px 12px 8px 32px', fontSize: '.85rem', width: 190 }}
+                  value={busqueda}
+                  onChange={e => setBusqueda(e.target.value)}
+                />
+              </div>
+            }
+          >
+            <div style={{ padding: '16px 22px 22px' }}>
+              <StripedTable minWidth={0}>
+                <StripedTableHead>
+                  <StripedTh>Comprobante</StripedTh>
+                  <StripedTh>Cliente</StripedTh>
+                  <StripedTh align="right">Monto</StripedTh>
+                  <StripedTh>Fecha</StripedTh>
+                </StripedTableHead>
                 <tbody>
                   {comprobantesFiltrados.length === 0 ? (
                     <tr><td colSpan={4} style={{ textAlign: 'center', color: COLORS.textLight, padding: '16px' }}>No hay comprobantes</td></tr>
-                  ) : comprobantesFiltrados.map(c => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid rgba(129, 208, 241, 0.45)', animation: 'rowFadeIn 300ms ease-out both' }}>
-                      <td style={{ padding: '8px', color: COLORS.text, fontWeight: 600, textAlign: 'center' }}>
+                  ) : comprobantesFiltrados.map((c, idx) => (
+                    <StripedTableRow key={c.id} index={idx}>
+                      <StripedTd align="center">
                         {esPdfUrl(c.documento) ? (
                           <a
                             href={c.documento}
@@ -721,213 +686,145 @@ const CuadreCaja = () => {
                         ) : (
                           <span>{c.comprobante || c.numero || '-'}</span>
                         )}
-                      </td>
-                      <td style={{ padding: '8px', color: COLORS.text }}>{c.cliente}</td>
-                      <td style={{ padding: '8px', color: COLORS.text }}>S/ {c.monto.toFixed(2)}</td>
-                      <td style={{ padding: '8px', color: COLORS.text }}>{c.fecha}</td>
-                    </tr>
+                      </StripedTd>
+                      <StripedTd>{c.cliente}</StripedTd>
+                      <StripedTd align="right">S/ {c.monto.toFixed(2)}</StripedTd>
+                      <StripedTd>{c.fecha}</StripedTd>
+                    </StripedTableRow>
                   ))}
                 </tbody>
-              </table>
+              </StripedTable>
             </div>
-          </div>
+          </BrandCard>
         </div>
         {/* Panel derecho: Base de caja y retiro */}
-        <div>
-          <div style={{ 
-            background: COLORS.white, 
-            borderRadius: '16px', 
-            boxShadow: pulsoRealtime ? `0 10px 30px rgba(13, 148, 136, 0.16)` : `0 4px 16px rgba(0, 0, 0, 0.08)`, 
-            padding: '24px', 
-            marginBottom: '32px',
-            transition: 'box-shadow 0.45s ease, transform 0.45s ease',
-            transform: pulsoRealtime ? 'translateY(-2px)' : 'translateY(0)'
-          }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '20px', fontFamily: FONTS.heading, color: COLORS.text }}>Cantidad en Caja</h3>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: COLORS.text, fontFamily: FONTS.heading }}>S/ {baseCajaAnimada.toFixed(2)}</span>
-              <button
-                style={{ 
-                  background: COLORS.primary, 
-                  color: COLORS.white, 
-                  padding: '12px 20px', 
-                  borderRadius: '8px', 
-                  fontWeight: 700, 
-                  border: 'none', 
-                  cursor: 'pointer',
-                  boxShadow: `0 2px 8px rgba(0, 0, 0, 0.1)`,
-                  fontFamily: FONTS.heading,
-                  fontSize: '1rem'
-                }}
-                onClick={handleImprimir}
-              >Imprimir Arqueo</button>
+        <div style={{ display: 'grid', gap: '32px', alignContent: 'start' }}>
+          <BrandCard
+            icon={<IconReportMoney size={14} />}
+            title="Cantidad en Caja"
+            style={{
+              boxShadow: pulsoRealtime ? '0 10px 30px rgba(13, 148, 136, 0.22)' : undefined,
+              transform: pulsoRealtime ? 'translateY(-2px)' : 'translateY(0)',
+              transition: 'box-shadow 0.45s ease, transform 0.45s ease',
+            }}
+          >
+            <div style={{ padding: '20px 22px 22px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: 10 }}>
+                <span style={{ fontSize: '2rem', fontWeight: 700, color: COLORS.text, fontFamily: FONTS.heading }}>S/ {baseCajaAnimada.toFixed(2)}</span>
+                <BrandCtaButton variant="primary" size="sm" onClick={handleImprimir}>Imprimir Arqueo</BrandCtaButton>
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Cantidad a Retirar</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  className="nm-input"
+                  style={nmInputStyle}
+                  value={retiro}
+                  onChange={e => {
+                    let val = e.target.value.replace(/[^0-9.]/g, "");
+                    const partes = val.split(".");
+                    if (partes.length > 2) val = partes[0] + "." + partes.slice(1).join("");
+                    if (partes[1]) val = partes[0] + "." + partes[1].slice(0, 2);
+                    if (val !== "" && Number(val) > baseCaja) val = String(baseCaja);
+                    setRetiro(val);
+                    setError("");
+                  }}
+                />
+              </div>
+              <BrandCtaButton variant="primary" style={{ width: '100%' }} onClick={handleRetiro} disabled={loading}>
+                Retirar
+              </BrandCtaButton>
+              <BrandCtaButton variant="secondary" style={{ width: '100%', marginTop: 12 }} onClick={handleCrearNuevaCaja} disabled={loading}>
+                Crear Nueva Caja
+              </BrandCtaButton>
+              {error && <div style={{ marginTop: '8px', color: COLORS.error, fontWeight: 600, fontFamily: FONTS.body }}>{error}</div>}
+              {success && <div style={{ marginTop: '8px', color: COLORS.success, fontWeight: 600, fontFamily: FONTS.body }}>{success}</div>}
             </div>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text, fontSize: '1.05rem' }}>Cantidad a Retirar</label>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                style={{
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  width: '100%',
-                  fontFamily: FONTS.body,
-                  color: COLORS.text
-                }}
-                value={retiro}
-                onChange={e => {
-                  let val = e.target.value.replace(/[^0-9.]/g, "");
-                  const partes = val.split(".");
-                  if (partes.length > 2) val = partes[0] + "." + partes.slice(1).join("");
-                  if (partes[1]) val = partes[0] + "." + partes[1].slice(0, 2);
-                  if (val !== "" && Number(val) > baseCaja) val = String(baseCaja);
-                  setRetiro(val);
-                  setError("");
-                }}
-              />
-            </div>
-            <button
-              style={{ 
-                background: COLORS.primary, 
-                color: COLORS.white, 
-                padding: '12px 20px', 
-                borderRadius: '8px', 
-                fontWeight: 700, 
-                width: '100%', 
-                border: 'none', 
-                cursor: 'pointer',
-                boxShadow: `0 2px 8px rgba(0, 0, 0, 0.1)`,
-                fontFamily: FONTS.heading,
-                fontSize: '1rem'
-              }}
-              onClick={handleRetiro}
-              disabled={loading}
-            >Retirar</button>
-            <button
-              style={{ 
-                background: COLORS.secondary, 
-                color: COLORS.white, 
-                padding: '12px 20px', 
-                borderRadius: '8px', 
-                fontWeight: 700, 
-                width: '100%', 
-                border: 'none', 
-                cursor: 'pointer',
-                boxShadow: `0 2px 8px rgba(0, 0, 0, 0.1)`,
-                fontFamily: FONTS.heading,
-                fontSize: '1rem',
-                marginTop: '12px'
-              }}
-              onClick={handleCrearNuevaCaja}
-              disabled={loading}
-            >Crear Nueva Caja</button>
-            {error && <div style={{ marginTop: '8px', color: COLORS.error, fontWeight: 600, fontFamily: FONTS.body }}>{error}</div>}
-            {success && <div style={{ marginTop: '8px', color: COLORS.success, fontWeight: 600, fontFamily: FONTS.body }}>{success}</div>}
-          </div>
+          </BrandCard>
 
           {/* Sección de retiros realizados */}
-          <div style={{ 
-            background: COLORS.white, 
-            borderRadius: '16px', 
-            boxShadow: `0 4px 16px rgba(0, 0, 0, 0.08)`, 
-            padding: '24px'
-          }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '20px', fontFamily: FONTS.heading, color: COLORS.text }}>Retiros Realizados Hoy</h3>
-            {retiros.length === 0 ? (
-              <div style={{ textAlign: 'center', color: COLORS.textLight, padding: '16px', fontFamily: FONTS.body }}>No hay retiros registrados hoy</div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {retiros.map((r, idx) => (
-                  <div key={r.id_gasto || idx} style={{ 
-                    border: `1px solid ${COLORS.border}`, 
-                    borderRadius: '8px', 
-                    padding: '12px',
+          <BrandCard icon={<IconClipboardList size={14} />} title="Retiros Realizados Hoy">
+            <div style={{ padding: '20px 22px 22px' }}>
+              {retiros.length === 0 ? (
+                <div style={{ textAlign: 'center', color: COLORS.textLight, padding: '16px', fontFamily: FONTS.body }}>No hay retiros registrados hoy</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {retiros.map((r, idx) => (
+                    <div key={r.id_gasto || idx} style={{
+                      border: `1px solid ${COLORS.border}`,
+                      borderRadius: '8px',
+                      padding: '12px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text }}>Retiro #{idx + 1}</div>
+                        <div style={{ fontSize: '0.85rem', color: COLORS.textLight, fontFamily: FONTS.body }}>{r.fecha}</div>
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: '1.2rem', color: COLORS.primary, fontFamily: FONTS.heading }}>S/ {Number(r.monto).toFixed(2)}</div>
+                    </div>
+                  ))}
+                  <div style={{
+                    marginTop: '12px',
+                    paddingTop: '12px',
+                    borderTop: `2px solid ${COLORS.border}`,
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontFamily: FONTS.body, color: COLORS.text }}>Retiro #{idx + 1}</div>
-                      <div style={{ fontSize: '0.85rem', color: COLORS.textLight, fontFamily: FONTS.body }}>{r.fecha}</div>
-                    </div>
-                    <div style={{ fontWeight: 700, fontSize: '1.2rem', color: COLORS.primary, fontFamily: FONTS.heading }}>S/ {Number(r.monto).toFixed(2)}</div>
+                    <span style={{ fontWeight: 700, fontFamily: FONTS.heading, color: COLORS.text, fontSize: '1.1rem' }}>Total Retirado:</span>
+                    <span style={{ fontWeight: 700, fontSize: '1.3rem', color: COLORS.error, fontFamily: FONTS.heading }}>
+                      S/ {retiros.reduce((acc, r) => acc + Number(r.monto), 0).toFixed(2)}
+                    </span>
                   </div>
-                ))}
-                <div style={{ 
-                  marginTop: '12px', 
-                  paddingTop: '12px', 
-                  borderTop: `2px solid ${COLORS.border}`,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
-                  <span style={{ fontWeight: 700, fontFamily: FONTS.heading, color: COLORS.text, fontSize: '1.1rem' }}>Total Retirado:</span>
-                  <span style={{ fontWeight: 700, fontSize: '1.3rem', color: COLORS.error, fontFamily: FONTS.heading }}>
-                    S/ {retiros.reduce((acc, r) => acc + Number(r.monto), 0).toFixed(2)}
-                  </span>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          </BrandCard>
 
           {/* Modal de confirmación */}
           {modal && (
-            <div style={{ 
-              position: 'fixed', 
-              inset: 0, 
-              background: 'rgba(0, 0, 0, 0.3)', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              zIndex: 50 
+            <div style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 50,
+              padding: 16,
             }}>
-              <div style={{ 
-                background: COLORS.white, 
-                borderRadius: '16px', 
-                boxShadow: `0 8px 32px rgba(0, 0, 0, 0.15)`, 
-                padding: '32px', 
-                maxWidth: '400px', 
-                width: '100%' 
-              }}>
-                <h4 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '20px', fontFamily: FONTS.heading, color: COLORS.text }}>
-                  ¿Confirmar retiro de S/ {retiro}?
-                </h4>
-                <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
-                  <button
-                    style={{
-                      background: COLORS.primary,
-                      color: COLORS.white,
-                      padding: '12px 20px',
-                      borderRadius: '8px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      opacity: loading ? 0.7 : 1,
-                      fontFamily: FONTS.heading,
-                      fontSize: '1rem'
-                    }}
-                    onClick={confirmarRetiro}
-                    disabled={loading}
-                  >{loading ? "Guardando..." : "Confirmar"}</button>
-                  <button
-                    style={{
-                      background: COLORS.border,
-                      color: COLORS.text,
-                      padding: '12px 20px',
-                      borderRadius: '8px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      opacity: loading ? 0.7 : 1,
-                      fontFamily: FONTS.heading,
-                      fontSize: '1rem'
-                    }}
-                    onClick={() => setModal(false)}
-                    disabled={loading}
-                  >Cancelar</button>
-                </div>
+              <div style={{ width: 'min(400px, 100%)' }}>
+                <BrandCard title="Confirmar retiro">
+                  <div style={{ padding: '18px 22px 22px' }}>
+                    <p style={{ fontSize: '1.05rem', fontWeight: 600, color: COLORS.text, fontFamily: FONTS.body, marginTop: 0, marginBottom: 20 }}>
+                      ¿Confirmar retiro de S/ {retiro}?
+                    </p>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                      <button
+                        style={{
+                          padding: '12px 20px',
+                          borderRadius: 12,
+                          border: '1.5px solid rgba(128,194,220,.35)',
+                          background: '#ffffff',
+                          color: COLORS.text,
+                          fontWeight: 700,
+                          fontFamily: FONTS.heading,
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          opacity: loading ? 0.7 : 1,
+                        }}
+                        onClick={() => setModal(false)}
+                        disabled={loading}
+                      >Cancelar</button>
+                      <BrandCtaButton variant="primary" onClick={confirmarRetiro} disabled={loading}>
+                        {loading ? "Guardando..." : "Confirmar"}
+                      </BrandCtaButton>
+                    </div>
+                  </div>
+                </BrandCard>
               </div>
             </div>
           )}
