@@ -167,14 +167,14 @@ const VentasBody = () => {
       background: 'linear-gradient(145deg,#dff0f8 0%,#eaf5fb 40%,#f4f9fd 100%)',
     }}>
 
-      {/* ── HEADER: separado del navbar con padding top ── */}
+      {/* ── HEADER: título, tabs y acciones en una sola fila ── */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '36px 28px 16px', gap: 10,
+        display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+        padding: '28px 28px 20px', gap: 16,
       }}>
 
         {/* Ícono + título */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <div style={{
             width: 46, height: 46, borderRadius: 14, flexShrink: 0,
             background: 'linear-gradient(135deg,#80C2DC 0%,#5a8ba8 100%)',
@@ -196,8 +196,19 @@ const VentasBody = () => {
           </div>
         </div>
 
+        {/* Tabs — centradas entre el título y las acciones */}
+        <div className="vb-tabs" style={{ borderRadius: 14, flex: '1 1 320px', maxWidth: 560, margin: '0 auto' }}>
+          {TABS.map(({ key, label, Icon }) => (
+            <button key={key}
+              className={`vb-tab${tab === key ? ' active' : ''}`}
+              onClick={() => setTab(key)}>
+              <Icon size={13}/> {label}
+            </button>
+          ))}
+        </div>
+
         {/* Acciones */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <IconUser size={22} color={T.textLight}/>
           <button onClick={() => {
               localStorage.removeItem('personalToken');
@@ -213,19 +224,8 @@ const VentasBody = () => {
         </div>
       </div>
 
-      {/* ── Padding lateral para tabs y contenido ── */}
+      {/* ── Padding lateral para el contenido ── */}
       <div style={{ padding: '0 28px 28px' }}>
-
-        {/* ── Tabs ── */}
-        <div className="vb-tabs" style={{ borderRadius: 14, marginBottom: 20 }}>
-          {TABS.map(({ key, label, Icon }) => (
-            <button key={key}
-              className={`vb-tab${tab === key ? ' active' : ''}`}
-              onClick={() => setTab(key)}>
-              <Icon size={13}/> {label}
-            </button>
-          ))}
-        </div>
 
         {/* ── Contenido ── */}
         <div key={tab}>
