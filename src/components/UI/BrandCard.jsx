@@ -28,7 +28,7 @@ const BC_STYLES = `
   }
   .bcard-title { font-weight: 700; font-size: 13px; color: var(--bcard-title-color,#2f6f8f); flex: 1; }
   .bcard-body {
-    background: linear-gradient(180deg, rgba(148,25,24,.14) 0%, rgba(148,25,24,.05) 100%);
+    background: rgba(148,25,24,.1);
   }
 `;
 
