@@ -6,9 +6,12 @@ const BC_STYLES = `
     position: relative;
     border-radius: 16px;
     overflow: hidden;
-    background: linear-gradient(165deg, #ffffff 0%, #eaf2f6 100%);
-    border: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.45);
-    box-shadow: 0 10px 28px rgba(15,23,42,.14);
+    background: #ffffff;
+    border: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.35);
+    box-shadow:
+      inset 3px 3px 8px rgba(90,139,168,.14),
+      inset -3px -3px 8px rgba(255,255,255,.9),
+      0 6px 18px rgba(15,23,42,.08);
     transition: box-shadow .2s ease, border-color .2s ease;
   }
   .bcard-accent {
@@ -17,8 +20,9 @@ const BC_STYLES = `
   }
   .bcard-head {
     padding: 12px 16px 11px;
-    background: rgba(var(--bcard-accent-rgb,128,194,220),.18);
-    border-bottom: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.35);
+    background: rgba(var(--bcard-accent-rgb,128,194,220),.16);
+    border-bottom: 1.5px solid rgba(var(--bcard-accent-rgb,128,194,220),.3);
+    box-shadow: inset 0 2px 6px rgba(90,139,168,.1);
     display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
   }
   .bcard-icon {
@@ -28,7 +32,8 @@ const BC_STYLES = `
   }
   .bcard-title { font-weight: 700; font-size: 13px; color: var(--bcard-title-color,#2f6f8f); flex: 1; }
   .bcard-body {
-    background: rgba(148,25,24,.1);
+    background: rgba(148,25,24,.08);
+    box-shadow: inset 0 2px 8px rgba(148,25,24,.08);
   }
 `;
 
