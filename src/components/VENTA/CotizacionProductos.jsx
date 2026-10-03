@@ -21,6 +21,8 @@ import {
   limpiarCotizacion,
 } from "../../utils/ramCotizacion";
 import { consultarDocumentoApi } from "../../config";
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from "../UI/StripedTable";
+import BrandCtaButton from "../UI/BrandCtaButton";
 
 const RED    = '#941918';
 const CELESTE  = '#80C2DC';
@@ -114,27 +116,13 @@ const CSS = `
   display:flex;align-items:center;gap:9px;flex-wrap:wrap;
 }
 
-.cq-table{width:100%;border-collapse:collapse;}
-.cq-th{
-  padding:7px 10px;
-  font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:700;
-  letter-spacing:.8px;text-transform:uppercase;color:#5a7a90;
-  background:rgba(232,246,252,.70);
-  border-bottom:1.5px solid rgba(128,194,220,.28);
-  white-space:nowrap;
-}
-.cq-th:first-child{border-radius:8px 0 0 0}
-.cq-th:last-child{border-radius:0 8px 0 0}
-.cq-tr{border-bottom:1px solid rgba(128,194,220,.10);transition:background .12s;animation:cqRow .18s ease both;}
-.cq-tr:hover{background:rgba(232,246,252,.45);}
-.cq-td{padding:7px 10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#2d4a62;vertical-align:middle;}
 .cq-scroll-t{max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(128,194,220,.35) transparent;}
 .cq-scroll-t::-webkit-scrollbar{width:4px}
 .cq-scroll-t::-webkit-scrollbar-thumb{background:rgba(128,194,220,.35);border-radius:999px}
 
 .cq-input{
   width:100%;padding:8px 12px;
-  background:rgba(255,255,255,.75);
+  background:#ffffff;
   border:1.5px solid rgba(128,194,220,.35);border-radius:10px;
   font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1a2a3a;
   outline:none;transition:border-color .18s,box-shadow .18s;
@@ -148,10 +136,9 @@ const CSS = `
 .cq-pill{
   display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;cursor:pointer;
   font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
-  border:1.5px solid rgba(128,194,220,.30);background:rgba(255,255,255,.65);color:#5a7a90;transition:all .15s;
+  border:1.5px solid rgba(128,194,220,.30);background:#ffffff;color:#5a7a90;transition:all .15s;
 }
-.cq-pill.active{background:rgba(148,25,24,.08);border-color:rgba(148,25,24,.30);color:#941918;}
-.cq-pill.active{box-shadow:0 6px 14px rgba(148,25,24,.14);}
+.cq-pill:hover{background:rgba(232,246,252,.55);}
 
 .cq-doc-wrap{
   padding:10px 11px;
@@ -282,13 +269,6 @@ const CSS = `
 
 .cq-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;background:rgba(128,194,220,.12);border:1px solid rgba(128,194,220,.30);color:#5a7a90;}
 
-.cq-btn-red{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:11px;cursor:pointer;background:linear-gradient(180deg,rgba(148,25,24,.13),rgba(148,25,24,.22));color:#941918;border:1.5px solid rgba(148,25,24,.28);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;box-shadow:inset 0 2px 5px rgba(148,25,24,.10),0 1px 0 rgba(255,255,255,.8);transition:all .16s;}
-.cq-btn-red:hover{background:linear-gradient(180deg,rgba(148,25,24,.19),rgba(148,25,24,.30));}
-
-.cq-btn-compra{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 22px;border-radius:11px;cursor:pointer;background:linear-gradient(135deg,#80C2DC,#5a8ba8);color:white;border:none;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;box-shadow:0 6px 18px rgba(128,194,220,.38);transition:all .16s;}
-.cq-btn-compra:hover{box-shadow:0 10px 26px rgba(128,194,220,.50);transform:translateY(-1px);}
-.cq-total-row .cq-btn-compra{animation:cqPulse 2.5s ease-in-out infinite;}
-
 .cq-popover{position:fixed;z-index:1500;background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(236,248,255,.96));backdrop-filter:blur(24px) saturate(200%);-webkit-backdrop-filter:blur(24px) saturate(200%);border:1.5px solid rgba(128,194,220,.50);border-radius:20px;box-shadow:0 24px 48px rgba(26,42,58,.28),0 4px 12px rgba(128,194,220,.18),0 1px 0 rgba(255,255,255,.95) inset;padding:18px 16px 16px;width:230px;animation:cqPopIn .22s cubic-bezier(.34,1.4,.64,1) both;}
 .cq-popover-title{font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#1a2a3a;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .cq-pop-confirm{width:100%;padding:11px 0;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#80C2DC,#5a8ba8);color:#fff;font-weight:800;font-size:12px;font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 6px 16px rgba(128,194,220,.42),inset 0 1px 0 rgba(255,255,255,.28);transition:all .14s;letter-spacing:.3px;margin-bottom:8px;}
@@ -320,7 +300,6 @@ const CSS = `
 @media (prefers-reduced-motion: reduce){
   .cq-wrap::before,.cq-wrap::after,
   .cq-total-row::before,
-  .cq-total-row .cq-btn-compra,
   .cq-prod-card::after{animation:none !important;}
 }
 
@@ -904,7 +883,9 @@ const CotizacionView = () => {
                   <div style={{display:'flex',gap:6,flexWrap:'wrap',flex:'1 1 180px'}}>
                     {Array.isArray(tipoDocumentos)&&tipoDocumentos.length>0
                       ?tipoDocumentos.map(tipo=>(
-                        <button key={tipo.id_tipo||tipo.descripcion} className={`cq-pill${tipoDocumentoSeleccionado===tipo.id_tipo?' active':''}`} onClick={()=>setTipoDocumentoSeleccionado(tipo.id_tipo)}>{tipo.descripcion}</button>
+                        tipoDocumentoSeleccionado===tipo.id_tipo
+                          ?<BrandCtaButton key={tipo.id_tipo||tipo.descripcion} variant="primary" size="sm" onClick={()=>setTipoDocumentoSeleccionado(tipo.id_tipo)}>{tipo.descripcion}</BrandCtaButton>
+                          :<button key={tipo.id_tipo||tipo.descripcion} className="cq-pill" onClick={()=>setTipoDocumentoSeleccionado(tipo.id_tipo)}>{tipo.descripcion}</button>
                       )):<span style={{fontSize:10,color:TXTD}}>Cargando\u2026</span>}
                   </div>
                   <input className="cq-input" type="text"
@@ -936,62 +917,61 @@ const CotizacionView = () => {
             {cotizacionProductos.length>0&&<span className="cq-chip">{cotizacionProductos.length} \u00edtem{cotizacionProductos.length!==1?'s':''}</span>}
           </div>
           <div style={{padding:'10px 12px 14px'}}>
-            <div style={{borderRadius:10,overflow:'hidden',border:'1px solid rgba(128,194,220,.20)',background:'rgba(255,255,255,.50)'}}>
-              <div className="cq-scroll-t">
-                <table className="cq-table">
-                  <thead>
-                    <tr>
-                      {['C\u00f3digo','Nombre','Cant.','P. Unit.','Total','Acciones'].map((h,i)=>(
-                        <th key={h+i} className="cq-th" style={{textAlign:i>=2?'center':'left'}}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cotizacionProductos.length===0?(
-                      <tr><td colSpan={6} style={{textAlign:'center',padding:'28px 0',color:TXTD,fontSize:11,fontFamily:FM}}>Sin productos en la cotizaci\u00f3n</td></tr>
-                    ):cotizacionProductos.map((p,idx)=>{
-                      const total=Number(p.precio_unitario||0)*Number(p.cantidad||1);
-                      return(
-                        <tr key={p.id_producto||p.codigo||idx} className="cq-tr" style={{animationDelay:`${idx*12}ms`}}>
-                          <td className="cq-td"><span className="cq-chip">{p.codigo}</span></td>
-                          <td className="cq-td" style={{fontWeight:600,color:TXT,maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nombre}</td>
-                          <td className="cq-td" style={{textAlign:'center'}}>
-                            {p.tipo_producto === 'CORTE' ? (
-                              p.cantidad
-                            ) : (
-                              <div className="cq-qty">
-                                <button className="cq-qty-btn" onClick={() => actualizarCantidad(p, -1)} disabled={Number(p.cantidad || 1) <= 1}>-</button>
-                                <span className="cq-qty-val">{p.cantidad}</span>
-                                <button className="cq-qty-btn" onClick={() => actualizarCantidad(p, 1)}>+</button>
-                              </div>
-                            )}
-                          </td>
-                          <td className="cq-td" style={{textAlign:'center',fontWeight:600,color:TXTM}}>S/{typeof p.precio_unitario==='number'?p.precio_unitario.toFixed(2):'0.00'}</td>
-                          <td className="cq-td" style={{textAlign:'center',fontWeight:800,color:CELESTE2}}>S/{total.toFixed(2)}</td>
-                          <td className="cq-td" style={{textAlign:'center'}}>
-                            <div style={{display:'flex',gap:5,justifyContent:'center'}}>
-                              {p.tipo_producto==='CORTE'&&p.cortes_detalles&&(
-                                <button style={{width:22,height:22,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(128,194,220,.16)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .14s'}}
-                                  onMouseEnter={e=>e.currentTarget.style.background='rgba(128,194,220,.30)'}
-                                  onMouseLeave={e=>e.currentTarget.style.background='rgba(128,194,220,.16)'}
-                                  onClick={()=>{setProductoEnEdicion(p);setProductoSeleccionadoCortes({codigo:p.codigo.replace('CORTE-',''),nombre:p.nombre.replace(/ (\d+ CORTES)$/,''),categoria:p.categoria,precio_unitario:p.precio_unitario});setModalCortesVisible(true);}}>
-                                  <IconEdit size={11} color={CELESTE2}/>
-                                </button>
-                              )}
-                              <button style={{width:22,height:22,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(148,25,24,.10)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .14s'}}
-                                onMouseEnter={e=>e.currentTarget.style.background='rgba(148,25,24,.22)'}
-                                onMouseLeave={e=>e.currentTarget.style.background='rgba(148,25,24,.10)'}
-                                onClick={()=>{eliminarProductoCotizacion(p.__cotiz_id);setCotizacionProductos(obtenerProductosCotizacion());}}>
-                                <IconTrash size={11} color={RED}/>
-                              </button>
+            <div className="cq-scroll-t">
+              <StripedTable minWidth={0}>
+                <StripedTableHead>
+                  <StripedTh>C\u00f3digo</StripedTh>
+                  <StripedTh>Nombre</StripedTh>
+                  <StripedTh align="center">Cant.</StripedTh>
+                  <StripedTh align="center">P. Unit.</StripedTh>
+                  <StripedTh align="center">Total</StripedTh>
+                  <StripedTh align="center">Acciones</StripedTh>
+                </StripedTableHead>
+                <tbody>
+                  {cotizacionProductos.length===0?(
+                    <tr><td colSpan={6} style={{textAlign:'center',padding:'28px 0',color:TXTD,fontSize:11,fontFamily:FM}}>Sin productos en la cotizaci\u00f3n</td></tr>
+                  ):cotizacionProductos.map((p,idx)=>{
+                    const total=Number(p.precio_unitario||0)*Number(p.cantidad||1);
+                    return(
+                      <StripedTableRow key={p.id_producto||p.codigo||idx} index={idx}>
+                        <StripedTd><span className="cq-chip">{p.codigo}</span></StripedTd>
+                        <StripedTd style={{fontWeight:600,color:TXT,maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.nombre}</StripedTd>
+                        <StripedTd align="center">
+                          {p.tipo_producto === 'CORTE' ? (
+                            p.cantidad
+                          ) : (
+                            <div className="cq-qty">
+                              <button className="cq-qty-btn" onClick={() => actualizarCantidad(p, -1)} disabled={Number(p.cantidad || 1) <= 1}>-</button>
+                              <span className="cq-qty-val">{p.cantidad}</span>
+                              <button className="cq-qty-btn" onClick={() => actualizarCantidad(p, 1)}>+</button>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                          )}
+                        </StripedTd>
+                        <StripedTd align="center" style={{fontWeight:600,color:TXTM}}>S/{typeof p.precio_unitario==='number'?p.precio_unitario.toFixed(2):'0.00'}</StripedTd>
+                        <StripedTd align="center" style={{fontWeight:800,color:CELESTE2}}>S/{total.toFixed(2)}</StripedTd>
+                        <StripedTd align="center">
+                          <div style={{display:'flex',gap:5,justifyContent:'center'}}>
+                            {p.tipo_producto==='CORTE'&&p.cortes_detalles&&(
+                              <button style={{width:22,height:22,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(128,194,220,.16)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .14s'}}
+                                onMouseEnter={e=>e.currentTarget.style.background='rgba(128,194,220,.30)'}
+                                onMouseLeave={e=>e.currentTarget.style.background='rgba(128,194,220,.16)'}
+                                onClick={()=>{setProductoEnEdicion(p);setProductoSeleccionadoCortes({codigo:p.codigo.replace('CORTE-',''),nombre:p.nombre.replace(/ (\d+ CORTES)$/,''),categoria:p.categoria,precio_unitario:p.precio_unitario});setModalCortesVisible(true);}}>
+                                <IconEdit size={11} color={CELESTE2}/>
+                              </button>
+                            )}
+                            <button style={{width:22,height:22,borderRadius:6,border:'none',cursor:'pointer',background:'rgba(148,25,24,.10)',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .14s'}}
+                              onMouseEnter={e=>e.currentTarget.style.background='rgba(148,25,24,.22)'}
+                              onMouseLeave={e=>e.currentTarget.style.background='rgba(148,25,24,.10)'}
+                              onClick={()=>{eliminarProductoCotizacion(p.__cotiz_id);setCotizacionProductos(obtenerProductosCotizacion());}}>
+                              <IconTrash size={11} color={RED}/>
+                            </button>
+                          </div>
+                        </StripedTd>
+                      </StripedTableRow>
+                    );
+                  })}
+                </tbody>
+              </StripedTable>
             </div>
 
             {/* Total + acciones */}
@@ -1001,16 +981,15 @@ const CotizacionView = () => {
                 <div style={{fontFamily:FM,fontWeight:800,fontSize:20,color:CELESTE2}}>S/ {totalCotizacion.toFixed(2)}</div>
               </div>
               <div style={{display:'flex',gap:8}}>
-                <button className="cq-btn-red" style={{padding:'8px 14px',fontSize:11}}
+                <BrandCtaButton variant="primary" size="sm"
                   onClick={()=>{if(confirm('\u00bfLimpiar toda la cotizaci\u00f3n?')){limpiarCotizacion();setCotizacionProductos([]);}}}>
                   <IconTrash size={12}/> Limpiar
-                </button>
-                <button className="cq-btn-compra"
+                </BrandCtaButton>
+                <BrandCtaButton variant="secondary" size="sm"
                   disabled={(estadoRegistro !== 'registered' && estadoRegistro !== 'unregistered') || cotizacionProductos.length === 0}
-                  style={((estadoRegistro !== 'registered' && estadoRegistro !== 'unregistered') || cotizacionProductos.length === 0) ? {opacity:.45,cursor:'not-allowed',animation:'none'} : {}}
                   onClick={()=>setModalPagoOpen(true)}>
                   <IconShoppingCartPlus size={14}/> Realizar compra
-                </button>
+                </BrandCtaButton>
               </div>
             </div>
           </div>

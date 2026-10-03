@@ -72,29 +72,29 @@ const CSS = `
 .vb-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(90,139,168,.22)}
 .vb-btn:active{transform:translateY(0) scale(.97)}
 
-/* ── Tabs dentro del card (estilo Entrega) ── */
+/* ── Tabs dentro del card (segmentado blanco / rojo activo) ── */
 .vb-tabs{
-  display:flex;gap:0;padding:10px 12px;
-  background:linear-gradient(90deg,rgba(245,234,234,.70),rgba(248,238,238,.55));
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  border-bottom:1px solid rgba(148,25,24,.12);
+  display:flex;gap:6px;padding:8px;
+  background:#ffffff;
+  border:1.5px solid rgba(128,194,220,.35);
 }
 .vb-tab{
   flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
   padding:11px 20px;border-radius:10px;
   font-family:${T.fontHead};font-size:13px;font-weight:700;
   letter-spacing:.8px;text-transform:uppercase;
-  border:none;cursor:pointer;
-  color:rgba(148,25,24,.50);background:transparent;
+  border:1.5px solid transparent;cursor:pointer;
+  color:${T.textLight};background:#ffffff;
   transition:all .20s cubic-bezier(.4,0,.2,1);
 }
-.vb-tab:hover{color:rgba(148,25,24,.75);background:rgba(255,255,255,.35);}
+.vb-tab:hover{color:${T.brand};background:rgba(128,194,220,.12);border-color:rgba(128,194,220,.30);}
 .vb-tab.active{
-  background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(252,240,240,.85));
-  color:#941918;
-  box-shadow:0 3px 14px rgba(148,25,24,.12),0 1px 0 rgba(255,255,255,.95) inset;
-  border:1.5px solid rgba(148,25,24,.18);
+  background:linear-gradient(135deg,#c94543,#941918);
+  color:#fff;
+  box-shadow:0 10px 22px rgba(148,25,24,.32),0 4px 14px rgba(148,25,24,.22);
+  border-color:transparent;
 }
+.vb-tab.active:hover{color:#fff;background:linear-gradient(135deg,#c94543,#941918);}
 
 /* ── Contenido ── */
 .vb-content{padding:28px;animation:fadeUp .3s ease both;}
