@@ -24,7 +24,8 @@ const SERVICIO_CSS = `
 .sv-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .sv-pill{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:9px 16px;border:1.5px solid rgba(128,194,220,.35);background:#ffffff;font-weight:700;font-family:${FONTS.heading};font-size:.95rem;color:${COLORS.textLight};cursor:pointer;transition:all .18s ease}
 .sv-pill:hover{background:rgba(128,194,220,.12)}
-.sv-grid{display:grid;grid-template-columns:minmax(300px,520px) minmax(340px,560px);gap:20px;align-items:start;margin-bottom:14px}
+.sv-grid{display:grid;grid-template-columns:1fr;gap:18px;align-items:start;margin-bottom:14px}
+.sv-field{min-width:0}
 .sv-field label{font-size:.82rem;color:${COLORS.textLight};margin-bottom:7px;display:block;font-weight:600}
 .sv-doc-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .sv-doc-row .sv-radio-row{flex:1 1 180px}
@@ -37,9 +38,8 @@ const SERVICIO_CSS = `
 .sv-notice.warn{background:rgba(242,189,36,.14);color:#8f5c00;border-color:rgba(242,189,36,.38)}
 .sv-notice.ok{background:rgba(23,173,110,.12);color:#0b8a58;border-color:rgba(23,173,110,.3)}
 .sv-notice.err{background:rgba(148,25,24,.12);color:${COLORS.primary};border-color:rgba(148,25,24,.34)}
-.sv-name-row{display:flex;align-items:center;gap:12px;max-width:520px}
-.sv-name-row .nm-input{flex:1}
-.sv-icon-dot{width:38px;height:38px;border-radius:11px;background:rgba(128,194,220,.14);border:1px solid rgba(128,194,220,.35);display:flex;align-items:center;justify-content:center;color:${COLORS.secondaryDark};flex-shrink:0}
+.sv-name-row{position:relative;max-width:520px}
+.sv-name-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:${COLORS.secondaryDark};display:flex;pointer-events:none;z-index:1}
 .sv-svc-cell{display:flex;align-items:center;gap:9px}
 .sv-svc-thumb{width:36px;height:36px;border-radius:8px;object-fit:cover;border:1px solid rgba(128,194,220,.3);flex-shrink:0}
 .sv-svc-thumb-ph{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,rgba(128,194,220,.2),rgba(90,139,168,.12));display:flex;align-items:center;justify-content:center;font-size:.7rem;color:${COLORS.textLight};flex-shrink:0;border:1px solid rgba(128,194,220,.2)}
@@ -64,7 +64,6 @@ const SERVICIO_CSS = `
   .sv-cols{gap:16px}
   .sv-col-left{gap:16px}
   .sv-body{padding:16px}
-  .sv-grid{grid-template-columns:1fr}
   .sv-doc-row .nm-input{width:100%}
   .sv-name-row{max-width:100%}
   .sv-picker{width:calc(100vw - 32px);right:auto;left:0}
@@ -392,23 +391,6 @@ export default function Servicio() {
 
           <div className="sv-grid">
             <div className="sv-field">
-              <label>Nombre / Razón social</label>
-              <div className="sv-name-row">
-                <div className="sv-icon-dot">
-                  {tipoDesc === 'RUC' ? <IconBuilding size={18} /> : <IconUser size={18} />}
-                </div>
-                <input
-                  type="text"
-                  value={nombreCliente}
-                  onChange={e => setNombreCliente(e.target.value)}
-                  placeholder="Se completa automáticamente o escribe manualmente"
-                  className="nm-input"
-                  style={nmInputStyle}
-                />
-              </div>
-            </div>
-
-            <div className="sv-field">
               <label>Tipo y número de documento</label>
               <div className="sv-doc-row">
                 <div className="sv-radio-row">
@@ -442,6 +424,23 @@ export default function Servicio() {
                   disabled={!tipoSel}
                   className="nm-input"
                   style={{ ...nmInputStyle, opacity: tipoSel ? 1 : 0.5 }}
+                />
+              </div>
+            </div>
+
+            <div className="sv-field">
+              <label>Nombre / Razón social</label>
+              <div className="sv-name-row">
+                <span className="sv-name-icon">
+                  {tipoDesc === 'RUC' ? <IconBuilding size={16} /> : <IconUser size={16} />}
+                </span>
+                <input
+                  type="text"
+                  value={nombreCliente}
+                  onChange={e => setNombreCliente(e.target.value)}
+                  placeholder="Se completa automáticamente o escribe manualmente"
+                  className="nm-input"
+                  style={{ ...nmInputStyle, padding: '11px 16px 11px 42px' }}
                 />
               </div>
             </div>
