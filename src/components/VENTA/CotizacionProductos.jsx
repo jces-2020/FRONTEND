@@ -24,6 +24,7 @@ import { consultarDocumentoApi } from "../../config";
 import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from "../UI/StripedTable";
 import BrandCtaButton from "../UI/BrandCtaButton";
 import ProductCard from "../UI/ProductCard";
+import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
 
 const RED    = '#941918';
 const CELESTE  = '#80C2DC';
@@ -132,7 +133,6 @@ const CSS = `
 .cq-input:focus{border-color:rgba(128,194,220,.65);box-shadow:0 0 0 3px rgba(128,194,220,.13);}
 .cq-input::placeholder{color:#8aa8bc}
 .cq-input:disabled{opacity:.5;cursor:not-allowed}
-.cq-input-search{padding-left:34px;}
 
 .cq-pill{
   display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;cursor:pointer;
@@ -297,6 +297,7 @@ function injectCSS() {
 
 const CotizacionView = () => {
   injectCSS();
+  injectNeumorphicStyles();
 
   const [modalPagoOpen,              setModalPagoOpen]              = useState(false);
   const [searchTerm,                 setSearchTerm]                 = useState('');
@@ -854,8 +855,8 @@ const CotizacionView = () => {
                           :<button key={tipo.id_tipo||tipo.descripcion} className="cq-pill" onClick={()=>setTipoDocumentoSeleccionado(tipo.id_tipo)}>{tipo.descripcion}</button>
                       )):<span style={{fontSize:10,color:TXTD}}>Cargando\u2026</span>}
                   </div>
-                  <input className="cq-input" type="text"
-                    style={{width:190,maxWidth:'100%',marginLeft:'auto'}}
+                  <input className="nm-input" type="text"
+                    style={{width:190,maxWidth:'100%',marginLeft:'auto',padding:'10px 16px',fontFamily:FM,fontSize:13}}
                     placeholder={tipoDocumentoSeleccionado?(tipoDocumentos.find(tc=>tc.id_tipo===tipoDocumentoSeleccionado)?.descripcion==='RUC'?'RUC (11 d\u00edgitos)':'DNI (8 d\u00edgitos)'):'Seleccione tipo primero'}
                     value={digitos} onChange={e=>setDigitos(e.target.value.replace(/\D/g,''))}
                     maxLength={tipoDocumentoSeleccionado?(tipoDocumentos.find(tc=>tc.id_tipo===tipoDocumentoSeleccionado)?.descripcion==='RUC'?11:8):11}
@@ -973,8 +974,9 @@ const CotizacionView = () => {
           </div>
           <div style={{padding:'12px 14px 0'}}>
             <div style={{position:'relative',marginBottom:10}}>
-              <IconSearch size={13} color={TXTD} style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}/>
-              <input className="cq-input cq-input-search" type="text" placeholder="Buscar producto…" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}/>
+              <IconSearch size={13} color={TXTD} style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}/>
+              <input className="nm-input" type="text" placeholder="Buscar producto…" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}
+                style={{padding:'10px 16px 10px 38px',fontFamily:FM,fontSize:13}}/>
             </div>
             <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:12}}>
               <button className={`cq-cat${!categoriaSeleccionada?' active':''}`} onClick={()=>setCategoriaSeleccionada('')}>Todos</button>
