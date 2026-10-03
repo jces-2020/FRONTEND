@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { IconUser, IconBuilding, IconTrash, IconEdit, IconPlus, IconCheck, IconAlertTriangle, IconMapPin, IconClipboardList } from "@tabler/icons-react";
+import { IconUser, IconBuilding, IconTrash, IconEdit, IconPlus, IconCheck, IconAlertTriangle, IconMapPin, IconClipboardList, IconSearch } from "@tabler/icons-react";
 import { COLORS, FONTS } from "../../colors";
 import { getPresupuestos, updatePresupuesto, removePresupuesto, clearPresupuestos } from "../../utils/ramPresupuestos";
 import PresupuestoServicio from "../PresupuestoServicio";
@@ -53,12 +53,14 @@ const SERVICIO_CSS = `
 /* Picker de servicio */
 .sv-picker-wrap{position:relative;display:inline-block}
 .sv-picker{position:absolute;right:0;top:calc(100% + 8px);width:320px;max-height:360px;overflow-y:auto;background:rgba(255,255,255,.97);border:1.5px solid rgba(128,194,220,.4);border-radius:16px;box-shadow:0 20px 48px rgba(8,21,38,.18),0 6px 16px rgba(90,139,168,.14);z-index:200;animation:svPickerIn .2s ease both;padding:8px}
-.sv-picker-search{width:100%;padding:9px 12px;border:1.5px solid rgba(128,194,220,.35);border-radius:11px;font-family:${FONTS.body};font-size:.92rem;color:${COLORS.text};background:rgba(255,255,255,.9);outline:none;margin-bottom:8px;box-sizing:border-box}
-.sv-picker-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:11px;cursor:pointer;transition:background .15s ease}
-.sv-picker-item:hover{background:rgba(128,194,220,.14)}
-.sv-picker-img{width:38px;height:38px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid rgba(128,194,220,.28)}
-.sv-picker-img-ph{width:38px;height:38px;border-radius:8px;background:linear-gradient(135deg,rgba(128,194,220,.2),rgba(90,139,168,.1));flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;color:${COLORS.textLight};border:1px solid rgba(128,194,220,.18)}
-.sv-picker-name{font-weight:600;font-size:.9rem;color:${COLORS.text}}
+.sv-picker-search-wrap{position:relative;margin-bottom:8px}
+.sv-picker-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:${COLORS.textLight};pointer-events:none;display:flex}
+.sv-picker-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;cursor:pointer;background:#fff;border:1px solid rgba(0,0,0,.07);box-shadow:0 2px 8px rgba(15,23,42,.06);margin-bottom:6px;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s ease}
+.sv-picker-item:last-child{margin-bottom:0}
+.sv-picker-item:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(15,23,42,.12)}
+.sv-picker-img{width:40px;height:40px;border-radius:10px;object-fit:cover;flex-shrink:0}
+.sv-picker-img-ph{width:40px;height:40px;border-radius:10px;background:#f1f5f9;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.68rem;color:${COLORS.textLight}}
+.sv-picker-name{font-weight:700;font-size:.9rem;color:${COLORS.text};font-family:${FONTS.heading}}
 @media(max-width:900px){
   .sv-root{padding:14px}
   .sv-cols{gap:16px}
@@ -517,14 +519,18 @@ export default function Servicio() {
 
               {pickerOpen && (
                 <div className="sv-picker">
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Buscar servicio..."
-                    value={pickerQuery}
-                    onChange={e => setPickerQuery(e.target.value)}
-                    className="sv-picker-search"
-                  />
+                  <div className="sv-picker-search-wrap">
+                    <span className="sv-picker-search-icon"><IconSearch size={15} /></span>
+                    <input
+                      autoFocus
+                      type="text"
+                      placeholder="Buscar servicio..."
+                      value={pickerQuery}
+                      onChange={e => setPickerQuery(e.target.value)}
+                      className="nm-input"
+                      style={{ padding: '10px 14px 10px 38px', fontFamily: FONTS.body, fontSize: '.92rem' }}
+                    />
+                  </div>
                   {catalogoFiltrado.length === 0 && (
                     <div style={{ padding: '12px 10px', color: COLORS.textLight, fontSize: '.88rem' }}>
                       Sin resultados
