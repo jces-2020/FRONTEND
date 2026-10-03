@@ -839,7 +839,7 @@ const CotizacionView = () => {
             <div>
               <label className="cq-label">Nombre / Razón social</label>
               <div className="cq-name-wrap">
-                <input className="cq-input" style={{maxWidth:'520px'}} type="text" value={nombreCliente} onChange={e=>actualizarNombreCliente(e.target.value)} placeholder="Nombre / Razón social"/>
+                <input className="nm-input" style={{maxWidth:'520px',padding:'10px 16px',fontFamily:FB,fontSize:13}} type="text" value={nombreCliente} onChange={e=>actualizarNombreCliente(e.target.value)} placeholder="Nombre / Razón social"/>
                 {errorNombre&&!nombreCliente&&<div style={{fontSize:10,color:RED,fontWeight:600,marginTop:6}}>{errorNombre}</div>}
               </div>
             </div>
@@ -856,7 +856,7 @@ const CotizacionView = () => {
                       )):<span style={{fontSize:10,color:TXTD}}>Cargando\u2026</span>}
                   </div>
                   <input className="nm-input" type="text"
-                    style={{width:190,maxWidth:'100%',marginLeft:'auto',padding:'10px 16px',fontFamily:FM,fontSize:13}}
+                    style={{width:190,maxWidth:'100%',marginLeft:'auto',padding:'10px 16px',fontFamily:FB,fontSize:13}}
                     placeholder={tipoDocumentoSeleccionado?(tipoDocumentos.find(tc=>tc.id_tipo===tipoDocumentoSeleccionado)?.descripcion==='RUC'?'RUC (11 d\u00edgitos)':'DNI (8 d\u00edgitos)'):'Seleccione tipo primero'}
                     value={digitos} onChange={e=>setDigitos(e.target.value.replace(/\D/g,''))}
                     maxLength={tipoDocumentoSeleccionado?(tipoDocumentos.find(tc=>tc.id_tipo===tipoDocumentoSeleccionado)?.descripcion==='RUC'?11:8):11}
@@ -976,7 +976,7 @@ const CotizacionView = () => {
             <div style={{position:'relative',marginBottom:10}}>
               <IconSearch size={13} color={TXTD} style={{position:'absolute',left:16,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}/>
               <input className="nm-input" type="text" placeholder="Buscar producto…" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}
-                style={{padding:'10px 16px 10px 38px',fontFamily:FM,fontSize:13}}/>
+                style={{padding:'10px 16px 10px 38px',fontFamily:FB,fontSize:13}}/>
             </div>
             <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:12}}>
               <button className={`cq-cat${!categoriaSeleccionada?' active':''}`} onClick={()=>setCategoriaSeleccionada('')}>Todos</button>
