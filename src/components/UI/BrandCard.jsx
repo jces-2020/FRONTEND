@@ -26,7 +26,10 @@ const BC_STYLES = `
     width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
     background: rgba(148,25,24,.08); color: #941918;
   }
-  .bcard-title { font-weight: 700; font-size: 13px; color: #1a2a3a; flex: 1; }
+  .bcard-title { font-weight: 700; font-size: 13px; color: var(--bcard-title-color,#5a8ba8); flex: 1; }
+  .bcard-body {
+    background: linear-gradient(180deg, rgba(148,25,24,.055) 0%, rgba(148,25,24,.02) 100%);
+  }
 `;
 
 export function injectBrandCardStyles() {
@@ -68,7 +71,7 @@ export default function BrandCard({
           {meta}
         </div>
       )}
-      <div style={bodyStyle}>{children}</div>
+      <div className="bcard-body" style={bodyStyle}>{children}</div>
     </div>
   );
 }

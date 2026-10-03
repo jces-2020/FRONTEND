@@ -46,7 +46,6 @@ const CSS = `
 @keyframes cqCard{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 @keyframes cqAura{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(10px,-8px) scale(1.06)}}
 @keyframes cqPulse{0%,100%{box-shadow:0 6px 18px rgba(128,194,220,.38)}50%{box-shadow:0 12px 30px rgba(128,194,220,.55)}}
-@keyframes cqShimmer{0%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
 @keyframes cqPopIn{from{opacity:0;transform:scale(.82) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes cqPopGlow{0%,100%{box-shadow:0 8px 24px rgba(128,194,220,.38),0 1px 0 rgba(255,255,255,.9) inset}50%{box-shadow:0 14px 36px rgba(128,194,220,.55),0 1px 0 rgba(255,255,255,.9) inset}}
 
@@ -230,8 +229,6 @@ const CSS = `
 .cq-qr-bar{height:6px;width:34px;border-radius:999px;background:linear-gradient(90deg,rgba(148,25,24,.45),rgba(128,194,220,.65));transform-origin:left center;}
 
 .cq-total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:11px;margin-top:8px;background:linear-gradient(135deg,rgba(128,194,220,.15),rgba(90,139,168,.10));border:1.5px solid rgba(128,194,220,.35);}
-.cq-total-row{position:relative;overflow:hidden;}
-.cq-total-row::before{content:'';position:absolute;left:-20%;top:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,214,0,.22),transparent);transform:skewX(-18deg);animation:cqShimmer 3.2s linear infinite;pointer-events:none;opacity:.55;}
 
 .cq-label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.8px;color:#8aa8bc;margin-bottom:5px;text-transform:uppercase;}
 
@@ -242,8 +239,7 @@ const CSS = `
 @media(max-width:900px){.cq-wrap{flex-direction:column;}.cq-side{max-width:100%;}.cq-main,.cq-side{flex:1;}}
 
 @media (prefers-reduced-motion: reduce){
-  .cq-wrap::before,.cq-wrap::after,
-  .cq-total-row::before{animation:none !important;}
+  .cq-wrap::before,.cq-wrap::after{animation:none !important;}
 }
 
 .cq-print-sheet{display:none;}
@@ -825,7 +821,7 @@ const CotizacionView = () => {
                         tipoDocumentoSeleccionado===tipo.id_tipo
                           ?<BrandCtaButton key={tipo.id_tipo||tipo.descripcion} variant="primary" size="sm" onClick={()=>setTipoDocumentoSeleccionado(tipo.id_tipo)}>{tipo.descripcion}</BrandCtaButton>
                           :<button key={tipo.id_tipo||tipo.descripcion} className="cq-pill" onClick={()=>setTipoDocumentoSeleccionado(tipo.id_tipo)}>{tipo.descripcion}</button>
-                      )):<span style={{fontSize:10,color:TXTD}}>Cargando\u2026</span>}
+                      )):<span style={{fontSize:10,color:TXTD}}>Cargando…</span>}
                   </div>
                   <input className="nm-input" type="text"
                     style={{width:190,maxWidth:'100%',marginLeft:'auto',padding:'10px 16px',fontFamily:FB,fontSize:13}}
@@ -850,14 +846,14 @@ const CotizacionView = () => {
 
         {/* Tabla */}
         <BrandCard
-          title="Productos en cotizaci\u00f3n"
-          meta={cotizacionProductos.length>0&&<span className="cq-chip">{cotizacionProductos.length} \u00edtem{cotizacionProductos.length!==1?'s':''}</span>}
+          title="Productos en cotización"
+          meta={cotizacionProductos.length>0&&<span className="cq-chip">{cotizacionProductos.length} ítem{cotizacionProductos.length!==1?'s':''}</span>}
         >
           <div style={{padding:'10px 12px 14px'}}>
             <div className="cq-scroll-t">
               <StripedTable minWidth={0}>
                 <StripedTableHead>
-                  <StripedTh>C\u00f3digo</StripedTh>
+                  <StripedTh>Código</StripedTh>
                   <StripedTh>Nombre</StripedTh>
                   <StripedTh align="center">Cant.</StripedTh>
                   <StripedTh align="center">P. Unit.</StripedTh>
@@ -866,7 +862,7 @@ const CotizacionView = () => {
                 </StripedTableHead>
                 <tbody>
                   {cotizacionProductos.length===0?(
-                    <tr><td colSpan={6} style={{textAlign:'center',padding:'28px 0',color:TXTD,fontSize:11,fontFamily:FM}}>Sin productos en la cotizaci\u00f3n</td></tr>
+                    <tr><td colSpan={6} style={{textAlign:'center',padding:'28px 0',color:TXTD,fontSize:11,fontFamily:FM}}>Sin productos en la cotización</td></tr>
                   ):cotizacionProductos.map((p,idx)=>{
                     const total=Number(p.precio_unitario||0)*Number(p.cantidad||1);
                     return(
@@ -914,7 +910,7 @@ const CotizacionView = () => {
             {/* Total + acciones */}
             <div className="cq-total-row">
               <div>
-                <div style={{fontSize:9,fontFamily:FM,fontWeight:700,color:TXTD,letterSpacing:.8,textTransform:'uppercase',marginBottom:2}}>Total cotizaci\u00f3n</div>
+                <div style={{fontSize:9,fontFamily:FM,fontWeight:700,color:TXTD,letterSpacing:.8,textTransform:'uppercase',marginBottom:2}}>Total cotización</div>
                 <div style={{fontFamily:FM,fontWeight:800,fontSize:20,color:CELESTE2}}>S/ {totalCotizacion.toFixed(2)}</div>
               </div>
               <div style={{display:'flex',gap:8}}>
