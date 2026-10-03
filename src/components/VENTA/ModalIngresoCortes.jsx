@@ -1,78 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { COLORS, FONTS } from '../../colors';
 import { IconCards, IconRulerMeasure } from '@tabler/icons-react';
-
-const CSS_CORTES = `
-@keyframes cortesOverIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes cortesCardIn {
-  from { opacity: 0; transform: translateY(26px) scale(.92) perspective(900px) rotateX(7deg); }
-  to   { opacity: 1; transform: translateY(0)   scale(1) perspective(900px) rotateX(0deg);    }
-}
-@keyframes cortesGlassShine {
-  0% { transform: translateX(-120%) skewX(-16deg); opacity: 0; }
-  20% { opacity: .55; }
-  100% { transform: translateX(260%) skewX(-16deg); opacity: 0; }
-}
-.cortes-overlay {
-  position: fixed;
-  top: 64px;
-  left: 0; right: 0; bottom: 0;
-  background: rgba(6, 14, 28, .60);
-  backdrop-filter: blur(10px) saturate(160%);
-  -webkit-backdrop-filter: blur(10px) saturate(160%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1100;
-  padding: 16px;
-  animation: cortesOverIn .20s ease both;
-}
-.cortes-card {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(155deg, rgba(255,255,255,.96) 0%, rgba(221,242,252,.92) 55%, rgba(205,232,246,.86) 100%);
-  border: 1.5px solid rgba(200,236,253,.78);
-  border-radius: 22px;
-  padding: 32px 28px 28px;
-  max-width: 620px; width: 100%;
-  box-shadow:
-    0 38px 70px rgba(0,0,0,.28),
-    0 6px 16px rgba(0,0,0,.14),
-    inset 0 1px 0 rgba(255,255,255,.95),
-    inset 0 0 0 1px rgba(255,255,255,.42),
-    0 0 0 1.5px rgba(128,194,220,.20);
-  max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(128,194,220,.35) transparent;
-  animation: cortesCardIn .28s cubic-bezier(.34,1.32,.64,1) both;
-}
-.cortes-card::before {
-  content: '';
-  position: absolute;
-  top: -1px; left: 8%; right: 8%; height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
-  pointer-events: none;
-}
-.cortes-card::after {
-  content: '';
-  position: absolute;
-  top: 0; left: -62%; width: 35%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.24), transparent);
-  animation: cortesGlassShine 5.4s ease-in-out infinite 1.1s;
-  pointer-events: none;
-}
-.cortes-medida-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-`;
+import BrandCard from '../UI/BrandCard';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 const COSTO_CORTE = 10;
+
+const fieldLabelStyle = { fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: 6 };
+const nmInputStyle = { padding: '11px 16px', fontFamily: FONTS.body, fontSize: '1rem' };
 
 /**
  * Modal/Panel para ingresar detalles de cortes
@@ -80,13 +16,15 @@ const COSTO_CORTE = 10;
  * - ALUMINIOS: Solo ancho O alto (una dimensión), sin espesor ni notas
  * - VIDRIOS: Ancho y alto, sin espesor ni notas
  */
-const ModalIngresoCortes = ({ 
+const ModalIngresoCortes = ({
   producto,
   tipoProducto,    // 'ALUMINIOS' | 'VIDRIOS'
   cortesExistentes = null,  // Array de cortes existentes para editar
   onGuardarCorte,   // callback(corteData) - agrega a cotización
-  onCancel 
+  onCancel
 }) => {
+  injectNeumorphicStyles();
+
   const [cantidad, setCantidad] = useState(1);
   const [ancho, setAncho] = useState('');
   const [alto, setAlto] = useState('');
@@ -185,14 +123,8 @@ const ModalIngresoCortes = ({
         alert('Por favor ingresa el ancho');
         return;
       }
-    } else if (esVidrio) {
-      // VIDRIO: Ancho y Alto
-      if (!anchoValor || anchoValor <= 0 || !altoValor || altoValor <= 0) {
-        alert('Por favor ingresa ancho y alto');
-        return;
-      }
     } else {
-      // Otros: Ancho y Alto
+      // VIDRIO y otros: Ancho y Alto
       if (!anchoValor || anchoValor <= 0 || !altoValor || altoValor <= 0) {
         alert('Por favor ingresa ancho y alto');
         return;
@@ -253,375 +185,228 @@ const ModalIngresoCortes = ({
   };
 
   return (
-    <>
-      <style>{CSS_CORTES}</style>
-      <div
-        className="cortes-overlay"
-        onClick={e => { if (e.target === e.currentTarget) onCancel?.(); }}
-      >
-      <div className="cortes-card">
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2 style={{
-            fontFamily: FONTS.heading,
-            fontSize: '1.6rem',
-            color: COLORS.text,
-            margin: 0
-          }}>
-            <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
-              <IconCards stroke={1.25} size={26} color={COLORS.primary} />
-              Ingreso de Cortes {esAluminio ? '(ALUMINIO)' : esVidrio ? '(VIDRIO)' : ''}
-            </span>
-          </h2>
-          <button
-            onClick={onCancel}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '24px',
-              cursor: 'pointer',
-              color: COLORS.textLight
-            }}
-          >
-            ✕
-          </button>
-        </div>
+    <div
+      style={{
+        position: 'fixed', top: 64, left: 0, right: 0, bottom: 0,
+        background: 'rgba(6, 14, 28, .55)',
+        backdropFilter: 'blur(10px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(160%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 1100, padding: 16,
+      }}
+      onClick={e => { if (e.target === e.currentTarget) onCancel?.(); }}
+    >
+      <div style={{ width: 'min(620px, 100%)', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
+        <BrandCard
+          icon={<IconCards stroke={1.25} size={16} />}
+          title={`Ingreso de Cortes ${esAluminio ? '(ALUMINIO)' : esVidrio ? '(VIDRIO)' : ''}`}
+          meta={
+            <button
+              onClick={onCancel}
+              style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: COLORS.textLight, lineHeight: 1 }}
+            >
+              ✕
+            </button>
+          }
+        >
+          <div style={{ padding: '18px 22px 22px' }}>
 
-        {/* Info producto */}
-        <div style={{
-          background: COLORS.lightBlue,
-          padding: '16px',
-          marginBottom: '24px',
-          borderRadius: '10px'
-        }}>
-          <p style={{ margin: '0 0 8px 0', fontWeight: 600, color: COLORS.text }}>
-            Producto: {producto?.nombre}
-          </p>
-          <p style={{ margin: '0', color: COLORS.textLight, fontSize: '0.95rem' }}>
-            Código: {producto?.codigo} | Precio base: S/ {(producto?.precio_unitario || 0).toFixed(2)}
-          </p>
-          {esAluminio && (
-            <p style={{ margin: '8px 0 0 0', color: COLORS.text, fontSize: '0.9rem', fontWeight: 500 }}>
-              Ingresa solo el ancho
-            </p>
-          )}
-          {esVidrio && (
-            <p style={{ margin: '8px 0 0 0', color: COLORS.text, fontSize: '0.9rem', fontWeight: 500 }}>
-              Ingresa ancho y alto
-            </p>
-          )}
-        </div>
-
-        {/* Formulario */}
-        <div style={{ display: 'grid', gap: '16px', marginBottom: '24px' }}>
-          
-          {/* Cantidad */}
-          <div>
-            <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-              Cantidad de piezas de este corte
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={cantidad}
-              onChange={e => setCantidad(Math.max(1, Number(e.target.value) || 1))}
-              style={{
-                width: '100%',
-                padding: '10px',
-                borderRadius: '6px',
-                border: `1px solid ${COLORS.border}`,
-                fontFamily: FONTS.body,
-                fontSize: '1rem'
-              }}
-            />
-          </div>
-
-          {/* ALUMINIO: Solo Ancho */}
-          {esAluminio && (
-            <div>
-              <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-                <span className="cortes-medida-label"><IconRulerMeasure stroke={1} size={16} /> Ancho (cm) *</span>
-              </label>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="Ej: 100"
-                value={ancho}
-                onChange={e => handleMedidaChange(e.target.value, setAncho, setAdvertenciaAncho)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: `1px solid ${COLORS.border}`,
-                  fontFamily: FONTS.body,
-                  fontSize: '1rem'
-                }}
-              />
-              {advertenciaAncho && (
-                <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.9rem', fontWeight: 600 }}>
-                  {advertenciaAncho}
+            {/* Info producto */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ margin: '0 0 6px 0', fontWeight: 600, color: COLORS.text, fontFamily: FONTS.body }}>
+                Producto: {producto?.nombre}
+              </p>
+              <p style={{ margin: 0, color: COLORS.textLight, fontSize: '0.95rem', fontFamily: FONTS.body }}>
+                Código: {producto?.codigo} | Precio base: S/ {(producto?.precio_unitario || 0).toFixed(2)}
+              </p>
+              {esAluminio && (
+                <p style={{ margin: '8px 0 0 0', color: COLORS.text, fontSize: '0.9rem', fontWeight: 500, fontFamily: FONTS.body }}>
+                  Ingresa solo el ancho
+                </p>
+              )}
+              {esVidrio && (
+                <p style={{ margin: '8px 0 0 0', color: COLORS.text, fontSize: '0.9rem', fontWeight: 500, fontFamily: FONTS.body }}>
+                  Ingresa ancho y alto
                 </p>
               )}
             </div>
-          )}
 
-          {/* VIDRIO: Ancho, Alto (sin espesor) */}
-          {esVidrio && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-                  <span className="cortes-medida-label"><IconRulerMeasure stroke={1} size={16} /> Ancho (cm) *</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Ej: 100"
-                  value={ancho}
-                  onChange={e => handleMedidaChange(e.target.value, setAncho, setAdvertenciaAncho)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    border: `1px solid ${COLORS.border}`,
-                    fontFamily: FONTS.body,
-                    fontSize: '1rem'
-                  }}
-                />
-                {advertenciaAncho && (
-                  <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.85rem', fontWeight: 600 }}>
-                    {advertenciaAncho}
-                  </p>
-                )}
-              </div>
+            {/* Formulario */}
+            <div style={{ display: 'grid', gap: 16, marginBottom: 20 }}>
 
+              {/* Cantidad */}
               <div>
-                <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-                  <span className="cortes-medida-label"><IconRulerMeasure stroke={1} size={16} /> Alto (cm) *</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Ej: 50"
-                  value={alto}
-                  onChange={e => handleMedidaChange(e.target.value, setAlto, setAdvertenciaAlto)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    border: `1px solid ${COLORS.border}`,
-                    fontFamily: FONTS.body,
-                    fontSize: '1rem'
-                  }}
-                />
-                {advertenciaAlto && (
-                  <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.85rem', fontWeight: 600 }}>
-                    {advertenciaAlto}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* OTROS: Ancho, Alto, Espesor */}
-          {!esAluminio && !esVidrio && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
-              <div>
-                <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-                  <span className="cortes-medida-label"><IconRulerMeasure stroke={1} size={16} /> Ancho (cm) *</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Ej: 100"
-                  value={ancho}
-                  onChange={e => handleMedidaChange(e.target.value, setAncho, setAdvertenciaAncho)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    border: `1px solid ${COLORS.border}`,
-                    fontFamily: FONTS.body,
-                    fontSize: '1rem'
-                  }}
-                />
-                {advertenciaAncho && (
-                  <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.85rem', fontWeight: 600 }}>
-                    {advertenciaAncho}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-                  <span className="cortes-medida-label"><IconRulerMeasure stroke={1} size={16} /> Alto (cm) *</span>
-                </label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Ej: 50"
-                  value={alto}
-                  onChange={e => handleMedidaChange(e.target.value, setAlto, setAdvertenciaAlto)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    border: `1px solid ${COLORS.border}`,
-                    fontFamily: FONTS.body,
-                    fontSize: '1rem'
-                  }}
-                />
-                {advertenciaAlto && (
-                  <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.85rem', fontWeight: 600 }}>
-                    {advertenciaAlto}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label style={{ fontWeight: 600, fontSize: '0.95rem', color: COLORS.text, display: 'block', marginBottom: '6px' }}>
-                  Espesor (mm)
-                </label>
+                <label style={fieldLabelStyle}>Cantidad de piezas de este corte</label>
                 <input
                   type="number"
-                  step="0.1"
-                  placeholder="Ej: 6"
-                  value={espesor}
-                  onChange={e => setEspesor(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    borderRadius: '6px',
-                    border: `1px solid ${COLORS.border}`,
-                    fontFamily: FONTS.body,
-                    fontSize: '1rem'
-                  }}
+                  min="1"
+                  value={cantidad}
+                  onChange={e => setCantidad(Math.max(1, Number(e.target.value) || 1))}
+                  className="nm-input"
+                  style={nmInputStyle}
                 />
               </div>
-            </div>
-          )}
 
-          {/* Botón agregar otro corte */}
-          <button
-            onClick={handleAgregarOtroCorte}
-            style={{
-              padding: '12px',
-              background: COLORS.lightBlue,
-              color: COLORS.primary,
-              border: `2px solid ${COLORS.primary}`,
-              borderRadius: '10px',
-              fontWeight: 700,
-              fontSize: '1rem',
-              cursor: 'pointer',
-              fontFamily: FONTS.heading
-            }}
-          >
-            + Agregar otro corte
-          </button>
-
-        </div>
-
-        {/* Lista de cortes agregados */}
-        {cortesAgregados.length > 0 && (
-          <div style={{
-            background: COLORS.light,
-            padding: '16px',
-            borderRadius: '10px',
-            marginBottom: '24px',
-            maxHeight: '250px',
-            overflowY: 'auto'
-          }}>
-            <h4 style={{
-              margin: '0 0 12px 0',
-              fontFamily: FONTS.heading,
-              color: COLORS.text,
-              fontSize: '1rem'
-            }}>
-              Cortes agregados ({cortesAgregados.length}):
-            </h4>
-            {cortesAgregados.map((corte, idx) => (
-              <div key={corte.id + '-' + idx} style={{
-                background: COLORS.white,
-                padding: '10px',
-                borderRadius: '6px',
-                marginBottom: '8px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                border: `1px solid ${COLORS.border}`
-              }}>
+              {/* ALUMINIO: Solo Ancho */}
+              {esAluminio && (
                 <div>
-                  <p style={{ margin: '0 0 4px 0', fontWeight: 600, color: COLORS.text, fontSize: '0.95rem' }}>
-                    Corte {idx + 1}: {corte.cantidad}x 
-                    {esAluminio 
-                      ? `(${corte.ancho}cm ancho)`
-                      : esVidrio
-                      ? `(${corte.ancho}cm x ${corte.alto}cm)`
-                      : `(${corte.ancho}cm x ${corte.alto}cm)`
-                    }
-                  </p>
+                  <label style={fieldLabelStyle}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><IconRulerMeasure stroke={1} size={16} /> Ancho (cm) *</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="Ej: 100"
+                    value={ancho}
+                    onChange={e => handleMedidaChange(e.target.value, setAncho, setAdvertenciaAncho)}
+                    className="nm-input"
+                    style={nmInputStyle}
+                  />
+                  {advertenciaAncho && (
+                    <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.9rem', fontWeight: 600 }}>
+                      {advertenciaAncho}
+                    </p>
+                  )}
                 </div>
-                <button
-                  onClick={() => handleEliminarCorte(corte.id)}
-                  style={{
-                    padding: '4px 10px',
-                    background: COLORS.error,
-                    color: COLORS.white,
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  Eliminar
-                </button>
+              )}
+
+              {/* VIDRIO (y otros): Ancho y Alto */}
+              {!esAluminio && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label style={fieldLabelStyle}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><IconRulerMeasure stroke={1} size={16} /> Ancho (cm) *</span>
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Ej: 100"
+                      value={ancho}
+                      onChange={e => handleMedidaChange(e.target.value, setAncho, setAdvertenciaAncho)}
+                      className="nm-input"
+                      style={nmInputStyle}
+                    />
+                    {advertenciaAncho && (
+                      <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.85rem', fontWeight: 600 }}>
+                        {advertenciaAncho}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label style={fieldLabelStyle}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><IconRulerMeasure stroke={1} size={16} /> Alto (cm) *</span>
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Ej: 50"
+                      value={alto}
+                      onChange={e => handleMedidaChange(e.target.value, setAlto, setAdvertenciaAlto)}
+                      className="nm-input"
+                      style={nmInputStyle}
+                    />
+                    {advertenciaAlto && (
+                      <p style={{ margin: '8px 0 0 0', color: COLORS.error, fontSize: '0.85rem', fontWeight: 600 }}>
+                        {advertenciaAlto}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Botón agregar otro corte */}
+              <BrandCtaButton variant="secondary" onClick={handleAgregarOtroCorte}>
+                + Agregar otro corte
+              </BrandCtaButton>
+
+            </div>
+
+            {/* Lista de cortes agregados */}
+            {cortesAgregados.length > 0 && (
+              <div style={{
+                background: COLORS.backgroundLight,
+                padding: 16,
+                borderRadius: 10,
+                marginBottom: 20,
+                maxHeight: 250,
+                overflowY: 'auto'
+              }}>
+                <h4 style={{
+                  margin: '0 0 12px 0',
+                  fontFamily: FONTS.heading,
+                  color: COLORS.text,
+                  fontSize: '1rem'
+                }}>
+                  Cortes agregados ({cortesAgregados.length}):
+                </h4>
+                {cortesAgregados.map((corte, idx) => (
+                  <div key={corte.id + '-' + idx} style={{
+                    background: COLORS.white,
+                    padding: 10,
+                    borderRadius: 6,
+                    marginBottom: 8,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    border: `1px solid ${COLORS.border}`
+                  }}>
+                    <div>
+                      <p style={{ margin: '0 0 4px 0', fontWeight: 600, color: COLORS.text, fontSize: '0.95rem' }}>
+                        Corte {idx + 1}: {corte.cantidad}x
+                        {esAluminio
+                          ? `(${corte.ancho}cm ancho)`
+                          : `(${corte.ancho}cm x ${corte.alto}cm)`
+                        }
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleEliminarCorte(corte.id)}
+                      style={{
+                        padding: '4px 10px',
+                        background: COLORS.error,
+                        color: COLORS.white,
+                        border: 'none',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: '0.9rem'
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
+            {/* Botones */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <BrandCtaButton variant="primary" style={{ flex: 1 }} disabled={cortesAgregados.length === 0} onClick={handleGuardarTodosLosCortes}>
+                ✓ Guardar todos los cortes ({cortesAgregados.length})
+              </BrandCtaButton>
+              <button
+                onClick={onCancel}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  background: '#ffffff',
+                  color: COLORS.text,
+                  border: `1.5px solid rgba(128,194,220,.35)`,
+                  borderRadius: 12,
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontFamily: FONTS.heading
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+
           </div>
-        )}
-
-        {/* Botones */}
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={handleGuardarTodosLosCortes}
-            disabled={cortesAgregados.length === 0}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: cortesAgregados.length === 0 ? COLORS.textLight : COLORS.primary,
-              color: COLORS.white,
-              border: 'none',
-              borderRadius: '10px',
-              fontWeight: 700,
-              fontSize: '1rem',
-              cursor: cortesAgregados.length === 0 ? 'not-allowed' : 'pointer',
-              fontFamily: FONTS.heading,
-              opacity: cortesAgregados.length === 0 ? 0.5 : 1
-            }}
-          >
-            ✓ Guardar todos los cortes ({cortesAgregados.length})
-          </button>
-          <button
-            onClick={onCancel}
-            style={{
-              flex: 1,
-              padding: '12px',
-              background: COLORS.light,
-              color: COLORS.text,
-              border: `2px solid ${COLORS.border}`,
-              borderRadius: '10px',
-              fontWeight: 600,
-              fontSize: '1rem',
-              cursor: 'pointer',
-              fontFamily: FONTS.heading
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-
+        </BrandCard>
       </div>
-      </div>
-    </>
+    </div>
   );
 };
 
