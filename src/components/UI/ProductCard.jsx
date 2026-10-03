@@ -132,23 +132,25 @@ export default function ProductCard({
       <div className="pcard-body">
         <div className="pcard-name">{name}</div>
         {description && <div className="pcard-desc">{description}</div>}
-        <div className="pcard-foot">
-          {priceLabel ? (
-            <span className="pcard-consult">{priceLabel}</span>
-          ) : (
-            <span className="pcard-price">
-              {price !== undefined && <span className="pcard-curr">S/</span>}
-              {price !== undefined ? Number(price).toFixed(2) : "Consultar"}
-            </span>
-          )}
-          {stockLabel !== undefined ? (
-            <span className={`pcard-stk${soldOut ? " pcard-stk-red" : ""}`}>{stockLabel}</span>
-          ) : stock !== undefined ? (
-            <span className={`pcard-stk${soldOut ? " pcard-stk-red" : ""}`}>
-              {soldOut ? "Agotado" : Number(stock) <= 10 ? `Stock: ${stock}` : "Stock"}
-            </span>
-          ) : null}
-        </div>
+        {(price !== undefined || priceLabel || stock !== undefined || stockLabel !== undefined) && (
+          <div className="pcard-foot">
+            {priceLabel ? (
+              <span className="pcard-consult">{priceLabel}</span>
+            ) : price !== undefined ? (
+              <span className="pcard-price">
+                <span className="pcard-curr">S/</span>
+                {Number(price).toFixed(2)}
+              </span>
+            ) : <span />}
+            {stockLabel !== undefined ? (
+              <span className={`pcard-stk${soldOut ? " pcard-stk-red" : ""}`}>{stockLabel}</span>
+            ) : stock !== undefined ? (
+              <span className={`pcard-stk${soldOut ? " pcard-stk-red" : ""}`}>
+                {soldOut ? "Agotado" : Number(stock) <= 10 ? `Stock: ${stock}` : "Stock"}
+              </span>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );
