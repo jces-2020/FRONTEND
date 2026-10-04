@@ -31,12 +31,14 @@ const ADM_STYLES = `
 
   /* ── Fila superior ── */
   .adm-toprow {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 12px;
     padding: 28px 4px 16px 4px;
   }
+  .adm-toprow-spacer { justify-self: start; }
+  .adm-toprow .adm-logout { justify-self: end; }
 
   .adm-logout {
     display: flex;
@@ -357,13 +359,14 @@ const Administracion = () => {
     <div className="adm-root">
       <BrandToast toast={toast} onClose={() => setToast(null)} />
 
-      {/* ── Top row: tabs | salir ── */}
+      {/* ── Top row: (spacer) | tabs centrados | salir ── */}
       <div className="adm-toprow">
+        <div className="adm-toprow-spacer" />
+
         <TabSelector
           value={activeTab}
           onChange={setActiveTab}
           tabs={TABS}
-          style={{ flex: '1 1 480px', maxWidth: 640 }}
         />
 
         <button
