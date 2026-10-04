@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { COLORS, FONTS } from '../../colors';
-
-const cardStyle = {
-  border: `1px solid ${COLORS.border}`,
-  borderRadius: 16,
-  boxShadow: '0 10px 26px rgba(0,0,0,0.06)',
-  background: COLORS.white,
-  padding: 24,
-};
+import BrandCard from '../UI/BrandCard';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from '../UI/StripedTable';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 const labelStyle = {
   display: 'block',
@@ -18,54 +14,17 @@ const labelStyle = {
   fontFamily: FONTS.heading,
 };
 
-const inputStyle = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 10,
-  border: `1px solid ${COLORS.border}`,
+const nmFieldStyle = (hasError) => ({
+  padding: '10px 16px',
   fontFamily: FONTS.body,
-  fontSize: 14,
-  marginTop: 4,
-};
-
-const buttonPrimaryStyle = {
-  border: 'none',
-  borderRadius: 12,
-  padding: '12px 18px',
-  fontWeight: 700,
-  cursor: 'pointer',
-  fontFamily: FONTS.heading,
-  background: COLORS.success,
-  color: COLORS.white,
-  boxShadow: '0 10px 20px rgba(16,185,129,0.22)',
-  width: '100%',
-  fontSize: 15,
-};
-
-const buttonSecondaryStyle = {
-  border: 'none',
-  borderRadius: 10,
-  padding: '8px 14px',
-  fontWeight: 700,
-  cursor: 'pointer',
-  fontFamily: FONTS.heading,
-  background: COLORS.primary,
-  color: COLORS.white,
-  boxShadow: '0 8px 18px rgba(0,210,255,0.22)',
-  fontSize: 14,
-};
-
-const buttonDangerStyle = {
-  background: 'transparent',
-  border: 'none',
-  color: COLORS.error,
-  cursor: 'pointer',
-  textDecoration: 'underline',
-  fontSize: 12,
-  fontFamily: FONTS.body,
-};
+  color: COLORS.text,
+  boxShadow: hasError ? `0 0 0 2px ${COLORS.error}55` : undefined,
+  boxSizing: 'border-box',
+});
 
 const Proyecto = ({ onToast }) => {
+  injectNeumorphicStyles();
+
   const [tiposServicio, setTiposServicio] = useState([]);
   const [nombreServicio, setNombreServicio] = useState('');
   const [descripcionServicio, setDescripcionServicio] = useState('');
@@ -215,163 +174,161 @@ const Proyecto = ({ onToast }) => {
   };
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', fontFamily: FONTS.body }}>
-      <div style={cardStyle}>
-        <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20, color: COLORS.text, fontFamily: FONTS.heading }}>
-          Registrar nuevo proyecto/servicio
-        </h3>
-
-        <div style={{ display: 'grid', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>Nombre</label>
-            <input
-              value={nombreServicio}
-              onChange={e => setNombreServicio(e.target.value)}
-              style={inputStyle}
-              placeholder="Nombre del proyecto"
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Descripción</label>
-            <textarea
-              value={descripcionServicio}
-              onChange={e => setDescripcionServicio(e.target.value)}
-              style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }}
-              placeholder="Descripción del proyecto"
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <label style={labelStyle}>Tipo de servicio</label>
-            <select value={tipoServicioId} onChange={e => setTipoServicioId(e.target.value)} style={inputStyle}>
-              <option value="">-- Selecciona tipo --</option>
-              {tiposServicio.map(t => (
-                <option key={t.id_tipo} value={t.id_tipo}>{t.nombre || t.descripcion || t.id_tipo}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <img
-              src={previewServicio || 'https://via.placeholder.com/120'}
-              alt="Vista previa"
-              style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: `2px solid ${COLORS.border}`, background: COLORS.white }}
-            />
-            <div style={{ flex: 1 }}>
-              <label style={{ ...labelStyle, marginBottom: 8 }}>Subir imagen (opcional)</label>
+    <div style={{ maxWidth: 880, margin: '0 auto', fontFamily: FONTS.body, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <BrandCard title="Registrar nuevo proyecto/servicio">
+        <div style={{ padding: '18px 20px 20px' }}>
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Nombre</label>
               <input
-                type="file"
-                accept="image/*"
-                onChange={e => {
-                  const file = e.target.files[0];
-                  setImagenServicio(file);
-                  setPreviewServicio(file ? URL.createObjectURL(file) : '');
-                }}
-                style={{ fontSize: 14, fontFamily: FONTS.body }}
+                className="nm-input"
+                value={nombreServicio}
+                onChange={e => setNombreServicio(e.target.value)}
+                style={{ width: '100%', marginTop: 4, ...nmFieldStyle(false) }}
+                placeholder="Nombre del proyecto"
               />
             </div>
+
+            <div>
+              <label style={labelStyle}>Descripción</label>
+              <textarea
+                className="nm-input"
+                value={descripcionServicio}
+                onChange={e => setDescripcionServicio(e.target.value)}
+                style={{ width: '100%', marginTop: 4, minHeight: 80, resize: 'vertical', ...nmFieldStyle(false) }}
+                placeholder="Descripción del proyecto"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Tipo de servicio</label>
+              <select
+                className="nm-input"
+                value={tipoServicioId}
+                onChange={e => setTipoServicioId(e.target.value)}
+                style={{ width: '100%', marginTop: 4, ...nmFieldStyle(false) }}
+              >
+                <option value="">-- Selecciona tipo --</option>
+                {tiposServicio.map(t => (
+                  <option key={t.id_tipo} value={t.id_tipo}>{t.nombre || t.descripcion || t.id_tipo}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <img
+                src={previewServicio || 'https://via.placeholder.com/120'}
+                alt="Vista previa"
+                style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, border: `2px solid ${COLORS.border}`, background: COLORS.white }}
+              />
+              <div style={{ flex: 1 }}>
+                <label style={{ ...labelStyle, marginBottom: 8 }}>Subir imagen (opcional)</label>
+                <input
+                  type="file"
+                  className="nm-input"
+                  accept="image/*"
+                  onChange={e => {
+                    const file = e.target.files[0];
+                    setImagenServicio(file);
+                    setPreviewServicio(file ? URL.createObjectURL(file) : '');
+                  }}
+                  style={nmFieldStyle(false)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <BrandCtaButton variant="primary" onClick={handleGuardarProyecto} fullWidth>
+              Guardar proyecto
+            </BrandCtaButton>
           </div>
         </div>
+      </BrandCard>
 
-        <button onClick={handleGuardarProyecto} style={{ ...buttonPrimaryStyle, marginTop: 20 }}>
-          Guardar proyecto
-        </button>
-      </div>
+      <BrandCard title="Gestión de Tipos de Servicio">
+        <div style={{ padding: '18px 20px 20px' }}>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+            <input
+              className="nm-input"
+              value={nuevoTipoServicio}
+              onChange={e => setNuevoTipoServicio(e.target.value)}
+              placeholder="Nuevo tipo de servicio (máx. 50 caracteres)"
+              maxLength={50}
+              style={{ flex: 1, minWidth: 200, ...nmFieldStyle(false) }}
+            />
+            <input
+              className="nm-input"
+              value={nuevoPrecioEstimado}
+              onChange={e => setNuevoPrecioEstimado(e.target.value.replace(/[^0-9.]/g, ''))}
+              placeholder="Precio estimado (S/)"
+              inputMode="decimal"
+              style={{ width: 160, ...nmFieldStyle(false) }}
+            />
+            <BrandCtaButton size="sm" variant="secondary" onClick={handleAgregarTipoServicio}>
+              Agregar tipo de servicio
+            </BrandCtaButton>
+          </div>
 
-      <div style={{ ...cardStyle, marginTop: 20 }}>
-        <h4 style={{ fontSize: 18, fontWeight: 800, marginBottom: 12, color: COLORS.text, fontFamily: FONTS.heading }}>
-          Gestión de Tipos de Servicio
-        </h4>
-        <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-          <input
-            value={nuevoTipoServicio}
-            onChange={e => setNuevoTipoServicio(e.target.value)}
-            placeholder="Nuevo tipo de servicio (máx. 50 caracteres)"
-            maxLength={50}
-            style={{ ...inputStyle, flex: 1, marginTop: 0 }}
-          />
-          <input
-            value={nuevoPrecioEstimado}
-            onChange={e => setNuevoPrecioEstimado(e.target.value.replace(/[^0-9.]/g, ''))}
-            placeholder="Precio estimado (S/)"
-            inputMode="decimal"
-            style={{ ...inputStyle, width: 160, marginTop: 0 }}
-          />
-          <button onClick={handleAgregarTipoServicio} style={buttonSecondaryStyle}>
-            Agregar tipo de servicio
-          </button>
-        </div>
-
-        <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: 12, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead style={{ background: COLORS.gray[100] }}>
-              <tr>
-                <th style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'left', fontFamily: FONTS.heading }}>
-                  Tipo de Servicio
-                </th>
-                <th style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'left', fontFamily: FONTS.heading }}>
-                  Precio Estimado (S/)
-                </th>
-                <th style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'center', fontFamily: FONTS.heading }}>
-                  Acción
-                </th>
-              </tr>
-            </thead>
+          <StripedTable minWidth={0}>
+            <StripedTableHead>
+              <StripedTh>Tipo de Servicio</StripedTh>
+              <StripedTh>Precio Estimado (S/)</StripedTh>
+              <StripedTh align="center">Acción</StripedTh>
+            </StripedTableHead>
             <tbody>
               {tiposServicio.length === 0 ? (
                 <tr>
-                  <td colSpan={3} style={{ textAlign: 'center', padding: 18, color: COLORS.textLight }}>
+                  <StripedTd align="center" colSpan={3} style={{ padding: 18, color: COLORS.textLight }}>
                     Sin tipos de servicio registrados
-                  </td>
+                  </StripedTd>
                 </tr>
               ) : (
                 tiposServicio.map((t, idx) => (
-                  <tr key={t.id_tipo} style={{ background: idx % 2 === 0 ? COLORS.white : COLORS.gray[50] }}>
-                    <td style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px' }}>
-                      {t.descripcion || t.nombre || t.id_tipo}
-                    </td>
-                    <td style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px' }}>
+                  <StripedTableRow key={t.id_tipo} index={idx}>
+                    <StripedTd>{t.descripcion || t.nombre || t.id_tipo}</StripedTd>
+                    <StripedTd>
                       {editandoTipoId === t.id_tipo ? (
                         <input
+                          className="nm-input"
                           value={editPrecioEstimado}
                           onChange={e => setEditPrecioEstimado(e.target.value.replace(/[^0-9.]/g, ''))}
-                          style={{ ...inputStyle, marginTop: 0, width: 120 }}
+                          style={{ width: 120, ...nmFieldStyle(false) }}
                           autoFocus
                         />
                       ) : (
                         t.precio_estimado != null ? Number(t.precio_estimado).toFixed(2) : '-'
                       )}
-                    </td>
-                    <td style={{ borderBottom: `1px solid ${COLORS.border}`, padding: '10px 12px', textAlign: 'center' }}>
+                    </StripedTd>
+                    <StripedTd align="center">
                       {editandoTipoId === t.id_tipo ? (
-                        <>
-                          <button onClick={() => handleGuardarEdicion(t.id_tipo)} style={{ ...buttonDangerStyle, color: COLORS.success, marginRight: 12 }}>
+                        <div style={{ display: 'inline-flex', gap: 8 }}>
+                          <BrandCtaButton size="sm" variant="primary" onClick={() => handleGuardarEdicion(t.id_tipo)}>
                             Guardar
-                          </button>
-                          <button onClick={() => setEditandoTipoId(null)} style={buttonDangerStyle}>
+                          </BrandCtaButton>
+                          <BrandCtaButton size="sm" variant="secondary" onClick={() => setEditandoTipoId(null)}>
                             Cancelar
-                          </button>
-                        </>
+                          </BrandCtaButton>
+                        </div>
                       ) : (
-                        <>
-                          <button onClick={() => handleIniciarEdicion(t)} style={{ ...buttonDangerStyle, color: COLORS.primary, marginRight: 12 }}>
+                        <div style={{ display: 'inline-flex', gap: 8 }}>
+                          <BrandCtaButton size="sm" variant="secondary" onClick={() => handleIniciarEdicion(t)}>
                             Editar
-                          </button>
-                          <button onClick={() => handleEliminarTipoServicio(t.id_tipo)} style={buttonDangerStyle}>
+                          </BrandCtaButton>
+                          <BrandCtaButton size="sm" variant="primary" onClick={() => handleEliminarTipoServicio(t.id_tipo)}>
                             Eliminar
-                          </button>
-                        </>
+                          </BrandCtaButton>
+                        </div>
                       )}
-                    </td>
-                  </tr>
+                    </StripedTd>
+                  </StripedTableRow>
                 ))
               )}
             </tbody>
-          </table>
+          </StripedTable>
         </div>
-      </div>
+      </BrandCard>
     </div>
   );
 };
