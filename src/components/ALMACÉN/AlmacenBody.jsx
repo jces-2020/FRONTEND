@@ -29,12 +29,22 @@ const STYLES = `
     }
   }
   .alm-toprow {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 16px;
     padding: 24px 4px 20px 4px;
     flex-wrap: wrap;
+  }
+  .alm-logout-wrap {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  @media (max-width: 560px) {
+    .alm-logout-wrap { position: static; transform: none; order: -1; align-self: flex-end; }
   }
   @media (min-width: 768px) {
     .alm-toprow {
@@ -157,11 +167,13 @@ const AlmacenBody = () => {
           value={tab}
           onChange={setTab}
           tabs={TAB_CONFIG.map(({ key, label, icon: Icon }) => ({ key, label, icon: <Icon size={15} stroke={2} /> }))}
-          style={{ flex: '1 1 320px', maxWidth: 480 }}
+          style={{ width: '100%', maxWidth: 480, margin: '0 auto' }}
         />
-        <button className="alm-logout" onClick={handleLogout}>
-          <IconLogout stroke={1.5} size={16} /> Salir
-        </button>
+        <div className="alm-logout-wrap">
+          <button className="alm-logout" onClick={handleLogout}>
+            <IconLogout stroke={1.5} size={16} /> Salir
+          </button>
+        </div>
       </div>
       <div className="alm-wrapper">
         <BrandCard icon={activeTab && <activeTab.icon size={14} />} title={activeTab?.label}>
