@@ -1,7 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { COLORS, FONTS } from '../../colors';
+import BrandCard from '../UI/BrandCard';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd, StripedTableSummaryRow } from '../UI/StripedTable';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
+
+const nmFieldStyle = (hasError) => ({
+  padding: '10px 16px',
+  fontFamily: FONTS.body,
+  color: COLORS.text,
+  boxShadow: hasError ? `0 0 0 2px ${COLORS.error}55` : undefined,
+  boxSizing: 'border-box',
+});
 
 const Cuadre = ({ onToast }) => {
+  injectNeumorphicStyles();
+
   const today = new Date();
   const defaultMes = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
   const [mes, setMes] = useState(defaultMes);
@@ -109,9 +123,10 @@ const Cuadre = ({ onToast }) => {
   if (loading) return <div style={{ padding: windowWidth < 640 ? '12px' : '24px', fontFamily: FONTS.body, color: COLORS.text }}>Cargando...</div>;
   if (!resumen) return <div style={{ padding: windowWidth < 640 ? '12px' : '24px', fontFamily: FONTS.body, color: COLORS.text }}>Sin datos del mes</div>;
 
+  const padBody = windowWidth < 640 ? '14px' : '18px 20px 20px';
+
   return (
     <div style={{
-      padding: windowWidth < 640 ? '12px' : windowWidth < 1024 ? '16px' : '24px',
       maxWidth: '1400px',
       margin: '0 auto',
       fontFamily: FONTS.body,
@@ -127,7 +142,6 @@ const Cuadre = ({ onToast }) => {
       }}>
         <div style={{
           display: 'flex',
-          alignItems: 'center',
           gap: windowWidth < 640 ? '8px' : windowWidth < 1024 ? '12px' : '16px',
           flexDirection: windowWidth < 640 ? 'column' : 'row',
           alignItems: windowWidth < 640 ? 'flex-start' : 'center',
@@ -164,19 +178,10 @@ const Cuadre = ({ onToast }) => {
         </div>
         <input
           type="month"
+          className="nm-input"
           value={mes}
           onChange={e => setMes(e.target.value)}
-          style={{
-            padding: windowWidth < 640 ? '8px 10px' : '10px 12px',
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: '6px',
-            backgroundColor: '#fff',
-            color: COLORS.text,
-            fontFamily: FONTS.body,
-            fontSize: windowWidth < 640 ? '0.9rem' : '1rem',
-            cursor: 'pointer',
-            width: windowWidth < 640 ? '100%' : 'auto'
-          }}
+          style={{ ...nmFieldStyle(false), width: windowWidth < 640 ? '100%' : 'auto' }}
         />
       </div>
 
@@ -186,217 +191,70 @@ const Cuadre = ({ onToast }) => {
         gap: windowWidth < 640 ? '12px' : windowWidth < 1024 ? '16px' : '20px'
       }}>
         {/* Panel izquierdo: Pagos + búsqueda */}
-        <div style={{
-          padding: windowWidth < 640 ? '12px' : '16px',
-          borderRadius: '8px',
-          border: `1px solid ${COLORS.border}`,
-          background: COLORS.light
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: windowWidth < 640 ? '8px' : '12px',
-            marginBottom: windowWidth < 640 ? '12px' : '16px'
-          }}>
+        <BrandCard title="Pagos">
+          <div style={{ padding: padBody }}>
             <input
+              className="nm-input"
               placeholder="Buscar..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{
-                flex: 1,
-                padding: windowWidth < 640 ? '8px 10px' : '10px 12px',
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: '6px',
-                backgroundColor: '#fff',
-                color: COLORS.text,
-                fontFamily: FONTS.body,
-                fontSize: windowWidth < 640 ? '0.85rem' : '0.9rem'
-              }}
+              style={{ width: '100%', marginBottom: 12, ...nmFieldStyle(false) }}
             />
-          </div>
 
-          <div style={{
-            border: `1px solid ${COLORS.border}`,
-            backgroundColor: '#fff',
-            borderRadius: '6px',
-            overflow: 'hidden'
-          }}>
             <div style={{
               maxHeight: windowWidth < 640 ? '300px' : windowWidth < 1024 ? '400px' : '500px',
               overflowY: 'auto'
             }}>
-              <table style={{
-                width: '100%',
-                fontSize: windowWidth < 640 ? '0.7rem' : windowWidth < 1024 ? '0.8rem' : '0.9rem',
-                fontFamily: FONTS.body,
-                borderCollapse: 'collapse'
-              }}>
-                <thead style={{
-                  background: COLORS.light,
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 10
-                }}>
-                  <tr>
-                    <th style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                      textAlign: 'left',
-                      color: COLORS.text,
-                      fontFamily: FONTS.heading,
-                      fontWeight: 600
-                    }}>FECHA</th>
-                    <th style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                      textAlign: 'left',
-                      color: COLORS.text,
-                      fontFamily: FONTS.heading,
-                      fontWeight: 600,
-                      display: windowWidth < 768 ? 'none' : 'table-cell'
-                    }}>MES</th>
-                    <th style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                      textAlign: 'left',
-                      color: COLORS.text,
-                      fontFamily: FONTS.heading,
-                      fontWeight: 600,
-                      display: windowWidth < 1024 ? 'none' : 'table-cell'
-                    }}>SEMANA</th>
-                    <th style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                      textAlign: 'left',
-                      color: COLORS.text,
-                      fontFamily: FONTS.heading,
-                      fontWeight: 600
-                    }}>CODIGO</th>
-                    <th style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                      textAlign: 'left',
-                      color: COLORS.text,
-                      fontFamily: FONTS.heading,
-                      fontWeight: 600
-                    }}>TIPO</th>
-                    <th style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                      textAlign: 'right',
-                      color: COLORS.text,
-                      fontFamily: FONTS.heading,
-                      fontWeight: 600
-                    }}>MONTO</th>
-                  </tr>
-                </thead>
+              <StripedTable minWidth={0}>
+                <StripedTableHead>
+                  <StripedTh>Fecha</StripedTh>
+                  <StripedTh hideOnMobile>Mes</StripedTh>
+                  <StripedTh hideOnMobile>Semana</StripedTh>
+                  <StripedTh>Código</StripedTh>
+                  <StripedTh>Tipo</StripedTh>
+                  <StripedTh align="right">Monto</StripedTh>
+                </StripedTableHead>
                 <tbody>
                   {filteredPagos.length === 0 ? (
                     <tr>
-                      <td colSpan={windowWidth < 1024 ? 5 : 6} style={{
-                        textAlign: 'center',
-                        padding: windowWidth < 640 ? '12px' : '16px',
-                        color: COLORS.textLight,
-                        fontFamily: FONTS.body,
-                        border: `1px solid ${COLORS.border}`
-                      }}>
+                      <StripedTd align="center" colSpan={6} style={{ padding: 14, color: COLORS.textLight }}>
                         Sin pagos registrados
-                      </td>
+                      </StripedTd>
                     </tr>
                   ) : (
                     filteredPagos.map((p, idx) => (
-                      <tr key={`${p.tipo}-${p.id}`} style={{
-                        borderBottom: `1px solid ${COLORS.border}`,
-                        background: idx % 2 === 0 ? COLORS.backgroundLight : COLORS.white,
-                        transition: 'background-color 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? COLORS.backgroundLight : COLORS.white}>
-                        <td style={{
-                          border: `1px solid ${COLORS.border}`,
-                          padding: windowWidth < 640 ? '6px 8px' : '8px 10px'
-                        }}>
-                          {p.fecha || '-'}
-                        </td>
-                        <td style={{
-                          border: `1px solid ${COLORS.border}`,
-                          padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                          display: windowWidth < 768 ? 'none' : 'table-cell'
-                        }}>
-                          {(p.fecha || '').slice(0, 7) || '-'}
-                        </td>
-                        <td style={{
-                          border: `1px solid ${COLORS.border}`,
-                          padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                          display: windowWidth < 1024 ? 'none' : 'table-cell'
-                        }}>
-                          {semanaDeFecha(p.fecha)}
-                        </td>
-                        <td style={{
-                          border: `1px solid ${COLORS.border}`,
-                          padding: windowWidth < 640 ? '6px 8px' : '8px 10px'
-                        }}>
-                          {p.codigo}
-                        </td>
-                        <td style={{
-                          border: `1px solid ${COLORS.border}`,
-                          padding: windowWidth < 640 ? '6px 8px' : '8px 10px'
-                        }}>
-                          {p.tipo}
-                        </td>
-                        <td style={{
-                          border: `1px solid ${COLORS.border}`,
-                          padding: windowWidth < 640 ? '6px 8px' : '8px 10px',
-                          textAlign: 'right',
-                          fontWeight: 600,
-                          color: COLORS.error
-                        }}>
+                      <StripedTableRow key={`${p.tipo}-${p.id}`} index={idx}>
+                        <StripedTd>{p.fecha || '-'}</StripedTd>
+                        <StripedTd hideOnMobile>{(p.fecha || '').slice(0, 7) || '-'}</StripedTd>
+                        <StripedTd hideOnMobile>{semanaDeFecha(p.fecha)}</StripedTd>
+                        <StripedTd>{p.codigo}</StripedTd>
+                        <StripedTd>{p.tipo}</StripedTd>
+                        <StripedTd align="right" style={{ fontWeight: 600, color: COLORS.error }}>
                           S/ {parseFloat(p.monto || 0).toFixed(2)}
-                        </td>
-                      </tr>
+                        </StripedTd>
+                      </StripedTableRow>
                     ))
                   )}
                 </tbody>
-                <tfoot>
-                  <tr style={{
-                    background: COLORS.light,
-                    borderTop: `2px solid ${COLORS.border}`
-                  }}>
-                    <td colSpan={windowWidth < 1024 ? 5 : 6} style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '8px' : '10px',
-                      textAlign: 'right',
-                      fontWeight: 700,
-                      fontFamily: FONTS.heading
-                    }}>
-                      TOTAL
-                    </td>
-                  </tr>
-                  <tr style={{ background: COLORS.light }}>
-                    <td colSpan={windowWidth < 1024 ? 5 : 6} style={{
-                      border: `1px solid ${COLORS.border}`,
-                      padding: windowWidth < 640 ? '8px' : '10px',
-                      textAlign: 'right',
-                      fontWeight: 700,
-                      fontFamily: FONTS.heading,
-                      color: COLORS.error
-                    }}>
-                      S/ {filteredPagos.reduce((acc, p) => acc + (parseFloat(p.monto || 0) || 0), 0).toFixed(2)}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+                {filteredPagos.length > 0 && (
+                  <tfoot>
+                    <StripedTableSummaryRow
+                      label="TOTAL"
+                      value={`S/ ${filteredPagos.reduce((acc, p) => acc + (parseFloat(p.monto || 0) || 0), 0).toFixed(2)}`}
+                      colSpan={5}
+                      emphasis
+                      topBorder
+                    />
+                  </tfoot>
+                )}
+              </StripedTable>
             </div>
           </div>
-        </div>
+        </BrandCard>
 
         {/* Panel derecho: Resumen del mes */}
-        <div>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: windowWidth < 640 ? '12px' : windowWidth < 1024 ? '14px' : '16px'
-          }}>
+        <BrandCard title="Resumen del mes">
+          <div style={{ padding: padBody, display: 'flex', flexDirection: 'column', gap: windowWidth < 640 ? '12px' : windowWidth < 1024 ? '14px' : '16px' }}>
             {/* Ingreso */}
             <div style={{
               display: 'flex',
@@ -486,33 +344,17 @@ const Cuadre = ({ onToast }) => {
             </div>
 
             {/* PDF Button */}
-            <div style={{
-              textAlign: 'center',
-              marginTop: windowWidth < 640 ? '8px' : '12px'
-            }}>
-              <button
+            <div style={{ textAlign: 'center', marginTop: windowWidth < 640 ? '8px' : '12px' }}>
+              <BrandCtaButton
+                variant="primary"
                 onClick={handleGenerarPDF}
-                style={{
-                  padding: windowWidth < 640 ? '10px 20px' : windowWidth < 1024 ? '12px 24px' : '14px 32px',
-                  color: '#fff',
-                  backgroundColor: COLORS.success,
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontFamily: FONTS.heading,
-                  fontWeight: 700,
-                  fontSize: windowWidth < 640 ? '0.9rem' : windowWidth < 1024 ? '1rem' : '1.05rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  width: windowWidth < 640 ? '100%' : 'auto'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#15803d'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = COLORS.success}
+                fullWidth={windowWidth < 640}
               >
-                📄 GUARDAR
-              </button>
+                📄 Guardar
+              </BrandCtaButton>
             </div>
           </div>
-        </div>
+        </BrandCard>
       </div>
     </div>
   );
