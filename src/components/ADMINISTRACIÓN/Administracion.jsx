@@ -11,6 +11,7 @@ import Proyecto from './Proyecto';
 import DashboardETL from './DashboardETL';
 import AsistenteIA from './AsistenteIA';
 import BrandToast from '../UI/BrandToast';
+import TabSelector from '../UI/TabSelector';
 
 /* ─── Estilos ─────────────────────────────────────────────── */
 const ADM_STYLES = `
@@ -31,8 +32,9 @@ const ADM_STYLES = `
   /* ── Fila superior ── */
   .adm-toprow {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
+    gap: 12px;
     padding: 28px 4px 16px 4px;
   }
 
@@ -61,65 +63,13 @@ const ADM_STYLES = `
     transform: translateY(-1px);
   }
 
-  /* ── Tab strip ── */
-  .adm-tabs {
-    display: flex;
-    padding: 0 4px;
-    gap: 2px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    scroll-snap-type: x mandatory;
-  }
-  .adm-tabs::-webkit-scrollbar { display: none; }
-
-  .adm-tab {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 12px;
-    border: 1.5px solid rgba(80,170,220,0.30);
-    border-bottom: none;
-    border-radius: 12px 12px 0 0;
-    background: rgba(175,222,246,0.42);
-    color: #3a8ab5;
-    font-family: ${FONTS?.heading ?? 'sans-serif'};
-    font-weight: 700;
-    font-size: 0.7rem;
-    letter-spacing: 0.15px;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    position: relative;
-    bottom: -1px;
-    transition: background 0.2s, color 0.2s, padding 0.2s;
-    white-space: nowrap;
-    flex-shrink: 0;
-    scroll-snap-align: start;
-  }
-
-  .adm-tab.active {
-    background: rgba(255,255,255,0.97);
-    color: #0c4f7a;
-    border-color: rgba(70,165,220,0.45);
-    border-bottom: 1.5px solid rgba(255,255,255,0.97);
-    z-index: 2;
-    box-shadow: 0 -3px 12px rgba(70,155,210,0.10);
-  }
-
-  .adm-tab:not(.active):hover {
-    background: rgba(200,238,252,0.68);
-    color: #0c4f7a;
-  }
-
   /* ── Content card ── */
   .adm-card {
     position: relative;
     z-index: 1;
     width: 100%;
     background: rgba(255,255,255,0.94);
-    border-radius: 0 16px 16px 16px;
+    border-radius: 16px;
     border: 1.5px solid rgba(70,165,220,0.38);
     box-shadow:
       0 10px 36px rgba(70,155,210,0.13),
@@ -217,16 +167,6 @@ const ADM_STYLES = `
 
   /* ── Tablet (640px+) ── */
   @media (min-width: 640px) {
-    .adm-tab {
-      padding: 9px 14px;
-      font-size: 0.75rem;
-    }
-
-    .adm-tabs {
-      padding: 0 6px;
-      gap: 3px;
-    }
-
     .adm-card {
       padding: 26px 28px;
     }
@@ -245,17 +185,6 @@ const ADM_STYLES = `
     .adm-logout {
       padding: 9px 20px;
       font-size: 0.82rem;
-    }
-
-    .adm-tabs {
-      padding: 0 8px;
-      gap: 4px;
-    }
-
-    .adm-tab {
-      padding: 10px 16px;
-      font-size: 0.8rem;
-      gap: 5px;
     }
 
     .adm-card {
@@ -298,20 +227,6 @@ const ADM_STYLES = `
       font-size: 0.82rem;
     }
 
-    .adm-tabs {
-      padding: 0 8px;
-      gap: 6px;
-      overflow-x: visible;
-      flex-wrap: nowrap;
-    }
-
-    .adm-tab {
-      padding: 11px 20px;
-      font-size: 0.85rem;
-      gap: 6px;
-      flex-shrink: 1;
-    }
-
     .adm-card {
       padding: 32px 36px;
     }
@@ -345,16 +260,6 @@ const ADM_STYLES = `
   @media (min-width: 1400px) {
     .adm-root {
       padding: 0 40px 48px 40px;
-    }
-
-    .adm-tabs {
-      padding: 0 12px;
-      gap: 8px;
-    }
-
-    .adm-tab {
-      padding: 12px 24px;
-      font-size: 0.9rem;
     }
 
     .adm-card {
@@ -452,8 +357,15 @@ const Administracion = () => {
     <div className="adm-root">
       <BrandToast toast={toast} onClose={() => setToast(null)} />
 
-      {/* ── Top row: logout | (space) | pdf ── */}
+      {/* ── Top row: tabs | salir ── */}
       <div className="adm-toprow">
+        <TabSelector
+          value={activeTab}
+          onChange={setActiveTab}
+          tabs={TABS}
+          style={{ flex: '1 1 480px', maxWidth: 640 }}
+        />
+
         <button
           className="adm-logout"
           onClick={handleLogout}
@@ -461,25 +373,10 @@ const Administracion = () => {
           <IconLogout size={16} stroke={1.5} />
           Salir
         </button>
-
-
       </div>
 
-      {/* ── Tabs + card ── */}
+      {/* ── Card ── */}
       <div>
-        {/* Tab strip */}
-        <div className="adm-tabs">
-          {TABS.map(t => (
-            <button
-              key={t.key}
-              className={`adm-tab${activeTab === t.key ? ' active' : ''}`}
-              onClick={() => setActiveTab(t.key)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
         {/* Content card */}
         <div className="adm-card" key={activeTab}>
 

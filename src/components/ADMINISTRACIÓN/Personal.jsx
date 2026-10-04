@@ -517,6 +517,7 @@ const Personal = () => {
           </BrandCtaButton>
         }
       >
+        <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px" }}>
         {/* ── Formulario nuevo personal ────────────────────────────────────── */}
         {mostrarNuevoPersonal && (
           <div
@@ -722,12 +723,14 @@ const Personal = () => {
             </tbody>
           </StripedTable>
         </div>
+        </div>
       </BrandCard>
 
       {/* ── Panel de detalles ──────────────────────────────────────────────── */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {/* Asignar bono */}
         <BrandCard title="Asignar Bono">
+        <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px" }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
             <input
               type="text"
@@ -803,6 +806,7 @@ const Personal = () => {
           <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
             Selecciona uno o más personal con check + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
           </div>
+        </div>
         </BrandCard>
 
         {selectedPersonal ? (
@@ -816,6 +820,7 @@ const Personal = () => {
                 </BrandCtaButton>
               }
             >
+            <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px" }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, fontSize: "0.95rem" }}>
                 <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
                   <strong>Código:</strong> {selectedPersonal.Codigo || "-"}
@@ -863,33 +868,45 @@ const Personal = () => {
                   )}
                 </div>
               </div>
+            </div>
             </BrandCard>
 
             {/* Bonos asignados */}
             <BrandCard title="Bonos Asignados">
-              <div style={{ maxHeight: 200, overflowY: "auto" }}>
+              <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px" }}>
                 {personalBonos.length === 0 ? (
                   <div style={{ color: COLORS.textLight, fontFamily: FONTS.body, fontSize: "0.95rem" }}>Sin bonos asignados</div>
                 ) : (
-                  <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                    {personalBonos.map((b) => (
-                      <li key={b.bono_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, fontFamily: FONTS.body, paddingBottom: 10, borderBottom: `1px solid ${COLORS.border}` }}>
-                        <span style={{ fontWeight: 600 }}>{b.bonos?.descripcion || b.bono_id}</span>
-                        <span style={{ color: COLORS.textLight, fontSize: "0.85rem" }}>Asignado</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                    <StripedTable minWidth={0}>
+                      <StripedTableHead>
+                        <StripedTh>Bono</StripedTh>
+                        <StripedTh align="right">Estado</StripedTh>
+                      </StripedTableHead>
+                      <tbody>
+                        {personalBonos.map((b, index) => (
+                          <StripedTableRow key={b.bono_id} index={index}>
+                            <StripedTd style={{ fontWeight: 600 }}>{b.bonos?.descripcion || b.bono_id}</StripedTd>
+                            <StripedTd align="right" style={{ color: COLORS.textLight, fontSize: "0.85rem" }}>Asignado</StripedTd>
+                          </StripedTableRow>
+                        ))}
+                      </tbody>
+                    </StripedTable>
+                  </div>
                 )}
               </div>
             </BrandCard>
 
             {/* Próximos pagos */}
             <BrandCard title="Próximos pagos estimados">
-              <div style={{ fontFamily: FONTS.body, color: COLORS.textLight }}>Próximo pago: {nextPayText}</div>
+              <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px", fontFamily: FONTS.body, color: COLORS.textLight }}>
+                Próximo pago: {nextPayText}
+              </div>
             </BrandCard>
 
             {/* Pago mensual */}
             <BrandCard title="Registrar Pago Mensual">
+              <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px" }}>
               <div style={{ display: "flex", gap: 12, flexDirection: windowWidth < 640 ? "column" : "row", alignItems: windowWidth < 640 ? "stretch" : "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <input
@@ -919,11 +936,12 @@ const Personal = () => {
                   ✉️ Al pagar se enviará una notificación a <strong>{selectedPersonal.correo}</strong>
                 </div>
               )}
+              </div>
             </BrandCard>
           </>
         ) : (
           <BrandCard>
-            <div style={{ color: COLORS.textLight, fontFamily: FONTS.body }}>
+            <div style={{ padding: windowWidth < 640 ? "14px" : "18px 20px 20px", color: COLORS.textLight, fontFamily: FONTS.body }}>
               Selecciona un personal para ver sus detalles y registrar pagos.
             </div>
           </BrandCard>
