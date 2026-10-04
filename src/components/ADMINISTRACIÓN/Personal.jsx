@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { COLORS, FONTS } from "../../colors";
+import BrandCtaButton from "../UI/BrandCtaButton";
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from "../UI/StripedTable";
+import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
 
 const Personal = () => {
+  injectNeumorphicStyles();
+
   const [personalList, setPersonalList] = useState([]);
   const [tipoPersonalList, setTipoPersonalList] = useState([]);
   const [mostrarNuevoPersonal, setMostrarNuevoPersonal] = useState(false);
@@ -448,13 +453,10 @@ const Personal = () => {
   // ─── Estilos de campo ─────────────────────────────────────────────────────────
 
   const fieldStyle = (hasError) => ({
-    width: "100%",
-    padding: 10,
-    borderRadius: 8,
-    border: `1px solid ${hasError ? COLORS.error : COLORS.border}`,
+    padding: "10px 16px",
     fontFamily: FONTS.body,
     color: COLORS.text,
-    boxShadow: hasError ? `0 0 0 2px ${COLORS.error}22` : "none",
+    boxShadow: hasError ? `0 0 0 2px ${COLORS.error}55` : undefined,
     boxSizing: "border-box",
   });
 
@@ -525,21 +527,13 @@ const Personal = () => {
             Personal de la Empresa
           </h3>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button
+            <BrandCtaButton
+              size="sm"
+              variant={mostrarNuevoPersonal ? "secondary" : "primary"}
               onClick={() => setMostrarNuevoPersonal((v) => !v)}
-              style={{
-                background: COLORS.primary,
-                color: COLORS.white,
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 14px",
-                fontWeight: 700,
-                fontFamily: FONTS.heading,
-                cursor: "pointer",
-              }}
             >
               {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
-            </button>
+            </BrandCtaButton>
           </div>
         </div>
 
@@ -567,6 +561,7 @@ const Personal = () => {
               <div>
                 <input
                   type="text"
+                  className="nm-input"
                   placeholder="Nombre (mín. 3 caracteres)"
                   value={nuevoPersonal.nombre}
                   onChange={(e) => {
@@ -583,6 +578,7 @@ const Personal = () => {
               <div>
                 <input
                   type="text"
+                  className="nm-input"
                   placeholder="Código (letras, números, -, _)"
                   value={nuevoPersonal.codigo}
                   onChange={(e) => {
@@ -598,6 +594,7 @@ const Personal = () => {
               {/* Tipo personal */}
               <div>
                 <select
+                  className="nm-input"
                   value={nuevoPersonal.tipo_personal_id}
                   onChange={(e) => {
                     setNuevoPersonal((prev) => ({ ...prev, tipo_personal_id: e.target.value }));
@@ -620,6 +617,7 @@ const Personal = () => {
               <div>
                 <input
                   type="email"
+                  className="nm-input"
                   placeholder="Correo electrónico"
                   value={nuevoPersonal.correo}
                   onChange={(e) => {
@@ -636,6 +634,7 @@ const Personal = () => {
               <div>
                 <input
                   type="file"
+                  className="nm-input"
                   accept=".pdf"
                   onChange={(e) => setCvFile(e.target.files?.[0] || null)}
                   style={fieldStyle(false)}
@@ -656,6 +655,7 @@ const Personal = () => {
               <div>
                 <input
                   type="date"
+                  className="nm-input"
                   value={nuevoPersonal.fecha_nacimiento}
                   min={new Date().toISOString().split("T")[0]}
                   onChange={(e) => {
@@ -670,107 +670,77 @@ const Personal = () => {
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 14, gap: 10 }}>
-              <button
+              <BrandCtaButton
+                variant="secondary"
                 onClick={() => { setMostrarNuevoPersonal(false); setErroresPersonal({}); }}
-                style={{
-                  background: COLORS.textLight,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "10px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: "pointer",
-                }}
               >
                 Cancelar
-              </button>
-              <button
+              </BrandCtaButton>
+              <BrandCtaButton
+                variant="primary"
                 onClick={handleCrearPersonal}
                 disabled={subiendoCv}
-                style={{
-                  background: subiendoCv ? COLORS.textLight : COLORS.success,
-                  color: COLORS.white,
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "10px 16px",
-                  fontWeight: 700,
-                  fontFamily: FONTS.heading,
-                  cursor: subiendoCv ? "not-allowed" : "pointer",
-                }}
+                loading={subiendoCv}
               >
                 {subiendoCv ? "Subiendo CV..." : "Guardar personal"}
-              </button>
+              </BrandCtaButton>
             </div>
           </div>
         )}
 
         {/* ── Tabla ────────────────────────────────────────────────────────── */}
-        <div
-          style={{
-            maxHeight: "600px",
-            overflowY: "auto",
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 10,
-            boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
-          }}
-        >
-          <table style={{ width: "100%", fontSize: "0.95rem", background: COLORS.white }}>
-            <thead style={{ position: "sticky", top: 0, background: COLORS.light }}>
-              <tr>
-                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "center", width: 56, fontFamily: FONTS.heading, color: COLORS.text }}>Check</th>
-                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Nombre</th>
-                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Código</th>
-                <th style={{ border: `1px solid ${COLORS.border}`, padding: "10px", textAlign: "left", fontFamily: FONTS.heading, color: COLORS.text }}>Tipo</th>
-              </tr>
-            </thead>
+        <div style={{ maxHeight: "600px", overflowY: "auto" }}>
+          <StripedTable minWidth={0}>
+            <StripedTableHead>
+              <StripedTh align="center" width={56}>Check</StripedTh>
+              <StripedTh>Nombre</StripedTh>
+              <StripedTh>Código</StripedTh>
+              <StripedTh>Tipo</StripedTh>
+            </StripedTableHead>
             <tbody>
               {personalList.length === 0 ? (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: 14, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                  <StripedTd align="center" colSpan={4} style={{ padding: 14, color: COLORS.textLight }}>
                     Sin personal registrado
-                  </td>
+                  </StripedTd>
                 </tr>
               ) : (
-                personalList.map((p) => {
+                personalList.map((p, index) => {
                   const isSelected = selectedPersonal?.id_personal === p.id_personal;
                   return (
-                    <tr
+                    <StripedTableRow
                       key={p.id_personal}
+                      index={index}
                       onClick={() => handleSelectPersonal(p)}
                       style={{
                         cursor: "pointer",
-                        background: isSelected ? COLORS.backgroundLight : COLORS.white,
-                        borderBottom: `1px solid ${COLORS.border}`,
+                        background: isSelected ? COLORS.backgroundLight : undefined,
                       }}
                     >
-                      <td
-                        style={{ padding: "10px", textAlign: "center" }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <StripedTd align="center" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={selectedPersonalIds.includes(p.id_personal)}
                           onChange={() => handleTogglePersonalCheck(p.id_personal)}
                           style={{ cursor: "pointer" }}
                         />
-                      </td>
-                      <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>
+                      </StripedTd>
+                      <StripedTd>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           {p.nombre || "Sin nombre"}
                           {p.correo && (
                             <span title={p.correo} style={{ fontSize: "0.75rem", color: COLORS.textLight }}>✉️</span>
                           )}
                         </div>
-                      </td>
-                      <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>{p.Codigo || "-"}</td>
-                      <td style={{ padding: "10px", fontFamily: FONTS.body, color: COLORS.text }}>{p.tipo_personal?.descripcion || "Sin tipo"}</td>
-                    </tr>
+                      </StripedTd>
+                      <StripedTd>{p.Codigo || "-"}</StripedTd>
+                      <StripedTd>{p.tipo_personal?.descripcion || "Sin tipo"}</StripedTd>
+                    </StripedTableRow>
                   );
                 })
               )}
             </tbody>
-          </table>
+          </StripedTable>
         </div>
       </div>
 
@@ -790,20 +760,22 @@ const Personal = () => {
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
             <input
               type="text"
+              className="nm-input"
               placeholder="Nuevo bono"
               value={nuevoBono}
               onChange={(e) => setNuevoBono(e.target.value)}
-              style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+              style={{ flex: 1, minWidth: 200, ...fieldStyle(false) }}
             />
-            <button onClick={handleCrearBono} style={{ background: COLORS.primary, color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer" }}>
+            <BrandCtaButton size="sm" variant="secondary" onClick={handleCrearBono}>
               Crear bono
-            </button>
+            </BrandCtaButton>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <select
+              className="nm-input"
               value={selectedBonoId}
               onChange={(e) => { setSelectedBonoId(e.target.value); }}
-              style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+              style={{ flex: 1, minWidth: 200, ...fieldStyle(false) }}
             >
               <option value="">-- Seleccionar bono --</option>
               {allBonos.map((b) => (
@@ -814,51 +786,48 @@ const Personal = () => {
             <div style={{ minWidth: 140 }}>
               <input
                 type="number"
+                className="nm-input"
                 placeholder="Monto"
                 value={montoPagoBono}
                 onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoBono(l); if (l.trim()) setErroresMontoBono(""); }}
                 onBlur={() => { if (montoPagoBono) setErroresMontoBono(validarMonto(montoPagoBono, "bono")); }}
                 onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
                 step="0.01" min="0"
-                style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${erroresMontoBono ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+                style={{ width: "100%", ...fieldStyle(erroresMontoBono) }}
               />
               {errorMsg(erroresMontoBono)}
             </div>
 
-            <button
+            <BrandCtaButton
+              size="sm"
+              variant="primary"
               onClick={handleEnviarCorreo}
               disabled={selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo}
-              style={{
-                background: selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? COLORS.textLight : COLORS.primary,
-                color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
-                cursor: selectedPersonalIds.length === 0 || !selectedBonoId || !montoPagoBono || !!erroresMontoBono || enviandoCorreo ? "not-allowed" : "pointer",
-              }}
+              loading={enviandoCorreo}
             >
               {enviandoCorreo ? "Enviando..." : "Enviar correo"}
-            </button>
+            </BrandCtaButton>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
             <select
+              className="nm-input"
               value={bonoAEliminar}
               onChange={(e) => setBonoAEliminar(e.target.value)}
-              style={{ flex: 1, minWidth: 200, padding: 10, borderRadius: 8, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text }}
+              style={{ flex: 1, minWidth: 200, ...fieldStyle(false) }}
             >
               <option value="">-- Seleccionar bono a eliminar --</option>
               {allBonos.map((b) => (
                 <option key={`del-${b.id_bono}`} value={b.id_bono}>{b.descripcion}</option>
               ))}
             </select>
-            <button
+            <BrandCtaButton
+              size="sm"
+              variant="primary"
               onClick={handleEliminarBono}
               disabled={!bonoAEliminar}
-              style={{
-                background: !bonoAEliminar ? COLORS.textLight : COLORS.error,
-                color: COLORS.white, border: "none", borderRadius: 8, padding: "10px 14px", fontWeight: 700, fontFamily: FONTS.heading,
-                cursor: !bonoAEliminar ? "not-allowed" : "pointer",
-              }}
             >
               Eliminar bono
-            </button>
+            </BrandCtaButton>
           </div>
           <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
             Selecciona uno o más personal con check + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
@@ -872,18 +841,9 @@ const Personal = () => {
               <h4 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>
                 Detalles de {selectedPersonal.nombre}
               </h4>
-              <button
-                onClick={handleEliminarPersonal}
-                style={{
-                  background: COLORS.error, color: COLORS.white, border: "none", borderRadius: 8,
-                  padding: "8px 14px", fontWeight: 700, fontFamily: FONTS.heading, cursor: "pointer",
-                  fontSize: "0.85rem", whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(239,68,68,0.25)",
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.opacity = "0.85")}
-                onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
-              >
+              <BrandCtaButton size="sm" variant="primary" onClick={handleEliminarPersonal}>
                 🗑️ Eliminar
-              </button>
+              </BrandCtaButton>
             </div>
 
             {/* Info */}
@@ -971,30 +931,25 @@ const Personal = () => {
                 <div style={{ flex: 1 }}>
                   <input
                     type="number"
+                    className="nm-input"
                     placeholder="Monto mensual"
                     value={montoPagoMensual}
                     onChange={(e) => { const l = limpiarMonto(e.target.value); setMontoPagoMensual(l); if (l.trim()) setErroresMontoMensual(""); }}
                     onBlur={() => { if (montoPagoMensual) setErroresMontoMensual(validarMonto(montoPagoMensual, "pago mensual")); }}
                     onKeyDown={(e) => { if (["+", "-", "e", "E"].includes(e.key)) e.preventDefault(); }}
                     step="0.01" min="0"
-                    style={{ width: "100%", padding: 12, borderRadius: 8, border: `1px solid ${erroresMontoMensual ? COLORS.error : COLORS.border}`, fontFamily: FONTS.body, color: COLORS.text, boxSizing: "border-box" }}
+                    style={{ width: "100%", ...fieldStyle(erroresMontoMensual) }}
                   />
                   {errorMsg(erroresMontoMensual)}
                 </div>
-                <button
+                <BrandCtaButton
+                  variant="primary"
                   onClick={handlePagarMensual}
                   disabled={!montoPagoMensual || !!erroresMontoMensual}
-                  style={{
-                    background: !montoPagoMensual || erroresMontoMensual ? COLORS.textLight : COLORS.success,
-                    color: COLORS.white, border: "none", borderRadius: 10, padding: "12px 22px",
-                    fontWeight: 800, fontFamily: FONTS.heading,
-                    cursor: !montoPagoMensual || erroresMontoMensual ? "not-allowed" : "pointer",
-                    boxShadow: !montoPagoMensual || erroresMontoMensual ? "none" : "0 6px 16px rgba(16,185,129,0.25)",
-                    whiteSpace: "nowrap", minWidth: windowWidth < 640 ? "100%" : "auto",
-                  }}
+                  fullWidth={windowWidth < 640}
                 >
                   Pagar
-                </button>
+                </BrandCtaButton>
               </div>
               {selectedPersonal.correo && (
                 <div style={{ marginTop: 10, fontSize: "0.8rem", color: COLORS.textLight, fontFamily: FONTS.body, display: "flex", alignItems: "center", gap: 4 }}>
