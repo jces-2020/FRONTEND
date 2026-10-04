@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { COLORS, FONTS } from "../../colors";
 import BrandCtaButton from "../UI/BrandCtaButton";
+import BrandCard from "../UI/BrandCard";
 import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from "../UI/StripedTable";
 import { injectNeumorphicStyles } from "../UI/NeumorphicFormCard";
 
@@ -504,39 +505,18 @@ const Personal = () => {
       )}
 
       {/* ── Tabla de personal ─────────────────────────────────────────────── */}
-      <div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <h3
-            style={{
-              fontSize: "1.4rem",
-              fontWeight: 800,
-              margin: 0,
-              fontFamily: FONTS.heading,
-              color: COLORS.text,
-            }}
+      <BrandCard
+        title="Personal de la Empresa"
+        meta={
+          <BrandCtaButton
+            size="sm"
+            variant={mostrarNuevoPersonal ? "secondary" : "primary"}
+            onClick={() => setMostrarNuevoPersonal((v) => !v)}
           >
-            Personal de la Empresa
-          </h3>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <BrandCtaButton
-              size="sm"
-              variant={mostrarNuevoPersonal ? "secondary" : "primary"}
-              onClick={() => setMostrarNuevoPersonal((v) => !v)}
-            >
-              {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
-            </BrandCtaButton>
-          </div>
-        </div>
-
+            {mostrarNuevoPersonal ? "Cancelar" : "Nuevo personal"}
+          </BrandCtaButton>
+        }
+      >
         {/* ── Formulario nuevo personal ────────────────────────────────────── */}
         {mostrarNuevoPersonal && (
           <div
@@ -742,21 +722,12 @@ const Personal = () => {
             </tbody>
           </StripedTable>
         </div>
-      </div>
+      </BrandCard>
 
       {/* ── Panel de detalles ──────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: COLORS.backgroundLight,
-          padding: 18,
-          borderRadius: 12,
-          border: `1px solid ${COLORS.border}`,
-          boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
-        }}
-      >
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {/* Asignar bono */}
-        <div style={{ marginBottom: 14, padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
-          <h5 style={{ fontWeight: 800, marginBottom: 8, fontFamily: FONTS.heading, color: COLORS.text }}>Asignar Bono</h5>
+        <BrandCard title="Asignar Bono">
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
             <input
               type="text"
@@ -832,22 +803,19 @@ const Personal = () => {
           <div style={{ marginTop: 8, fontFamily: FONTS.body, color: COLORS.textLight, fontSize: "0.9rem" }}>
             Selecciona uno o más personal con check + bono + monto, y presiona Enviar correo para ejecutar todo en una sola acción.
           </div>
-        </div>
+        </BrandCard>
 
         {selectedPersonal ? (
           <>
-            {/* Header detalle */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
-              <h4 style={{ fontSize: "1.2rem", fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>
-                Detalles de {selectedPersonal.nombre}
-              </h4>
-              <BrandCtaButton size="sm" variant="primary" onClick={handleEliminarPersonal}>
-                🗑️ Eliminar
-              </BrandCtaButton>
-            </div>
-
-            {/* Info */}
-            <div style={{ marginBottom: 12, padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+            {/* Info + header detalle */}
+            <BrandCard
+              title={`Detalles de ${selectedPersonal.nombre}`}
+              meta={
+                <BrandCtaButton size="sm" variant="primary" onClick={handleEliminarPersonal}>
+                  🗑️ Eliminar
+                </BrandCtaButton>
+              }
+            >
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, fontSize: "0.95rem" }}>
                 <div style={{ fontFamily: FONTS.body, color: COLORS.text }}>
                   <strong>Código:</strong> {selectedPersonal.Codigo || "-"}
@@ -895,14 +863,11 @@ const Personal = () => {
                   )}
                 </div>
               </div>
-            </div>
+            </BrandCard>
 
             {/* Bonos asignados */}
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
-                <h5 style={{ fontWeight: 800, margin: 0, fontFamily: FONTS.heading, color: COLORS.text }}>Bonos Asignados</h5>
-              </div>
-              <div style={{ background: COLORS.white, padding: 12, borderRadius: 10, border: `1px solid ${COLORS.border}`, maxHeight: 200, overflowY: "auto" }}>
+            <BrandCard title="Bonos Asignados">
+              <div style={{ maxHeight: 200, overflowY: "auto" }}>
                 {personalBonos.length === 0 ? (
                   <div style={{ color: COLORS.textLight, fontFamily: FONTS.body, fontSize: "0.95rem" }}>Sin bonos asignados</div>
                 ) : (
@@ -916,17 +881,15 @@ const Personal = () => {
                   </ul>
                 )}
               </div>
-            </div>
+            </BrandCard>
 
             {/* Próximos pagos */}
-            <div style={{ marginBottom: 14, padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
-              <h5 style={{ fontWeight: 800, marginBottom: 6, fontFamily: FONTS.heading, color: COLORS.text }}>Próximos pagos estimados</h5>
+            <BrandCard title="Próximos pagos estimados">
               <div style={{ fontFamily: FONTS.body, color: COLORS.textLight }}>Próximo pago: {nextPayText}</div>
-            </div>
+            </BrandCard>
 
             {/* Pago mensual */}
-            <div style={{ padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
-              <h5 style={{ fontWeight: 800, marginBottom: 12, fontFamily: FONTS.heading, color: COLORS.text }}>Registrar Pago Mensual</h5>
+            <BrandCard title="Registrar Pago Mensual">
               <div style={{ display: "flex", gap: 12, flexDirection: windowWidth < 640 ? "column" : "row", alignItems: windowWidth < 640 ? "stretch" : "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <input
@@ -956,12 +919,14 @@ const Personal = () => {
                   ✉️ Al pagar se enviará una notificación a <strong>{selectedPersonal.correo}</strong>
                 </div>
               )}
-            </div>
+            </BrandCard>
           </>
         ) : (
-          <div style={{ padding: 12, background: COLORS.white, borderRadius: 10, border: `1px solid ${COLORS.border}`, fontFamily: FONTS.body, color: COLORS.textLight }}>
-            Selecciona un personal para ver sus detalles y registrar pagos.
-          </div>
+          <BrandCard>
+            <div style={{ color: COLORS.textLight, fontFamily: FONTS.body }}>
+              Selecciona un personal para ver sus detalles y registrar pagos.
+            </div>
+          </BrandCard>
         )}
       </div>
     </div>
