@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { IconLoader, IconAlertTriangle } from '@tabler/icons-react';
 import { COLORS, BRAND_THEME } from '../../colors';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from '../UI/StripedTable';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 const styles = `
   @keyframes fadeIn {
@@ -127,6 +130,7 @@ const styles = `
 `;
 
 export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess }) {
+  injectNeumorphicStyles();
   const [mermas, setMermas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selecciones, setSelecciones] = useState({}); // { id_merma: true/false }
@@ -367,35 +371,16 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
 
             {/* Botones */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: 12,
-                  border: '1.5px solid rgba(148,25,24,0.3)',
-                  background: 'rgba(148,25,24,0.07)',
-                  color: COLORS.primary, fontWeight: 600, fontSize: 14,
-                  cursor: 'pointer', transition: 'all .15s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(148,25,24,0.14)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(148,25,24,0.07)'}
-              >
+              <BrandCtaButton variant="secondary" fullWidth onClick={() => setShowConfirmModal(false)}>
                 Cancelar
-              </button>
-              <button
+              </BrandCtaButton>
+              <BrandCtaButton
+                variant="primary"
+                fullWidth
                 onClick={() => { setShowConfirmModal(false); setIsProcessing(true); onGuardarSuccess?.(); }}
-                style={{
-                  flex: 1, padding: '10px 0', borderRadius: 12,
-                  border: 'none',
-                  background: `linear-gradient(135deg, ${COLORS.primary}, #b83332)`,
-                  color: '#fff', fontWeight: 700, fontSize: 14,
-                  cursor: 'pointer', boxShadow: '0 4px 14px rgba(148,25,24,0.35)',
-                  transition: 'all .15s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
                 Continuar
-              </button>
+              </BrandCtaButton>
             </div>
           </div>
         </div>
@@ -433,46 +418,44 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
             )}
             
             {/* TABLA PRINCIPAL DE MERMAS */}
-            <div className="tabla-mermas" style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', border: `2px solid ${COLORS.secondary}`, borderRadius: '8px', maxHeight: mermasFiltradas.filter(m => !selecciones[m.id_merma]).length >= 5 ? '300px' : 'auto', boxShadow: `0 2px 8px rgba(148, 25, 24, 0.1)`, backgroundColor: `${COLORS.glass}80` }}>
-              <div style={{ minWidth: isTablet ? '900px' : '100%' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                <thead style={{ backgroundColor: COLORS.primary, color: COLORS.white, borderBottom: `3px solid ${COLORS.primary}`, position: 'sticky', top: 0 }}>
-                  <tr>
-                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', width: '40px' }}></th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Nombre</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Ancho (cm)</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Alto (cm)</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Cantidad</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Lugar</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Descripción</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Categoría</th>
-                    <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>Uso (cantidad)</th>
-                  </tr>
-                </thead>
+            <div className="tabla-mermas" style={{ maxHeight: mermasFiltradas.filter(m => !selecciones[m.id_merma]).length >= 5 ? '300px' : 'auto', overflowY: 'auto' }}>
+              <StripedTable minWidth={isTablet ? 900 : 0}>
+                <StripedTableHead>
+                  <StripedTh width={40}></StripedTh>
+                  <StripedTh>Nombre</StripedTh>
+                  <StripedTh>Ancho (cm)</StripedTh>
+                  <StripedTh>Alto (cm)</StripedTh>
+                  <StripedTh>Cantidad</StripedTh>
+                  <StripedTh>Lugar</StripedTh>
+                  <StripedTh>Descripción</StripedTh>
+                  <StripedTh>Categoría</StripedTh>
+                  <StripedTh align="center">Uso (cantidad)</StripedTh>
+                </StripedTableHead>
                 <tbody>
                   {mermasFiltradas
                     .filter(m => !selecciones[m.id_merma])
                     .map((m, idx) => (
-                    <tr key={m.id_merma} style={{ borderBottom: `1px solid rgba(128, 194, 220, 0.3)`, backgroundColor: idx % 2 === 0 ? `rgba(199, 236, 255, 0.3)` : `rgba(255, 255, 255, 0.6)`, transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `rgba(128, 194, 220, 0.2)`} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? `rgba(199, 236, 255, 0.3)` : `rgba(255, 255, 255, 0.6)`}>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                    <StripedTableRow key={m.id_merma} index={idx}>
+                      <StripedTd align="center">
                         <input
                           type="checkbox"
                           checked={selecciones[m.id_merma] || false}
                           onChange={(e) => handleSelectOne(m.id_merma, e.target.checked)}
                           style={{ cursor: 'pointer', accentColor: COLORS.primary }}
                         />
-                      </td>
-                      <td style={{ padding: '10px' }}>{m.nombre}</td>
-                      <td style={{ padding: '10px' }}>{m.ancho_cm}</td>
-                      <td style={{ padding: '10px' }}>{m.alto_cm}</td>
-                      <td style={{ padding: '10px', fontWeight: 'bold', color: m.cantidad > 0 ? COLORS.text : COLORS.error }}>{m.cantidad}</td>
-                      <td style={{ padding: '10px' }}>{m.lugar}</td>
-                      <td style={{ padding: '10px' }}>{m.descripción || '-'}</td>
-                      <td style={{ padding: '10px', fontSize: '12px', color: COLORS.textLight }}>
+                      </StripedTd>
+                      <StripedTd>{m.nombre}</StripedTd>
+                      <StripedTd>{m.ancho_cm}</StripedTd>
+                      <StripedTd>{m.alto_cm}</StripedTd>
+                      <StripedTd style={{ fontWeight: 'bold', color: m.cantidad > 0 ? COLORS.text : COLORS.error }}>{m.cantidad}</StripedTd>
+                      <StripedTd>{m.lugar}</StripedTd>
+                      <StripedTd>{m.descripción || '-'}</StripedTd>
+                      <StripedTd style={{ fontSize: '12px', color: COLORS.textLight }}>
                         {m.categoria?.descripcion || 'Sin categoría'}
-                      </td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>
+                      </StripedTd>
+                      <StripedTd align="center">
                         <input
+                          className="nm-input"
                           type="text"
                           inputMode="numeric"
                           value={usos[m.id_merma] || ''}
@@ -481,21 +464,16 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                           style={{
                             width: '70px',
                             padding: '6px',
-                            border: `1px solid ${COLORS.secondary}`,
-                            borderRadius: '4px',
                             textAlign: 'center',
                             fontSize: '12px',
-                            transition: 'all 0.3s ease',
-                            backgroundColor: `rgba(255, 255, 255, 0.8)`
                           }}
                           disabled={!selecciones[m.id_merma]}
                         />
-                      </td>
-                    </tr>
+                      </StripedTd>
+                    </StripedTableRow>
                   ))}
                 </tbody>
-              </table>
-              </div>
+              </StripedTable>
             </div>
             {isTablet && (
               <div style={{ marginTop: '-10px', fontSize: '11px', color: COLORS.textLight, fontStyle: 'italic' }}>
@@ -508,37 +486,35 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
               <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold', color: COLORS.primary }}>
                 Mermas Seleccionadas ({Object.values(selecciones).filter(v => v).length})
               </h3>
-              <div style={{ overflowX: 'auto', overflowY: 'auto', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x pan-y', border: `2px solid ${COLORS.secondary}`, borderRadius: '8px', maxHeight: mermasFiltradas.filter(m => selecciones[m.id_merma]).length >= 5 ? '250px' : 'auto', boxShadow: `0 2px 8px rgba(255, 214, 0, 0.08)`, backgroundColor: `rgba(255, 214, 0, 0.04)` }}>
+              <div style={{ maxHeight: mermasFiltradas.filter(m => selecciones[m.id_merma]).length >= 5 ? '250px' : 'auto', overflowY: 'auto' }}>
                 {Object.values(selecciones).filter(v => v).length === 0 ? (
-                  <div style={{ padding: '20px', textAlign: 'center', color: COLORS.textLight, backgroundColor: `rgba(199, 236, 255, 0.3)` }}>
+                  <div style={{ padding: '20px', textAlign: 'center', color: COLORS.textLight, backgroundColor: `rgba(199, 236, 255, 0.3)`, border: `1px solid ${COLORS.border}`, borderRadius: 8 }}>
                     No hay mermas seleccionadas
                   </div>
                 ) : (
-                  <div style={{ minWidth: isTablet ? '760px' : '100%' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                    <thead style={{ background: `linear-gradient(135deg, rgba(255, 214, 0, 0.7) 0%, rgba(255, 180, 0, 0.7) 100%)`, color: '#000', borderBottom: `3px solid ${COLORS.accent}`, position: 'sticky', top: 0 }}>
-                      <tr>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Nombre</th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Ancho (cm)</th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Alto (cm)</th>
-                        <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Categoría</th>
-                        <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>Uso</th>
-                        <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>Quitar</th>
-                      </tr>
-                    </thead>
+                  <StripedTable minWidth={isTablet ? 760 : 0} accent="#ffd600">
+                    <StripedTableHead>
+                      <StripedTh>Nombre</StripedTh>
+                      <StripedTh>Ancho (cm)</StripedTh>
+                      <StripedTh>Alto (cm)</StripedTh>
+                      <StripedTh>Categoría</StripedTh>
+                      <StripedTh align="center">Uso</StripedTh>
+                      <StripedTh align="center">Quitar</StripedTh>
+                    </StripedTableHead>
                     <tbody>
                       {mermasFiltradas
                         .filter(m => selecciones[m.id_merma])
                         .map((m, idx) => (
-                          <tr key={m.id_merma} style={{ borderBottom: `1px solid rgba(255, 214, 0, 0.1)`, backgroundColor: idx % 2 === 0 ? `rgba(255, 214, 0, 0.05)` : `rgba(255, 255, 255, 0.4)`, transition: 'all 0.3s ease' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `rgba(255, 214, 0, 0.08)`} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = idx % 2 === 0 ? `rgba(255, 214, 0, 0.05)` : `rgba(255, 255, 255, 0.4)`}>
-                            <td style={{ padding: '10px' }}>{m.nombre}</td>
-                            <td style={{ padding: '10px' }}>{m.ancho_cm}</td>
-                            <td style={{ padding: '10px' }}>{m.alto_cm}</td>
-                            <td style={{ padding: '10px', fontSize: '12px', color: COLORS.textLight }}>
+                          <StripedTableRow key={m.id_merma} index={idx}>
+                            <StripedTd>{m.nombre}</StripedTd>
+                            <StripedTd>{m.ancho_cm}</StripedTd>
+                            <StripedTd>{m.alto_cm}</StripedTd>
+                            <StripedTd style={{ fontSize: '12px', color: COLORS.textLight }}>
                               {m.categoria?.descripcion || 'Sin categoría'}
-                            </td>
-                            <td style={{ padding: '10px', textAlign: 'center' }}>
+                            </StripedTd>
+                            <StripedTd align="center">
                               <input
+                                className="nm-input"
                                 type="text"
                                 inputMode="numeric"
                                 value={usos[m.id_merma] || ''}
@@ -547,49 +523,27 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                                 style={{
                                   width: '70px',
                                   padding: '6px',
-                                  border: `1px solid ${COLORS.accent}`,
-                                  borderRadius: '4px',
                                   textAlign: 'center',
                                   fontSize: '12px',
                                   fontWeight: 'bold',
                                   color: COLORS.accent,
-                                  transition: 'all 0.3s ease',
-                                  backgroundColor: `rgba(255, 214, 0, 0.08)`
                                 }}
                               />
-                            </td>
-                            <td style={{ padding: '10px', textAlign: 'center' }}>
-                              <button
+                            </StripedTd>
+                            <StripedTd align="center">
+                              <BrandCtaButton
+                                size="sm"
+                                variant="primary"
+                                style={{ padding: '4px 10px', fontSize: 11 }}
                                 onClick={() => handleSelectOne(m.id_merma, false)}
-                                style={{
-                                  padding: '4px 8px',
-                                  backgroundColor: COLORS.primary,
-                                  color: COLORS.white,
-                                  border: 'none',
-                                  borderRadius: '4px',
-                                  cursor: 'pointer',
-                                  fontSize: '11px',
-                                  fontWeight: 'bold',
-                                  transition: 'all 0.3s ease',
-                                  boxShadow: `0 2px 4px rgba(148, 25, 24, 0.2)`
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.target.style.backgroundColor = '#7d1614';
-                                  e.target.style.transform = 'scale(1.05)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.target.style.backgroundColor = COLORS.primary;
-                                  e.target.style.transform = 'scale(1)';
-                                }}
                               >
                                 Quitar
-                              </button>
-                            </td>
-                          </tr>
+                              </BrandCtaButton>
+                            </StripedTd>
+                          </StripedTableRow>
                         ))}
                     </tbody>
-                  </table>
-                  </div>
+                  </StripedTable>
                 )}
               </div>
             </div>
@@ -611,25 +565,13 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej: vidrio, aluminio"
-                className="buscador-input"
+                className="buscador-input nm-input"
                 style={{
                   width: '100%',
-                  padding: '10px',
-                  border: `2px solid ${COLORS.secondary}`,
-                  borderRadius: '6px',
+                  padding: '10px 16px',
                   fontSize: '12px',
                   boxSizing: 'border-box',
-                  backgroundColor: `rgba(255, 255, 255, 0.9)`,
-                  transition: 'all 0.3s ease',
                   fontWeight: '500'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = COLORS.primary;
-                  e.target.style.boxShadow = `0 0 10px rgba(148, 25, 24, 0.3)`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = COLORS.secondary;
-                  e.target.style.boxShadow = 'none';
                 }}
               />
               <div style={{ fontSize: '11px', color: COLORS.textLight, marginTop: '4px', fontStyle: 'italic' }}>
@@ -640,40 +582,46 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
             {/* Divider */}
             <div style={{ borderTop: `2px solid rgba(148, 25, 24, 0.2)`, marginBottom: '16px' }}></div>
 
-            {/* Radio buttons - OPCIONAL */}
+            {/* Selector de tipo de material - OPCIONAL */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ marginBottom: '8px', display: 'block', fontSize: '12px', fontWeight: 'bold', color: COLORS.textLight }}>
                 Tipo de Material (opcional)
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.color = COLORS.primary} onMouseLeave={(e) => e.currentTarget.style.color = COLORS.text}>
-                <input
-                  type="radio"
-                  name="tipoMaterial"
-                  value="aluminio"
-                  checked={tipoMaterial === 'aluminio'}
-                  onChange={(e) => {
-                    setTipoMaterial(e.target.value);
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { key: 'aluminio', label: 'Aluminio' },
+                  { key: 'vidrio', label: 'Vidrio' },
+                ].map((opt) => {
+                  const activo = tipoMaterial === opt.key;
+                  const seleccionar = () => {
+                    setTipoMaterial(activo ? '' : opt.key);
                     setDimensiones({ ancho: '', alto: '' });
-                  }}
-                  style={{ marginRight: '8px', cursor: 'pointer', accentColor: COLORS.primary }}
-                />
-                <span style={{ fontSize: '13px', fontWeight: '500' }}>Aluminio</span>
-              </label>
-              
-              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }} onMouseEnter={(e) => e.currentTarget.style.color = COLORS.primary} onMouseLeave={(e) => e.currentTarget.style.color = COLORS.text}>
-                <input
-                  type="radio"
-                  name="tipoMaterial"
-                  value="vidrio"
-                  checked={tipoMaterial === 'vidrio'}
-                  onChange={(e) => {
-                    setTipoMaterial(e.target.value);
-                    setDimensiones({ ancho: '', alto: '' });
-                  }}
-                  style={{ marginRight: '8px', cursor: 'pointer', accentColor: COLORS.primary }}
-                />
-                <span style={{ fontSize: '13px', fontWeight: '500' }}>Vidrio</span>
-              </label>
+                  };
+                  return activo ? (
+                    <BrandCtaButton key={opt.key} size="sm" variant="primary" style={{ flex: 1 }} onClick={seleccionar}>
+                      {opt.label}
+                    </BrandCtaButton>
+                  ) : (
+                    <button
+                      key={opt.key}
+                      onClick={seleccionar}
+                      style={{
+                        flex: 1,
+                        padding: '8px 0',
+                        borderRadius: 12,
+                        border: '1px solid rgba(128,194,220,.35)',
+                        background: COLORS.white,
+                        color: COLORS.text,
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Campos condicionales - OPCIONAL */}
@@ -683,6 +631,7 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                   Ancho (cm) - opcional
                 </label>
                 <input
+                  className="nm-input"
                   type="text"
                   inputMode="numeric"
                   value={dimensiones.ancho}
@@ -691,16 +640,7 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                     setDimensiones(prev => ({ ...prev, ancho: soloNumeros }));
                   }}
                   placeholder="Ingresa ancho"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: `1px solid ${COLORS.secondary}`,
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    boxSizing: 'border-box',
-                    backgroundColor: `rgba(255, 255, 255, 0.9)`,
-                    transition: 'all 0.3s ease'
-                  }}
+                  style={{ width: '100%', padding: '8px 14px', fontSize: '12px', boxSizing: 'border-box' }}
                 />
               </div>
             )}
@@ -712,6 +652,7 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                     Ancho (cm) - opcional
                   </label>
                   <input
+                    className="nm-input"
                     type="text"
                     inputMode="numeric"
                     value={dimensiones.ancho}
@@ -720,24 +661,16 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                       setDimensiones(prev => ({ ...prev, ancho: soloNumeros }));
                     }}
                     placeholder="Ingresa ancho"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      border: `1px solid ${COLORS.secondary}`,
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      boxSizing: 'border-box',
-                      backgroundColor: `rgba(255, 255, 255, 0.9)`,
-                      transition: 'all 0.3s ease'
-                    }}
+                    style={{ width: '100%', padding: '8px 14px', fontSize: '12px', boxSizing: 'border-box' }}
                   />
                 </div>
-                
+
                 <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: `rgba(148, 25, 24, 0.1)`, borderRadius: '6px', border: `1px solid rgba(128, 194, 220, 0.4)`, animation: 'fadeIn 0.4s ease-in' }}>
                   <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', color: COLORS.primary }}>
                     Alto (cm) - opcional
                   </label>
                   <input
+                    className="nm-input"
                     type="text"
                     inputMode="numeric"
                     value={dimensiones.alto}
@@ -746,16 +679,7 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
                       setDimensiones(prev => ({ ...prev, alto: soloNumeros }));
                     }}
                     placeholder="Ingresa alto"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      border: `1px solid ${COLORS.secondary}`,
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      boxSizing: 'border-box',
-                      backgroundColor: `rgba(255, 255, 255, 0.9)`,
-                      transition: 'all 0.3s ease'
-                    }}
+                    style={{ width: '100%', padding: '8px 14px', fontSize: '12px', boxSizing: 'border-box' }}
                   />
                 </div>
               </>
@@ -763,98 +687,32 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
 
             {/* Botones Buscar/Limpiar */}
             <div style={{ display: 'flex', gap: '8px', flexDirection: isTinyMobile ? 'column' : 'row' }}>
-              <button
-                onClick={handleBuscar}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  backgroundColor: COLORS.primary,
-                  color: COLORS.white,
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease',
-                  boxShadow: `0 2px 6px rgba(148, 25, 24, 0.3)`
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = `0 4px 12px rgba(148, 25, 24, 0.5)`;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = `0 2px 6px rgba(148, 25, 24, 0.3)`;
-                }}
-              >
+              <BrandCtaButton variant="primary" fullWidth onClick={handleBuscar}>
                 Buscar
-              </button>
-              <button
+              </BrandCtaButton>
+              <BrandCtaButton
+                variant="secondary"
+                fullWidth
                 onClick={() => {
                   setResultadosBusqueda([]);
                   setNombre('');
                   setTipoMaterial('');
                   setDimensiones({ ancho: '', alto: '' });
                 }}
-                style={{
-                  flex: 1,
-                  padding: '10px',
-                  backgroundColor: COLORS.gray[400],
-                  color: COLORS.white,
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease',
-                  boxShadow: `0 2px 6px rgba(0,0,0,0.1)`
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = COLORS.gray[600];
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = `0 4px 12px rgba(0,0,0,0.2)`;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = COLORS.gray[400];
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = `0 2px 6px rgba(0,0,0,0.1)`;
-                }}
               >
                 Limpiar
-              </button>
+              </BrandCtaButton>
             </div>
 
             <div style={{ marginTop: '14px', display: 'flex', gap: '12px', flexDirection: 'column', justifyContent: 'flex-start' }}>
-              <button
+              <BrandCtaButton
+                variant="primary"
+                fullWidth
                 onClick={handleGuardar}
                 disabled={getAlgunoSeleccionado() && !isFormValid()}
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  backgroundColor: getAlgunoSeleccionado() && !isFormValid() ? '#ccc' : COLORS.primary,
-                  color: getAlgunoSeleccionado() && !isFormValid() ? '#999' : COLORS.white,
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: getAlgunoSeleccionado() && !isFormValid() ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  transition: 'all 0.3s ease',
-                  boxShadow: `0 4px 12px rgba(148, 25, 24, 0.3)`,
-                  opacity: getAlgunoSeleccionado() && !isFormValid() ? 0.5 : 1
-                }}
-                onMouseEnter={(e) => {
-                  if (!getAlgunoSeleccionado() || isFormValid()) {
-                    e.target.style.transform = 'translateY(-3px)';
-                    e.target.style.boxShadow = `0 6px 20px rgba(148, 25, 24, 0.5)`;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = `0 4px 12px rgba(148, 25, 24, 0.3)`;
-                }}
               >
                 Guardar y Continuar
-              </button>
+              </BrandCtaButton>
             </div>
           </div>
         </div>

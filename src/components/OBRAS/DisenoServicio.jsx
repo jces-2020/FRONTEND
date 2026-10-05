@@ -4,6 +4,9 @@ import { FONTS } from '../../colors';
 import ServicioRender from './ServicioRender';
 import Workspace2D from '../editor/Workspace2D';
 import { listAllPanels, listAllProfileBars } from '../../engine/geometry/ContainerGraph';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import TabSelector from '../UI/TabSelector';
+import { COLORS } from '../../colors';
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const DS_STYLE_ID = 'diseno-servicio-css';
@@ -19,9 +22,6 @@ const CSS = `
 .ds-title{font-family:${DS_FONT};font-size:17px;font-weight:700;color:#1a2a3a}
 .ds-section{max-width:980px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:14px}
 .ds-card{background:rgba(255,255,255,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(128,194,220,.25);border-radius:14px;padding:16px}
-.ds-view-toggle{display:flex;border-radius:10px;overflow:hidden;border:1px solid rgba(128,194,220,.35);width:fit-content}
-.ds-vbtn{padding:6px 16px;font-family:${DS_FONT};font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s;color:#5a7a90;background:transparent}
-.ds-vbtn.active{background:#127fc3;color:#fff}
 .ds-svg-wrap{background:rgba(240,248,255,.6);border-radius:12px;border:1px solid rgba(128,194,220,.25);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:280px;padding:16px;position:relative}
 .ds-section-lbl{font-family:${DS_MONO};font-size:9px;font-weight:700;letter-spacing:1.8px;color:#8aa8bc;text-transform:uppercase;margin-bottom:8px}
 .ds-mat-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -37,16 +37,8 @@ const CSS = `
 .ds-cost-row{display:flex;align-items:baseline;gap:6px}
 .ds-cost-val{font-family:${DS_FONT};font-size:20px;font-weight:700;color:#1a2a3a}
 .ds-cost-sub{font-family:${DS_MONO};font-size:10px;color:#8aa8bc}
-.ds-btn-continuar{width:100%;padding:12px;border-radius:11px;background:linear-gradient(135deg,#24a2df,#127fc3);border:none;cursor:pointer;font-family:${DS_FONT};font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s;box-shadow:0 4px 16px rgba(18,127,195,.28)}
-.ds-btn-continuar:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(18,127,195,.38)}
-.ds-btn-continuar:active{transform:translateY(0) scale(.98)}
-.ds-btn-continuar:disabled{opacity:.5;cursor:not-allowed;transform:none}
-.ds-editor-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:9px;border:1px solid rgba(128,194,220,.4);background:rgba(255,255,255,.85);font-family:${DS_FONT};font-size:12px;font-weight:700;color:#2d4a62;cursor:pointer;transition:all .15s}
-.ds-editor-btn:hover{border-color:#127fc3;color:#127fc3}
 .ds-loading{display:flex;align-items:center;justify-content:center;min-height:120px;color:#8aa8bc;font-family:${DS_MONO};font-size:13px;gap:8px}
 .ds-svc-tabs{display:flex;gap:6px;margin-bottom:4px;flex-wrap:wrap}
-.ds-svc-tab{padding:4px 10px;border-radius:999px;border:1px solid rgba(128,194,220,.35);background:transparent;font-family:${DS_MONO};font-size:10px;font-weight:600;color:#5a7a90;cursor:pointer;transition:all .14s}
-.ds-svc-tab.active{background:#127fc3;border-color:#127fc3;color:#fff}
 .ds-error{padding:10px 14px;border-radius:10px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);color:#991b1b;font-family:${DS_MONO};font-size:12px}
 .ds-work-row{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
 .ds-ref-card{width:260px;flex-shrink:0}
@@ -237,11 +229,33 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
       {/* Selector de servicios si hay más de uno */}
       {servicios.length > 1 && (
         <div className="ds-svc-tabs">
-          {servicios.map((s, i) => (
-            <button key={i} className={`ds-svc-tab${servicioIdx === i ? ' active' : ''}`} onClick={() => setServicioIdx(i)}>
-              {s.nombre_servicio || `Servicio ${i + 1}`}
-            </button>
-          ))}
+          {servicios.map((s, i) => {
+            const activo = servicioIdx === i;
+            const label = s.nombre_servicio || `Servicio ${i + 1}`;
+            return activo ? (
+              <BrandCtaButton key={i} size="sm" variant="primary" style={{ padding: '4px 12px', fontSize: 10 }} onClick={() => setServicioIdx(i)}>
+                {label}
+              </BrandCtaButton>
+            ) : (
+              <button
+                key={i}
+                onClick={() => setServicioIdx(i)}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 999,
+                  border: '1px solid rgba(128,194,220,.35)',
+                  background: COLORS.white,
+                  fontFamily: DS_MONO,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: '#5a7a90',
+                  cursor: 'pointer',
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -258,12 +272,15 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
         </div>
 
         <div className="ds-work-main">
-          <div className="ds-view-toggle">
-            <button className={`ds-vbtn${!vista3D ? ' active' : ''}`} onClick={() => setVista3D(false)}>2D</button>
-            <button className={`ds-vbtn${vista3D ? ' active' : ''}`} onClick={() => setVista3D(true)}>
-              <IconBox size={11} style={{ marginRight: 4, verticalAlign: 'middle' }} />3D
-            </button>
-          </div>
+          <TabSelector
+            value={vista3D ? '3d' : '2d'}
+            onChange={(key) => setVista3D(key === '3d')}
+            tabs={[
+              { key: '2d', label: '2D' },
+              { key: '3d', label: '3D', icon: <IconBox size={11} /> },
+            ]}
+            style={{ width: 'fit-content' }}
+          />
 
           {vista3D ? (
             <div className="ds-svg-wrap">
@@ -291,10 +308,16 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
             <div className="ds-section-lbl">Resumen del diseño</div>
             <div className="ds-stat-row"><span>Paneles de vidrio</span><span className="ds-stat-val">{vidrioN}</span></div>
             <div className="ds-stat-row"><span>Paneles sólidos</span><span className="ds-stat-val">{solidoN}</span></div>
-            <button className="ds-btn-continuar" style={{ marginTop: 14 }} onClick={handleOptimizar} disabled={optimizando || vidrioN === 0}>
-              {optimizando ? <IconLoader2 size={16} style={{ animation: 'ds-spin 1s linear infinite' }} /> : null}
+            <BrandCtaButton
+              variant="primary"
+              fullWidth
+              style={{ marginTop: 14 }}
+              onClick={handleOptimizar}
+              disabled={optimizando || vidrioN === 0}
+              loading={optimizando}
+            >
               {optimizando ? 'Optimizando…' : 'Optimizar cortes'}
-            </button>
+            </BrandCtaButton>
           </div>
         ) : (
           <>
@@ -353,13 +376,13 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
               </div>
             )}
 
-            <button className="ds-editor-btn" onClick={() => setResultado(null)}>
-              <IconTrash size={14} /> Volver a editar el diseño
-            </button>
+            <BrandCtaButton variant="secondary" icon={<IconTrash size={14} />} onClick={() => setResultado(null)}>
+              Volver a editar el diseño
+            </BrandCtaButton>
 
-            <button className="ds-btn-continuar" onClick={handleContinuar}>
+            <BrandCtaButton variant="primary" fullWidth onClick={handleContinuar}>
               Continuar <IconArrowRight size={16} />
-            </button>
+            </BrandCtaButton>
           </>
         )}
       </div>

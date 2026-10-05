@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { IconLoader } from '@tabler/icons-react';
 import { COLORS, FONTS, BRAND_THEME } from '../../colors';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 
 const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinalizarEntrega, onGuardarSuccess }) => {
+  injectNeumorphicStyles();
   const [barras, setBarras] = useState([{ id: 1, nombre: 'Barra 1', medidas: [], selectedAluminio: '', aluminioQuery: '', info: { fila: '', columna: '', stock: false } }]);
   const [cortesVidrioAgregadosPorPlancha, setCortesVidrioAgregadosPorPlancha] = useState({});
   const [corteVidrioInputPorPlancha, setCorteVidrioInputPorPlancha] = useState({});
@@ -1334,16 +1337,6 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
     boxShadow: BRAND_THEME.glassShadow
   };
 
-  const sunkenInputStyle = {
-    background: 'rgba(255,255,255,0.78)',
-    border: `1px solid ${COLORS.borderStrong}`,
-    borderRadius: '8px',
-    boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.16), inset 0 -1px 2px rgba(255,255,255,0.62)',
-    color: COLORS.text,
-    fontFamily: FONTS.body,
-    transition: 'all 0.2s ease'
-  };
-
   const sectionLabelStyle = {
     display: 'block',
     fontSize: 11,
@@ -1434,14 +1427,16 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
               <label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6, fontFamily: FONTS.heading, color: COLORS.text }}>CLIENTE</label>
               <input
                 type="text"
+                className="nm-input"
                 defaultValue={notificacion?.nombre || ''}
                 readOnly
                 style={{
                   width: '100%',
-                  padding: '8px 12px',
-                  ...sunkenInputStyle,
+                  padding: '8px 16px',
                   fontWeight: 500,
-                  fontSize: 14
+                  fontSize: 14,
+                  fontFamily: FONTS.body,
+                  color: COLORS.text,
                 }}
               />
             </div>
@@ -1473,6 +1468,7 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                   <label style={sectionLabelStyle}>ALUMINIO A USAR</label>
                   <div style={{ position: 'relative' }}>
                     <input
+                      className="nm-input"
                       value={barra.aluminioQuery || ''}
                       onFocus={() => setAluminioDropdownAbierto((prev) => ({ ...prev, [barra.id]: true }))}
                       onBlur={() => setTimeout(() => setAluminioDropdownAbierto((prev) => ({ ...prev, [barra.id]: false })), 140)}
@@ -1483,10 +1479,10 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                       placeholder="Escribe y selecciona aluminio"
                       style={{
                         width: '100%',
-                        padding: '6px',
-                        ...sunkenInputStyle,
+                        padding: '8px 14px',
                         fontSize: 10,
-                        backgroundColor: 'rgba(255,255,255,0.72)'
+                        fontFamily: FONTS.body,
+                        color: COLORS.text,
                       }}
                     />
 
@@ -1501,7 +1497,7 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                         maxHeight: 180,
                         overflowY: 'auto',
                         border: `1px solid ${COLORS.border}`,
-                        borderRadius: 6,
+                        borderRadius: 10,
                         background: COLORS.white,
                         boxShadow: '0 10px 24px rgba(0,0,0,0.12)'
                       }}>
@@ -1523,6 +1519,8 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                                 color: COLORS.text,
                                 cursor: 'pointer'
                               }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(128,194,220,.14)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                             >
                               {aluminio.nombre}
                             </button>
@@ -1542,18 +1540,20 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                     <label style={sectionLabelStyle}>FILA</label>
                     <input
                       type="text"
+                      className="nm-input"
                       readOnly
                       value={barra.info.fila || ''}
-                      style={{ width: '100%', padding: '6px', ...sunkenInputStyle, fontSize: 10, backgroundColor: 'rgba(241,245,249,0.68)' }}
+                      style={{ width: '100%', padding: '8px 14px', fontSize: 10, fontFamily: FONTS.body, color: COLORS.text }}
                     />
                   </div>
                   <div>
                     <label style={sectionLabelStyle}>COLUMNA</label>
                     <input
                       type="text"
+                      className="nm-input"
                       readOnly
                       value={barra.info.columna || ''}
-                      style={{ width: '100%', padding: '6px', ...sunkenInputStyle, fontSize: 10, backgroundColor: 'rgba(241,245,249,0.68)' }}
+                      style={{ width: '100%', padding: '8px 14px', fontSize: 10, fontFamily: FONTS.body, color: COLORS.text }}
                     />
                   </div>
                 </div>
@@ -1570,6 +1570,7 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                     <input
                       type="number"
+                      className="nm-input"
                       placeholder="Largo (cm)"
                       max={300}
                       value={inputBarra.largo}
@@ -1577,44 +1578,35 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                       onChange={(e) => setCorteAluminioInputPorBarra((prev) => ({ ...prev, [barra.id]: { ...inputBarra, largo: limitarMedidaCm(sanitizarEntradaNumerica(e.target.value, true)) } }))}
                       style={{
                         flex: isMobile ? '1 1 100%' : 1,
-                        padding: '6px',
-                        ...sunkenInputStyle,
+                        padding: '8px 12px',
                         fontSize: 10,
-                        backgroundColor: 'rgba(255,255,255,0.72)'
+                        fontFamily: FONTS.body,
+                        color: COLORS.text,
                       }}
                     />
                     <input
                       type="number"
+                      className="nm-input"
                       placeholder="Cantidad"
                       value={inputBarra.cantidad}
                       onKeyDown={bloquearEntradaNoNumerica}
                       onChange={(e) => setCorteAluminioInputPorBarra((prev) => ({ ...prev, [barra.id]: { ...inputBarra, cantidad: sanitizarEntradaNumerica(e.target.value, false) } }))}
                       style={{
                         width: isMobile ? 'calc(50% - 4px)' : '80px',
-                        padding: '6px',
-                        ...sunkenInputStyle,
+                        padding: '8px 12px',
                         fontSize: 10,
-                        backgroundColor: 'rgba(255,255,255,0.72)'
+                        fontFamily: FONTS.body,
+                        color: COLORS.text,
                       }}
                     />
-                    <button
+                    <BrandCtaButton
+                      size="sm"
+                      variant="secondary"
+                      style={{ padding: '6px 14px', fontSize: 10, width: isMobile ? 'calc(50% - 4px)' : 'auto' }}
                       onClick={() => handleAgregarCorteAluminio(barra.id)}
-                      style={{
-                        padding: '6px 12px',
-                        width: isMobile ? 'calc(50% - 4px)' : 'auto',
-                        background: COLORS.accent,
-                        color: COLORS.primaryDark,
-                        border: '1px solid rgba(255,255,255,0.34)',
-                        borderRadius: '8px',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        fontFamily: FONTS.heading,
-                        whiteSpace: 'nowrap'
-                      }}
                     >
                       + Agregar
-                    </button>
+                    </BrandCtaButton>
                   </div>
 
                   {cortesCustomBarra.length > 0 && (
@@ -1655,24 +1647,15 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                     </div>
                   )}
 
-                  <button
+                  <BrandCtaButton
+                    size="sm"
+                    variant="primary"
+                    fullWidth
+                    style={{ marginBottom: 8 }}
                     onClick={() => handleEliminarBarra(barra.id)}
-                    style={{
-                      width: '100%',
-                      padding: '6px 10px',
-                      background: BRAND_THEME.redGradient,
-                      color: COLORS.white,
-                      border: '1px solid rgba(255,255,255,0.34)',
-                      borderRadius: '8px',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      fontFamily: FONTS.heading,
-                      marginBottom: '8px'
-                    }}
                   >
                     Eliminar barra
-                  </button>
+                  </BrandCtaButton>
                 </div>
 
                 <div style={{ marginTop: '12px' }}>
@@ -1780,27 +1763,9 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
               </div>
             );
           })}
-          <button
-            onClick={handleAgregarBarra}
-            style={{
-              width: '100%',
-              background: COLORS.accent,
-              color: COLORS.primaryDark,
-              border: '1px solid rgba(255,255,255,0.34)',
-              borderRadius: '8px',
-              padding: '8px',
-              fontWeight: 600,
-              fontSize: 12,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              fontFamily: FONTS.heading
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>+</span> Agregar Barra
-          </button>
+          <BrandCtaButton variant="secondary" fullWidth onClick={handleAgregarBarra}>
+            + Agregar Barra
+          </BrandCtaButton>
         </div>
 
         {/* Columna derecha: VIDRIO / Plancha con área de corte */}
@@ -1813,6 +1778,7 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'center', width: isMobile ? '100%' : 'auto' }}>
                   <div style={{ position: 'relative', width: isMobile ? '100%' : 'auto' }}>
                     <input
+                      className="nm-input"
                       value={vidrioQuery}
                       onFocus={() => setVidrioDropdownAbierto(true)}
                       onBlur={() => setTimeout(() => setVidrioDropdownAbierto(false), 140)}
@@ -1822,12 +1788,10 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                       }}
                       placeholder="Buscar plancha de vidrio"
                       style={{
-                        padding: '6px 8px',
+                        padding: '8px 14px',
                         fontSize: 10,
                         fontFamily: FONTS.body,
                         fontWeight: 600,
-                        ...sunkenInputStyle,
-                        backgroundColor: 'rgba(255,255,255,0.72)',
                         color: COLORS.text,
                         minWidth: isMobile ? '0' : '180px',
                         width: isMobile ? '100%' : 'auto'
@@ -1842,7 +1806,7 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                         zIndex: 30,
                         background: COLORS.white,
                         border: `1px solid ${COLORS.border}`,
-                        borderRadius: '4px',
+                        borderRadius: '10px',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                         maxHeight: 180,
                         overflowY: 'auto',
@@ -1869,6 +1833,8 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                                 fontSize: 11,
                                 color: COLORS.text
                               }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(128,194,220,.14)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                             >
                               {v.nombre}{v.grosor ? ` (${v.grosor})` : ''}
                             </button>
@@ -1881,23 +1847,15 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                       </div>
                     )}
                   </div>
-                  <button
+                  <BrandCtaButton
+                    size="sm"
+                    variant="secondary"
+                    style={{ padding: '6px 10px', flexShrink: 0 }}
                     onClick={handleAgregarPlanchaTrabajo}
-                    style={{
-                      padding: '6px 8px',
-                      flexShrink: 0,
-                      border: '1px solid rgba(255,255,255,0.34)',
-                      borderRadius: '8px',
-                      background: COLORS.accent,
-                      color: COLORS.primaryDark,
-                      fontWeight: 700,
-                      fontFamily: FONTS.heading,
-                      cursor: 'pointer'
-                    }}
                     title="Agregar otra plancha"
                   >
                     +
-                  </button>
+                  </BrandCtaButton>
                 </div>
               )}
             </div>
@@ -1979,6 +1937,7 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
               <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
                 <input
                   type="number"
+                  className="nm-input"
                   placeholder="Ancho"
                   max={300}
                   value={(corteVidrioInputPorPlancha[selectedVidrio] || { ancho: '', alto: '', cantidad: '1' }).ancho}
@@ -1986,14 +1945,15 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                   onChange={(e) => setCorteVidrioInputPorPlancha((prev) => ({ ...prev, [selectedVidrio]: { ...(prev[selectedVidrio] || { ancho: '', alto: '', cantidad: '1' }), ancho: limitarMedidaCm(sanitizarEntradaNumerica(e.target.value, true)) } }))}
                   style={{
                     flex: isMobile ? '1 1 calc(50% - 4px)' : 1,
-                    padding: '6px',
-                    ...sunkenInputStyle,
+                    padding: '8px 12px',
                     fontSize: 10,
-                    backgroundColor: 'rgba(255,255,255,0.72)'
+                    fontFamily: FONTS.body,
+                    color: COLORS.text,
                   }}
                 />
                 <input
                   type="number"
+                  className="nm-input"
                   placeholder="Alto"
                   max={300}
                   value={(corteVidrioInputPorPlancha[selectedVidrio] || { ancho: '', alto: '', cantidad: '1' }).alto}
@@ -2001,44 +1961,35 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
                   onChange={(e) => setCorteVidrioInputPorPlancha((prev) => ({ ...prev, [selectedVidrio]: { ...(prev[selectedVidrio] || { ancho: '', alto: '', cantidad: '1' }), alto: limitarMedidaCm(sanitizarEntradaNumerica(e.target.value, true)) } }))}
                   style={{
                     flex: isMobile ? '1 1 calc(50% - 4px)' : 1,
-                    padding: '6px',
-                    ...sunkenInputStyle,
+                    padding: '8px 12px',
                     fontSize: 10,
-                    backgroundColor: 'rgba(255,255,255,0.72)'
+                    fontFamily: FONTS.body,
+                    color: COLORS.text,
                   }}
                 />
                 <input
                   type="number"
+                  className="nm-input"
                   placeholder="Cantidad"
                   value={(corteVidrioInputPorPlancha[selectedVidrio] || { ancho: '', alto: '', cantidad: '1' }).cantidad}
                   onKeyDown={bloquearEntradaNoNumerica}
                   onChange={(e) => setCorteVidrioInputPorPlancha((prev) => ({ ...prev, [selectedVidrio]: { ...(prev[selectedVidrio] || { ancho: '', alto: '', cantidad: '1' }), cantidad: sanitizarEntradaNumerica(e.target.value, false) } }))}
                   style={{
                     width: isMobile ? 'calc(50% - 4px)' : '80px',
-                    padding: '6px',
-                    ...sunkenInputStyle,
+                    padding: '8px 12px',
                     fontSize: 10,
-                    backgroundColor: 'rgba(255,255,255,0.72)'
+                    fontFamily: FONTS.body,
+                    color: COLORS.text,
                   }}
                 />
-                <button
+                <BrandCtaButton
+                  size="sm"
+                  variant="secondary"
+                  style={{ padding: '6px 14px', fontSize: 10, width: isMobile ? 'calc(50% - 4px)' : 'auto' }}
                   onClick={handleAgregarCorteVidrio}
-                  style={{
-                    padding: '6px 12px',
-                    width: isMobile ? 'calc(50% - 4px)' : 'auto',
-                    background: COLORS.accent,
-                    color: COLORS.primaryDark,
-                    border: '1px solid rgba(255,255,255,0.34)',
-                    borderRadius: '8px',
-                    fontSize: 10,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: FONTS.heading,
-                    whiteSpace: 'nowrap'
-                  }}
                 >
                   + Agregar
-                </button>
+                </BrandCtaButton>
               </div>
 
               {/* Lista de cortes agregados */}
@@ -2094,27 +2045,10 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
               animation: 'planchaGlow 2.8s ease-in-out infinite'
             }}>
               <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '8px' }}>
-                <button
-                  type="button"
-                  onClick={handleAutoOrganizarVidrio}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    background: 'rgba(199,236,255,0.65)',
-                    color: COLORS.secondaryDark,
-                    border: `1px solid ${COLORS.secondary}`,
-                    borderRadius: 12,
-                    padding: '8px 14px',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    fontFamily: FONTS.heading,
-                    cursor: 'pointer'
-                  }}
-                >
+                <BrandCtaButton size="sm" variant="secondary" onClick={handleAutoOrganizarVidrio}>
                   <span style={{ fontSize: 12 }}>▦</span>
                   Auto-organizar
-                </button>
+                </BrandCtaButton>
               </div>
               <div style={{ fontSize: '9px', fontWeight: 600, marginBottom: '4px', textAlign: 'center', color: COLORS.text }}>
                 PLANCHA {vidrioPlanchaAncho}cm × {vidrioPlanchaAlto}cm
@@ -2187,28 +2121,15 @@ const ProductosServicio = ({ notificacion, onToast, showHeader = true, onFinaliz
 
       {/* Botón guardar */}
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <button
+        <BrandCtaButton
+          variant="primary"
           disabled={finalizando}
-          style={{
-            background: finalizando ? COLORS.gray[400] : BRAND_THEME.redGradient,
-            color: COLORS.white,
-            border: `1px solid ${finalizando ? COLORS.gray[400] : 'rgba(255,255,255,0.34)'}`,
-            borderRadius: '10px',
-            width: isMobile ? '100%' : 'auto',
-            maxWidth: isMobile ? '440px' : 'none',
-            padding: isMobile ? '11px 16px' : '10px 40px',
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: finalizando ? 'not-allowed' : 'pointer',
-            textTransform: 'uppercase',
-            fontFamily: FONTS.heading,
-            boxShadow: '0 12px 24px rgba(15,23,42,0.2)',
-            opacity: finalizando ? 0.6 : 1
-          }}
+          loading={finalizando}
+          fullWidth={isMobile}
           onClick={finalizarEntregaCompleta}
         >
-          {finalizando ? 'FINALIZANDO...' : 'GUARDAR'}
-        </button>
+          {finalizando ? 'Finalizando...' : 'Guardar'}
+        </BrandCtaButton>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { COLORS, FONTS } from '../../colors';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 /* ─── Animaciones CSS inyectadas una vez ─── */
 const ANIMATION_CSS = `
@@ -87,6 +89,7 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
   const isTinyMobile = viewportWidth <= 480;
 
   useEffect(() => { injectStyles(); }, []);
+  injectNeumorphicStyles();
 
   useEffect(() => {
     const onResize = () => setViewportWidth(window.innerWidth);
@@ -375,18 +378,15 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
         </label>
         <input
           type="text"
+          className="nm-input"
           placeholder="Ej: Cristal 2.5mm, Espejo, Marco, etc."
           value={nombreServicio}
           onChange={(e) => setNombreServicio(e.target.value)}
           style={{
-            width: '100%', padding: '11px 14px',
-            border: `1.5px solid ${COLORS.border}`,
-            borderRadius: 8, fontSize: 14, fontFamily: FONTS.body,
+            width: '100%', padding: '11px 16px',
+            fontSize: 14, fontFamily: FONTS.body,
             color: COLORS.text, boxSizing: 'border-box',
-            outline: 'none', transition: 'border-color 0.2s'
           }}
-          onFocus={(e) => { e.target.style.borderColor = COLORS.info; }}
-          onBlur={(e) => { e.target.style.borderColor = COLORS.border; }}
         />
       </div>
 
@@ -408,21 +408,9 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
           {!instalado && (
             <div style={{ display: 'grid', gridTemplateColumns: isTinyMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 14 }}>
               {/* Tomar foto */}
-              <button
-                className="inst-btn-photo"
-                onClick={() => cameraInputRef.current?.click()}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  gap: 6, padding: '14px 10px',
-                  background: `linear-gradient(135deg, ${COLORS.primary}, ${COLORS.primaryLight})`,
-                  color: '#fff', border: 'none', borderRadius: 10,
-                  cursor: 'pointer', fontFamily: FONTS.heading,
-                  fontWeight: 700, fontSize: 13, letterSpacing: 0.3,
-                  boxShadow: '0 4px 14px rgba(148,25,24,0.25)'
-                }}
-              >
+              <BrandCtaButton variant="primary" onClick={() => cameraInputRef.current?.click()}>
                 Tomar Foto
-              </button>
+              </BrandCtaButton>
               <input
                 ref={cameraInputRef}
                 type="file"
@@ -433,21 +421,9 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
               />
 
               {/* Subir archivo */}
-              <button
-                className="inst-btn-photo"
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  gap: 6, padding: '14px 10px',
-                  background: `linear-gradient(135deg, ${COLORS.info}, #2563eb)`,
-                  color: '#fff', border: 'none', borderRadius: 10,
-                  cursor: 'pointer', fontFamily: FONTS.heading,
-                  fontWeight: 700, fontSize: 13, letterSpacing: 0.3,
-                  boxShadow: '0 4px 14px rgba(59,130,246,0.25)'
-                }}
-              >
+              <BrandCtaButton variant="secondary" onClick={() => fileInputRef.current?.click()}>
                 Subir Archivo
-              </button>
+              </BrandCtaButton>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -533,21 +509,19 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
             OBSERVACIONES DE INSTALACIÓN *
           </label>
           <textarea
+            className="nm-input"
             placeholder="Describe los detalles de la instalación realizada…"
             value={observaciones}
             onChange={(e) => setObservaciones(e.target.value)}
             rows={isMobile ? 7 : 9}
             style={{
-              flex: 1, width: '100%', padding: '10px 13px',
-              border: `1.5px solid ${COLORS.border}`,
-              borderRadius: 8, fontFamily: FONTS.body,
+              flex: 1, width: '100%', padding: '10px 16px',
+              fontFamily: FONTS.body,
               fontSize: 13, color: COLORS.text,
-              resize: 'vertical', outline: 'none',
-              boxSizing: 'border-box', transition: 'border-color 0.2s',
+              resize: 'vertical',
+              boxSizing: 'border-box',
               lineHeight: 1.6
             }}
-            onFocus={(e) => { e.target.style.borderColor = COLORS.info; }}
-            onBlur={(e) => { e.target.style.borderColor = COLORS.border; }}
           />
           <p style={{ margin: '8px 0 0', fontSize: 11, color: COLORS.textLight }}>
             Mínimo detalla el tipo de instalación, materiales y ubicación.
@@ -557,47 +531,15 @@ const Instalacion = ({ notificacion, onToast, carritoData = {}, onFinalizarServi
 
       {/* ── Botón guardar ── */}
       <div style={{ textAlign: 'center' }}>
-        <button
-          className={guardando || instalado ? '' : 'inst-guardar'}
+        <BrandCtaButton
+          variant="primary"
           onClick={handleGuardar}
           disabled={guardando || instalado}
-          style={{
-            background: instalado
-              ? `linear-gradient(135deg, ${COLORS.accent}, ${COLORS.accentDark})`
-              : `linear-gradient(135deg, ${COLORS.accentLight}, ${COLORS.accent})`,
-            color: COLORS.primaryDark,
-            border: 'none',
-            borderRadius: 10,
-            width: isMobile ? '100%' : 'auto',
-            maxWidth: isMobile ? '460px' : 'none',
-            padding: isMobile ? '12px 16px' : '13px 52px',
-            fontWeight: 700, fontSize: 15,
-            cursor: guardando || instalado ? 'not-allowed' : 'pointer',
-            textTransform: 'uppercase',
-            fontFamily: FONTS.heading,
-            letterSpacing: 1,
-            boxShadow: instalado
-              ? '0 4px 16px rgba(245,158,11,0.35)'
-              : '0 4px 16px rgba(245,158,11,0.3)',
-            display: 'inline-flex', alignItems: 'center', gap: 10,
-            opacity: guardando ? 0.8 : 1
-          }}
+          loading={guardando}
+          fullWidth={isMobile}
         >
-          {guardando ? (
-            <>
-              <span style={{
-                width: 16, height: 16, border: '2px solid rgba(107,16,15,0.35)',
-                borderTopColor: COLORS.primaryDark, borderRadius: '50%',
-                display: 'inline-block', animation: 'spin 0.7s linear infinite'
-              }} />
-              GUARDANDO…
-            </>
-          ) : instalado ? (
-            <>INSTALADO</>
-          ) : (
-            <>GUARDAR INSTALACIÓN</>
-          )}
-        </button>
+          {instalado ? 'Instalado' : guardando ? 'Guardando…' : 'Guardar instalación'}
+        </BrandCtaButton>
       </div>
     </div>
   );

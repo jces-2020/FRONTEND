@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { COLORS, FONTS } from '../../colors';
 import RutaEntrega from './RutaEntrega';
+import BrandCtaButton from '../UI/BrandCtaButton';
+import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
@@ -19,6 +21,7 @@ function formatFechaHoraEs(valor) {
 }
 
 const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onPagoConfirmado }) => {
+  injectNeumorphicStyles();
   const [ancho, setAncho] = useState('');
   const [alto, setAlto] = useState('');
   const [precio, setPrecio] = useState('');
@@ -420,32 +423,47 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
                 overflowX: isMobile ? 'auto' : 'visible',
                 paddingBottom: isMobile ? 2 : 0
               }}>
-                {serviciosCliente.map((servicio, idx) => (
-                  <React.Fragment key={servicio.id || idx}>
-                    <button
-                      type="button"
-                      onClick={() => aplicarServicio(serviciosCliente, idx)}
-                      style={{
-                        flex: '0 0 auto',
-                        whiteSpace: 'nowrap',
-                        border: idx === servicioActivoIndex ? `1px solid ${COLORS.primary}` : `1px solid ${COLORS.border}`,
-                        background: idx === servicioActivoIndex ? 'rgba(148,25,24,.08)' : COLORS.white,
-                        color: COLORS.text,
-                        borderRadius: 999,
-                        padding: '3px 9px',
-                        fontFamily: FONTS.body,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {`${servicio.nombre_servicio || `servicio${idx + 1}`}`} ({servicio.ancho_cm}x{servicio.alto_cm})
-                    </button>
-                    {idx < serviciosCliente.length - 1 && (
-                      <span style={{ color: COLORS.textLight, fontWeight: 700, fontSize: 14 }}>&lt;</span>
-                    )}
-                  </React.Fragment>
-                ))}
+                {serviciosCliente.map((servicio, idx) => {
+                  const activo = idx === servicioActivoIndex;
+                  const label = `${servicio.nombre_servicio || `servicio${idx + 1}`} (${servicio.ancho_cm}x${servicio.alto_cm})`;
+                  return (
+                    <React.Fragment key={servicio.id || idx}>
+                      {activo ? (
+                        <BrandCtaButton
+                          size="sm"
+                          variant="primary"
+                          onClick={() => aplicarServicio(serviciosCliente, idx)}
+                          style={{ padding: '4px 12px', fontSize: 11 }}
+                        >
+                          {label}
+                        </BrandCtaButton>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => aplicarServicio(serviciosCliente, idx)}
+                          style={{
+                            flex: '0 0 auto',
+                            whiteSpace: 'nowrap',
+                            border: '1px solid rgba(128,194,220,.35)',
+                            background: COLORS.white,
+                            color: COLORS.text,
+                            borderRadius: 999,
+                            padding: '3px 9px',
+                            fontFamily: FONTS.body,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {label}
+                        </button>
+                      )}
+                      {idx < serviciosCliente.length - 1 && (
+                        <span style={{ color: COLORS.textLight, fontWeight: 700, fontSize: 14 }}>&lt;</span>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
 
             </div>
@@ -662,6 +680,7 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               letterSpacing: 0.5
             }}>PRECIO DEL SERVICIO</label>
             <input
+              className="nm-input"
               value={precio}
               type="text"
               inputMode="decimal"
@@ -679,15 +698,12 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               placeholder="Ingrese el precio"
               style={{
                 width: '100%',
-                padding: '11px 12px',
-                border: `1px solid rgba(27,44,66,.18)`,
-                borderRadius: '10px',
+                padding: '11px 16px',
                 fontFamily: FONTS.body,
                 fontSize: 16,
                 fontWeight: 700,
-                background: 'rgba(255,255,255,.95)',
                 color: COLORS.text,
-                boxShadow: 'inset 0 1px 2px rgba(0,0,0,.04)'
+                boxSizing: 'border-box'
               }}
             />
             <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
@@ -712,6 +728,7 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               letterSpacing: 0.5
             }}>DESCRIPCION DEL TRABAJO</label>
             <textarea
+              className="nm-input"
               value={descripcion}
               onChange={(e) => {
                 const val = e.target.value;
@@ -722,15 +739,13 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               rows={isMobile ? 4 : 6}
               style={{
                 width: '100%',
-                padding: '10px 11px',
-                border: `1px solid rgba(27,44,66,.18)`,
-                borderRadius: '10px',
+                padding: '10px 16px',
                 fontSize: 13,
                 fontFamily: FONTS.body,
                 resize: 'none',
                 color: COLORS.text,
                 lineHeight: 1.45,
-                background: '#fbfdff'
+                boxSizing: 'border-box'
               }}
             />
             <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
@@ -755,6 +770,7 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               letterSpacing: 0.5
             }}>FECHA Y HORA PARA REALIZAR EL SERVICIO</label>
             <input
+              className="nm-input"
               value={fechaServicio}
               onChange={(e) => {
                 const val = e.target.value;
@@ -767,13 +783,11 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               min={fechaHoraMinima}
               style={{
                 width: '100%',
-                padding: '10px 11px',
-                border: `1px solid rgba(27,44,66,.18)`,
-                borderRadius: '10px',
+                padding: '10px 16px',
                 fontFamily: FONTS.body,
                 fontSize: 13,
                 color: COLORS.text,
-                background: '#fbfdff'
+                boxSizing: 'border-box'
               }}
             />
             <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
@@ -785,26 +799,13 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
 
       {/* Botón guardar */}
       <div style={{ textAlign: 'center', marginTop: '12px' }}>
-        <button
-          style={{
-            background: COLORS.text,
-            color: COLORS.white,
-            border: `2px solid ${COLORS.text}`,
-            borderRadius: '8px',
-            width: isMobile ? '100%' : 'auto',
-            maxWidth: isMobile ? '420px' : 'none',
-            padding: isMobile ? '10px 14px' : '8px 28px',
-            fontWeight: 700,
-            fontSize: isMobile ? 14 : 13,
-            cursor: 'pointer',
-            textTransform: 'uppercase',
-            fontFamily: FONTS.heading,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-          }}
+        <BrandCtaButton
+          variant="primary"
           onClick={handleGuardar}
+          fullWidth={isMobile}
         >
-          GUARDAR
-        </button>
+          Guardar
+        </BrandCtaButton>
       </div>
 
       {modalMetodoPago && (
@@ -835,60 +836,37 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
               Selecciona metodo de pago
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                style={{
-                  background: 'linear-gradient(135deg, #80C2DC, #5a8ba8)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.24)',
-                  borderRadius: '10px',
-                  padding: '11px 14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 20px rgba(90,139,168,0.34), inset 0 1px 0 rgba(255,255,255,0.3)'
-                }}
+              <BrandCtaButton
+                variant="secondary"
+                fullWidth
                 onClick={() => {
                   setModalMetodoPago(false);
                   handleGuardarConMetodo('al contado');
                 }}
               >
                 Pagar al contado
-              </button>
-              <button
-                style={{
-                  background: 'linear-gradient(135deg, #7a2ee6, #5b21b6)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.24)',
-                  borderRadius: '10px',
-                  padding: '11px 14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 20px rgba(91,33,182,0.34), inset 0 1px 0 rgba(255,255,255,0.3)'
-                }}
+              </BrandCtaButton>
+              <BrandCtaButton
+                fullWidth
+                from="#7a2ee6"
+                to="#5b21b6"
                 onClick={() => {
                   setModalMetodoPago(false);
                   handleGuardarConMetodo('por yape');
                 }}
               >
                 Pagar por Yape
-              </button>
-              <button
-                style={{
-                  background: 'linear-gradient(135deg, #d43a37, #941918)',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.24)',
-                  borderRadius: '10px',
-                  padding: '11px 14px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 20px rgba(148,25,24,0.34), inset 0 1px 0 rgba(255,255,255,0.3)'
-                }}
+              </BrandCtaButton>
+              <BrandCtaButton
+                variant="primary"
+                fullWidth
                 onClick={() => {
                   setModalMetodoPago(false);
                   handleGuardarConMetodo('por tarjeta');
                 }}
               >
                 Pagar por tarjeta
-              </button>
+              </BrandCtaButton>
               <button
                 style={{ background: 'transparent', color: '#3b5568', border: 'none', padding: '8px', cursor: 'pointer', fontWeight: 600 }}
                 onClick={() => setModalMetodoPago(false)}
