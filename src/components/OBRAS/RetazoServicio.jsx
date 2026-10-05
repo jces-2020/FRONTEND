@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { IconLoader, IconAlertTriangle } from '@tabler/icons-react';
 import { COLORS, BRAND_THEME } from '../../colors';
 import BrandCtaButton from '../UI/BrandCtaButton';
+import BrandCard from '../UI/BrandCard';
 import StripedTable, { StripedTableHead, StripedTh, StripedTableRow, StripedTd } from '../UI/StripedTable';
 import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
@@ -76,18 +77,10 @@ const styles = `
     animation: modalBackdropIn 0.22s ease;
   }
 
-  .confirm-card {
-    background: rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.28), 0 1px 0 rgba(255,255,255,0.5) inset;
-    border-radius: 20px;
-    padding: 36px 32px 28px;
-    width: 360px;
+  .confirm-modal-card {
+    width: 380px;
     max-width: 92vw;
     animation: modalCardIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
-    text-align: center;
   }
 
   @keyframes spinLoader {
@@ -339,49 +332,34 @@ export default function RetazoServicio({ notificacion, onToast, onGuardarSuccess
       {/* ── MODAL CONFIRMACIÓN ── */}
       {showConfirmModal && (
         <div className="confirm-backdrop" onClick={() => setShowConfirmModal(false)}>
-          <div className="confirm-card" onClick={e => e.stopPropagation()}>
-            {/* Icono */}
-            <div style={{
-              width: 56, height: 56, borderRadius: '50%',
-              background: 'rgba(148,25,24,0.12)',
-              border: '1.5px solid rgba(148,25,24,0.3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 16px',
-            }}
+          <div className="confirm-modal-card" onClick={e => e.stopPropagation()}>
+            <BrandCard
+              icon={<IconAlertTriangle size={18} stroke={1.5} />}
+              title="Sin mermas seleccionadas"
             >
-              <IconAlertTriangle size={28} stroke={1} color={COLORS.primary} />
-            </div>
+              <div style={{ padding: isMobile ? 14 : '18px 20px 20px', textAlign: 'center' }}>
+                <p style={{
+                  fontSize: 13.5, color: COLORS.textLight,
+                  margin: '0 0 20px', lineHeight: 1.55
+                }}>
+                  No seleccionaste ninguna merma.<br/>
+                  ¿Deseas continuar de todas formas hacia la siguiente etapa?
+                </p>
 
-            {/* Título */}
-            <p style={{
-              fontWeight: 700, fontSize: 17, color: '#1a1a2e',
-              marginBottom: 8, lineHeight: 1.3
-            }}>
-              Sin mermas seleccionadas
-            </p>
-
-            {/* Mensaje */}
-            <p style={{
-              fontSize: 13.5, color: '#ffffff',
-              marginBottom: 24, lineHeight: 1.55
-            }}>
-              No seleccionaste ninguna merma.<br/>
-              ¿Deseas continuar de todas formas hacia la siguiente etapa?
-            </p>
-
-            {/* Botones */}
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <BrandCtaButton variant="secondary" fullWidth onClick={() => setShowConfirmModal(false)}>
-                Cancelar
-              </BrandCtaButton>
-              <BrandCtaButton
-                variant="primary"
-                fullWidth
-                onClick={() => { setShowConfirmModal(false); setIsProcessing(true); onGuardarSuccess?.(); }}
-              >
-                Continuar
-              </BrandCtaButton>
-            </div>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                  <BrandCtaButton variant="secondary" fullWidth onClick={() => setShowConfirmModal(false)}>
+                    Cancelar
+                  </BrandCtaButton>
+                  <BrandCtaButton
+                    variant="primary"
+                    fullWidth
+                    onClick={() => { setShowConfirmModal(false); setIsProcessing(true); onGuardarSuccess?.(); }}
+                  >
+                    Continuar
+                  </BrandCtaButton>
+                </div>
+              </div>
+            </BrandCard>
           </div>
         </div>
       )}
