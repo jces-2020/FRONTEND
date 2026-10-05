@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IconArrowLeft, IconBell, IconLogout, IconTool, IconReceipt, IconLayoutGrid, IconStack2, IconChalkboardTeacher, IconCircleCheck, IconRuler2 } from '@tabler/icons-react';
+import { IconArrowLeft, IconBell, IconLogout, IconTool, IconReceipt, IconLayoutGrid, IconStack2, IconChalkboardTeacher, IconRuler2 } from '@tabler/icons-react';
 import { FONTS } from '../../colors';
 import BrandToast from '../UI/BrandToast';
 import BrandCtaButton from '../UI/BrandCtaButton';
+import BrandCard from '../UI/BrandCard';
 import Remetro from './Remetro';
 import RetazoServicio from './RetazoServicio';
 import ProductosServicio from './ProductosServicio';
@@ -50,14 +51,6 @@ const gc = {
   boxShadow: T.shadow,
 };
 
-const gcM = {
-  background: T.glassBgMid,
-  backdropFilter: `${T.glassBlur} ${T.glassSat}`,
-  WebkitBackdropFilter: `${T.glassBlur} ${T.glassSat}`,
-  border: `1px solid ${T.borderMid}`,
-  boxShadow: T.shadow,
-};
-
 const SERVICIO_TAB_KEY = 'obras_servicio_active_tab';
 const SERVICIO_TRACKING_KEY = 'obras_servicio_tracking';
 
@@ -83,24 +76,9 @@ const CSS = `
 .sv-title{font-family:${T.fontHead};font-weight:700;font-size:22px;color:${T.text};letter-spacing:.3px;line-height:1}
 .sv-subtitle{font-size:11px;color:${T.textDim};font-family:${T.fontMono};margin-top:2px}
 
-.sv-tabs{display:flex;gap:6px;background:rgba(148,25,24,.06);border:1px solid rgba(148,25,24,.18);border-radius:14px;padding:6px;margin-bottom:14px}
-.sv-tab{
-  flex:1;border-radius:10px;padding:10px 14px;cursor:pointer;
-  font-family:${T.fontHead};font-size:14px;font-weight:500;
-  border:1px solid transparent;background:transparent;
-  color:${T.textLight};transition:all .2s ease;
-}
-.sv-tab:hover{background:rgba(148,25,24,.07)}
-.sv-tab.active{
-  font-weight:700;color:#941918;
-  background:rgba(148,25,24,.09);
-  border-color:rgba(148,25,24,.35);
-  box-shadow:0 4px 14px rgba(148,25,24,.14),inset 0 1px 0 rgba(255,255,255,.75);
-}
-
-.sv-meta{display:flex;align-items:center;gap:24px;margin-bottom:18px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.35);border:1px solid ${T.border}}
-.sv-divider{width:1px;height:30px;background:${T.border}}
-.sv-content{padding:18px 16px;background:rgba(255,255,255,.45);border:1px solid ${T.border};border-radius:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);animation:svUp .28s ease}
+.sv-card-body{padding:22px 26px 28px}
+.sv-meta{display:flex;align-items:center;gap:24px;margin-bottom:20px}
+.sv-content{margin-top:22px;animation:svUp .28s ease}
 
 .sv-track{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px;padding-top:2px}
 .sv-track-line{position:absolute;left:12.5%;right:12.5%;top:20px;height:4px;border-radius:999px;background:rgba(128,194,220,.25);overflow:hidden}
@@ -124,13 +102,11 @@ const CSS = `
   .sv-title{font-size:18px}
   .sv-subtitle{font-size:10px}
   .sv-btn-grow{flex:1;justify-content:center}
-  .sv-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-  .sv-tab{font-size:12px;padding:8px 10px}
-  .sv-meta{display:grid;grid-template-columns:1fr;gap:10px;padding:10px 12px}
+  .sv-card-body{padding:16px 16px 20px}
+  .sv-meta{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}
   .sv-track{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .sv-track-line{display:none}
-  .sv-divider{display:none}
-  .sv-content{padding:12px 10px}
+  .sv-content{margin-top:16px}
 }
 `;
 
@@ -284,14 +260,6 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
       setActiveTab('REMETRO');
     }
   }, [tracking.aceptoPedido, activeTab]);
-
-  const TABS = [
-    { key: 'REMETRO',    label: 'REMETREO' },
-    { key: 'DISENO',     label: 'DISEÑO' },
-    { key: 'RETAZO',     label: 'RETAZO' },
-    { key: 'PRODUCTOS',  label: 'PRODUCTOS' },
-    { key: 'INSTALACION',label: 'INSTALACION' },
-  ];
 
   const abrirComprobanteServicio = useCallback((productos, opciones = {}) => {
     const lista = Array.isArray(productos) ? productos.filter(Boolean) : [];
@@ -453,46 +421,15 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
         </header>
 
         {rutaInfo.presupuestoId && (
-          <div style={{ borderRadius: 18, padding: '14px 18px', ...gc, animation: 'svUp .45s ease' }}>
-            <RutaEntrega presupuestoId={rutaInfo.presupuestoId} monto={rutaInfo.monto} />
-          </div>
+          <BrandCard title="Ruta de entrega" style={{ marginBottom: 20 }}>
+            <div className="sv-card-body">
+              <RutaEntrega presupuestoId={rutaInfo.presupuestoId} monto={rutaInfo.monto} />
+            </div>
+          </BrandCard>
         )}
 
-        <div style={{ borderRadius: 22, overflow: 'hidden', ...gcM, animation: 'svUp .45s ease', position: 'relative' }}>
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 1,
-              background: 'linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent)',
-              pointerEvents: 'none',
-            }}
-          />
-
-          <div style={{ padding: '20px 24px 26px' }}>
-            <div className="sv-tabs">
-              {TABS.map((tab) => {
-                const bloqueado = tab.key !== activeTab;
-                return (
-                  <button
-                    key={tab.key}
-                    className={`sv-tab${activeTab === tab.key ? ' active' : ''}${bloqueado ? ' disabled' : ''}`}
-                    onClick={() => { if (!bloqueado) setActiveTab(tab.key); }}
-                    disabled={bloqueado}
-                    title={bloqueado ? 'Debes completar la etapa actual para continuar.' : undefined}
-                    style={bloqueado ? { opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'auto' } : undefined}
-                  >
-                    {tab.label}
-                    {bloqueado && (
-                      <IconCircleCheck size={13} stroke={1.5} style={{ marginLeft: 5, verticalAlign: 'middle' }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
+        <BrandCard>
+          <div className="sv-card-body">
             <div className="sv-meta">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1.8, color: T.textDim, fontFamily: T.fontMono }}>
@@ -597,7 +534,7 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
               )}
             </div>
           </div>
-        </div>
+        </BrandCard>
       </div>
 
       {mostrarFacturacion && (
@@ -620,4 +557,3 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
 };
 
 export default ServicioTrabajo;
-

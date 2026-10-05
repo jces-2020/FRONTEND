@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { COLORS, FONTS } from '../../colors';
 import RutaEntrega from './RutaEntrega';
 import BrandCtaButton from '../UI/BrandCtaButton';
+import BrandCard from '../UI/BrandCard';
 import { injectNeumorphicStyles } from '../UI/NeumorphicFormCard';
 
 const MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -473,25 +474,19 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
 
       {/* Visita de remetro: fecha/hora agendada + ruta hacia el cliente */}
       {serviciosCliente.length > 0 && (
-        <div style={{
-          border: `1px solid ${COLORS.border}`,
-          borderRadius: 12,
-          background: '#fff',
-          padding: '12px',
-          marginBottom: 14,
-          display: 'grid',
-          gap: 8,
-        }}>
-          {serviciosCliente[0]?.fecha_remetro && (
-            <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.text }}>
-              <strong>Visita para tomar medidas:</strong> {formatFechaHoraEs(serviciosCliente[0].fecha_remetro)}
-            </div>
-          )}
-          <RutaEntrega
-            presupuestoId={serviciosCliente[0]?.id}
-            monto={serviciosCliente.reduce((acc, s) => acc + (Number(s.total) || 0), 0)}
-          />
-        </div>
+        <BrandCard style={{ marginBottom: 14 }}>
+          <div style={{ padding: isMobile ? 14 : '18px 20px 20px', display: 'grid', gap: 8 }}>
+            {serviciosCliente[0]?.fecha_remetro && (
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, color: COLORS.text }}>
+                <strong>Visita para tomar medidas:</strong> {formatFechaHoraEs(serviciosCliente[0].fecha_remetro)}
+              </div>
+            )}
+            <RutaEntrega
+              presupuestoId={serviciosCliente[0]?.id}
+              monto={serviciosCliente.reduce((acc, s) => acc + (Number(s.total) || 0), 0)}
+            />
+          </div>
+        </BrandCard>
       )}
 
       {/* Layout principal: izquierda (imagen + gráfico) y derecha (datos) */}
@@ -663,137 +658,98 @@ const Remetro = ({ notificacion, clienteResuelto, onToast, onGuardarSuccess, onP
 
         {/* Panel derecho: Resumen del servicio */}
         <div style={{ order: isMobile ? 1 : 2, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 12,
-            background: 'linear-gradient(180deg, #ffffff 0%, #f2f7ff 100%)',
-            padding: '12px 12px 10px',
-            boxShadow: '0 6px 18px rgba(15, 30, 53, .06)'
-          }}>
-            <label style={{
-              display: 'block',
-              fontSize: 13,
-              fontWeight: 700,
-              marginBottom: 7,
-              fontFamily: FONTS.heading,
-              color: COLORS.text,
-              letterSpacing: 0.5
-            }}>PRECIO DEL SERVICIO</label>
-            <input
-              className="nm-input"
-              value={precio}
-              type="text"
-              inputMode="decimal"
-              onChange={(e) => {
-                const raw = e.target.value;
-                // Solo dígitos y un punto decimal; sin signos + ni -
-                const limpio = raw.replace(/[^0-9.]/g, '');
-                // Evitar más de un punto decimal
-                const partes = limpio.split('.');
-                const normalizado = partes.length > 2
-                  ? partes[0] + '.' + partes.slice(1).join('')
-                  : limpio;
-                setPrecio(normalizado);
-              }}
-              placeholder="Ingrese el precio"
-              style={{
-                width: '100%',
-                padding: '11px 16px',
-                fontFamily: FONTS.body,
-                fontSize: 16,
-                fontWeight: 700,
-                color: COLORS.text,
-                boxSizing: 'border-box'
-              }}
-            />
-            <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
-              Suma de servicios asociados: {serviciosCliente.length}
+          <BrandCard title="Precio del servicio">
+            <div style={{ padding: isMobile ? 14 : '18px 20px 20px' }}>
+              <input
+                className="nm-input"
+                value={precio}
+                type="text"
+                inputMode="decimal"
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  // Solo dígitos y un punto decimal; sin signos + ni -
+                  const limpio = raw.replace(/[^0-9.]/g, '');
+                  // Evitar más de un punto decimal
+                  const partes = limpio.split('.');
+                  const normalizado = partes.length > 2
+                    ? partes[0] + '.' + partes.slice(1).join('')
+                    : limpio;
+                  setPrecio(normalizado);
+                }}
+                placeholder="Ingrese el precio"
+                style={{
+                  width: '100%',
+                  padding: '11px 16px',
+                  fontFamily: FONTS.body,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: COLORS.text,
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                Suma de servicios asociados: {serviciosCliente.length}
+              </div>
             </div>
-          </div>
+          </BrandCard>
 
-          <div style={{
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 12,
-            background: '#fff',
-            padding: '12px',
-            boxShadow: '0 6px 18px rgba(15, 30, 53, .05)'
-          }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: 13, 
-              fontWeight: 700, 
-              marginBottom: 7,
-              fontFamily: FONTS.heading,
-              color: COLORS.text,
-              letterSpacing: 0.5
-            }}>DESCRIPCION DEL TRABAJO</label>
-            <textarea
-              className="nm-input"
-              value={descripcion}
-              onChange={(e) => {
-                const val = e.target.value;
-                setDescripcion(val);
-                actualizarDraftActivo({ descripcion: val });
-              }}
-              placeholder="Descripción del trabajo a realizar"
-              rows={isMobile ? 4 : 6}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                fontSize: 13,
-                fontFamily: FONTS.body,
-                resize: 'none',
-                color: COLORS.text,
-                lineHeight: 1.45,
-                boxSizing: 'border-box'
-              }}
-            />
-            <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
-              Este texto se guardara junto al pago de REMETRO.
+          <BrandCard title="Descripción del trabajo">
+            <div style={{ padding: isMobile ? 14 : '18px 20px 20px' }}>
+              <textarea
+                className="nm-input"
+                value={descripcion}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDescripcion(val);
+                  actualizarDraftActivo({ descripcion: val });
+                }}
+                placeholder="Descripción del trabajo a realizar"
+                rows={isMobile ? 4 : 6}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  fontSize: 13,
+                  fontFamily: FONTS.body,
+                  resize: 'none',
+                  color: COLORS.text,
+                  lineHeight: 1.45,
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                Este texto se guardara junto al pago de REMETRO.
+              </div>
             </div>
-          </div>
+          </BrandCard>
 
-          <div style={{
-            border: `1px solid ${COLORS.border}`,
-            borderRadius: 12,
-            background: '#fff',
-            padding: '12px',
-            boxShadow: '0 6px 18px rgba(15, 30, 53, .05)'
-          }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: 13, 
-              fontWeight: 700, 
-              marginBottom: 7,
-              fontFamily: FONTS.heading,
-              color: COLORS.text,
-              letterSpacing: 0.5
-            }}>FECHA Y HORA PARA REALIZAR EL SERVICIO</label>
-            <input
-              className="nm-input"
-              value={fechaServicio}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val || val >= fechaHoraMinima) {
-                  setFechaServicio(val);
-                  actualizarDraftActivo({ fecha_servicio: val });
-                }
-              }}
-              type="datetime-local"
-              min={fechaHoraMinima}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                fontFamily: FONTS.body,
-                fontSize: 13,
-                color: COLORS.text,
-                boxSizing: 'border-box'
-              }}
-            />
-            <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
-              No se permiten fechas u horas anteriores al momento actual.
+          <BrandCard title="Fecha y hora para realizar el servicio">
+            <div style={{ padding: isMobile ? 14 : '18px 20px 20px' }}>
+              <input
+                className="nm-input"
+                value={fechaServicio}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (!val || val >= fechaHoraMinima) {
+                    setFechaServicio(val);
+                    actualizarDraftActivo({ fecha_servicio: val });
+                  }
+                }}
+                type="datetime-local"
+                min={fechaHoraMinima}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  fontFamily: FONTS.body,
+                  fontSize: 13,
+                  color: COLORS.text,
+                  boxSizing: 'border-box'
+                }}
+              />
+              <div style={{ marginTop: 6, fontSize: 11, color: COLORS.textLight, fontFamily: FONTS.body }}>
+                No se permiten fechas u horas anteriores al momento actual.
+              </div>
             </div>
-          </div>
+          </BrandCard>
         </div>
       </div>
 
