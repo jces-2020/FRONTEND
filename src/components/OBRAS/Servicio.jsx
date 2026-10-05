@@ -80,8 +80,8 @@ const CSS = `
 .sv-meta{display:flex;align-items:center;gap:24px;margin-bottom:20px}
 .sv-content{margin-top:22px;animation:svUp .28s ease}
 
-.sv-track{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px;padding-top:2px}
-.sv-track-line{position:absolute;left:12.5%;right:12.5%;top:20px;height:4px;border-radius:999px;background:rgba(128,194,220,.25);overflow:hidden}
+.sv-track{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:10px;padding-top:2px}
+.sv-track-line{position:absolute;left:10%;right:10%;top:20px;height:4px;border-radius:999px;background:rgba(128,194,220,.25);overflow:hidden}
 .sv-track-line-fill{height:100%;width:0%;background:linear-gradient(90deg,#24a2df,#127fc3);transition:width .35s ease}
 .sv-track-item{position:relative;z-index:1;padding:0 4px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;transition:all .22s ease;min-height:76px;border:none!important;background:transparent!important;box-shadow:none!important;outline:none!important}
 .sv-track-icon{width:32px;height:32px;border-radius:999px;border:1.5px solid rgba(128,194,220,.55);background:#f4fbff;display:flex;align-items:center;justify-content:center;transition:all .22s ease}
