@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { IconArrowLeft, IconBell, IconLogout, IconTool, IconReceipt, IconLayoutGrid, IconStack2, IconChalkboardTeacher, IconCircleCheck, IconRuler2 } from '@tabler/icons-react';
 import { FONTS } from '../../colors';
 import BrandToast from '../UI/BrandToast';
+import BrandCtaButton from '../UI/BrandCtaButton';
 import Remetro from './Remetro';
 import RetazoServicio from './RetazoServicio';
 import ProductosServicio from './ProductosServicio';
@@ -419,28 +420,21 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
               <IconBell size={17} stroke={1.5} color={T.textLight} />
             </button>
 
-            <button
-              className="sv-btn"
+            <BrandCtaButton
+              size="sm"
+              variant="secondary"
+              icon={<IconArrowLeft size={14} />}
               onClick={onBack}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '8px 14px',
-                borderRadius: 11,
-                ...gc,
-                color: T.brand,
-                fontWeight: 700,
-                fontSize: 13,
-                fontFamily: T.fontBody,
-                border: `1.5px solid ${T.borderMid}`,
-              }}
+              className="sv-btn-grow"
             >
-              <IconArrowLeft size={14} /> Atras
-            </button>
+              Atras
+            </BrandCtaButton>
 
-            <button
-              className="sv-btn sv-btn-grow"
+            <BrandCtaButton
+              size="sm"
+              variant="primary"
+              icon={<IconLogout size={14} />}
+              className="sv-btn-grow"
               onClick={() => {
                 ['personalToken', 'auth_token', 'cliente_id', 'cliente_correo', 'staff', 'area'].forEach(k => localStorage.removeItem(k));
                 const STAFF_PATHS = new Set(['/almacen', '/administracion', '/obras', '/operaciones', '/personal']);
@@ -451,23 +445,9 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
                 } catch {}
                 navigate('/personal', { replace: true });
               }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '8px 14px',
-                borderRadius: 11,
-                background: T.redSoft,
-                border: `1.5px solid ${T.redBorder}`,
-                color: T.red,
-                fontSize: 13,
-                fontWeight: 700,
-                fontFamily: T.fontBody,
-                backdropFilter: 'blur(8px)',
-              }}
             >
-              <IconLogout size={14} /> Salir
-            </button>
+              Salir
+            </BrandCtaButton>
 
           </div>
         </header>
