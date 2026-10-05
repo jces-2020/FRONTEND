@@ -620,3 +620,4 @@ const ServicioTrabajo = ({ notificacion, onBack }) => {
 };
 
 export default ServicioTrabajo;
+
