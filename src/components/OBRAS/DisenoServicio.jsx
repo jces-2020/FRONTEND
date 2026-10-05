@@ -5,6 +5,7 @@ import ServicioRender from './ServicioRender';
 import Workspace2D from '../editor/Workspace2D';
 import { listAllPanels, listAllProfileBars } from '../../engine/geometry/ContainerGraph';
 import BrandCtaButton from '../UI/BrandCtaButton';
+import BrandCard from '../UI/BrandCard';
 import TabSelector from '../UI/TabSelector';
 import { COLORS } from '../../colors';
 
@@ -20,8 +21,8 @@ const CSS = `
 .ds-header{display:flex;align-items:center;gap:10px;margin-bottom:2px;flex-wrap:wrap}
 .ds-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:rgba(90,139,168,.12);border:1px solid rgba(90,139,168,.3);font-family:${DS_MONO};font-size:11px;font-weight:600;color:#2d4a62;letter-spacing:.05em}
 .ds-title{font-family:${DS_FONT};font-size:17px;font-weight:700;color:#1a2a3a}
-.ds-section{max-width:980px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:14px}
-.ds-card{background:rgba(255,255,255,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(128,194,220,.25);border-radius:14px;padding:16px}
+.ds-section{max-width:980px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:16px}
+.ds-card-body{padding:18px 20px 20px}
 .ds-svg-wrap{background:rgba(240,248,255,.6);border-radius:12px;border:1px solid rgba(128,194,220,.25);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:280px;padding:16px;position:relative}
 .ds-section-lbl{font-family:${DS_MONO};font-size:9px;font-weight:700;letter-spacing:1.8px;color:#8aa8bc;text-transform:uppercase;margin-bottom:8px}
 .ds-mat-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -45,7 +46,7 @@ const CSS = `
 .ds-ref-img{width:100%;display:block;border-radius:10px;border:1px solid rgba(128,194,220,.3);cursor:zoom-in}
 .ds-ref-empty{font-family:${DS_MONO};font-size:11px;color:#8aa8bc;text-align:center;padding:24px 8px}
 .ds-work-main{flex:1;min-width:320px;display:flex;flex-direction:column;gap:14px}
-@media(max-width:720px){.ds-ref-card{width:100%}}
+@media(max-width:720px){.ds-ref-card{width:100%}.ds-card-body{padding:14px}}
 `;
 
 function injectCSS() {
@@ -260,16 +261,17 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
       )}
 
       <div className="ds-work-row">
-        <div className="ds-card ds-ref-card">
-          <div className="ds-section-lbl">Imagen de referencia</div>
-          {servicio?.imagen_url ? (
-            <a href={servicio.imagen_url} target="_blank" rel="noreferrer">
-              <img className="ds-ref-img" src={servicio.imagen_url} alt={`Referencia — ${nombreDisplay}`} />
-            </a>
-          ) : (
-            <div className="ds-ref-empty">Este servicio no tiene imagen de referencia.</div>
-          )}
-        </div>
+        <BrandCard title="Imagen de referencia" className="ds-ref-card">
+          <div className="ds-card-body">
+            {servicio?.imagen_url ? (
+              <a href={servicio.imagen_url} target="_blank" rel="noreferrer">
+                <img className="ds-ref-img" src={servicio.imagen_url} alt={`Referencia — ${nombreDisplay}`} />
+              </a>
+            ) : (
+              <div className="ds-ref-empty">Este servicio no tiene imagen de referencia.</div>
+            )}
+          </div>
+        </BrandCard>
 
         <div className="ds-work-main">
           <TabSelector
@@ -304,76 +306,80 @@ export default function DisenoServicio({ notificacion, onToast, onGuardarSuccess
         {errorOpt && <div className="ds-error">{errorOpt}</div>}
 
         {!resultado ? (
-          <div className="ds-card">
-            <div className="ds-section-lbl">Resumen del diseño</div>
-            <div className="ds-stat-row"><span>Paneles de vidrio</span><span className="ds-stat-val">{vidrioN}</span></div>
-            <div className="ds-stat-row"><span>Paneles sólidos</span><span className="ds-stat-val">{solidoN}</span></div>
-            <BrandCtaButton
-              variant="primary"
-              fullWidth
-              style={{ marginTop: 14 }}
-              onClick={handleOptimizar}
-              disabled={optimizando || vidrioN === 0}
-              loading={optimizando}
-            >
-              {optimizando ? 'Optimizando…' : 'Optimizar cortes'}
-            </BrandCtaButton>
-          </div>
+          <BrandCard title="Resumen del diseño">
+            <div className="ds-card-body">
+              <div className="ds-stat-row"><span>Paneles de vidrio</span><span className="ds-stat-val">{vidrioN}</span></div>
+              <div className="ds-stat-row"><span>Paneles sólidos</span><span className="ds-stat-val">{solidoN}</span></div>
+              <BrandCtaButton
+                variant="primary"
+                fullWidth
+                style={{ marginTop: 14 }}
+                onClick={handleOptimizar}
+                disabled={optimizando || vidrioN === 0}
+                loading={optimizando}
+              >
+                {optimizando ? 'Optimizando…' : 'Optimizar cortes'}
+              </BrandCtaButton>
+            </div>
+          </BrandCard>
         ) : (
           <>
             {/* Aluminio */}
-            <div className="ds-card">
-              <div className="ds-section-lbl">Aluminio</div>
-              <div className="ds-mat-row">
-                <span className="ds-mat-name">Barras necesarias</span>
-                <span className="ds-mat-val">{resultado.aluminio.total_barras} barra{resultado.aluminio.total_barras === 1 ? '' : 's'}</span>
+            <BrandCard title="Aluminio">
+              <div className="ds-card-body">
+                <div className="ds-mat-row">
+                  <span className="ds-mat-name">Barras necesarias</span>
+                  <span className="ds-mat-val">{resultado.aluminio.total_barras} barra{resultado.aluminio.total_barras === 1 ? '' : 's'}</span>
+                </div>
+                <BarPct pct={resultado.aluminio.eficiencia_global} />
+                <div className="ds-cortes-list">
+                  {(resultado.aluminio.barras || []).map((b) => (
+                    <div key={b.id} className="ds-corte-item">
+                      <span className="ds-corte-dot" style={{ background: '#127fc3' }} />
+                      Barra {b.id} — usado {b.usado} cm · retazo {b.retazo} cm
+                    </div>
+                  ))}
+                </div>
+                <div className="ds-stat-row">
+                  <span>Eficiencia global</span>
+                  <span className="ds-stat-val">{resultado.aluminio.eficiencia_global}%</span>
+                </div>
               </div>
-              <BarPct pct={resultado.aluminio.eficiencia_global} />
-              <div className="ds-cortes-list">
-                {(resultado.aluminio.barras || []).map((b) => (
-                  <div key={b.id} className="ds-corte-item">
-                    <span className="ds-corte-dot" style={{ background: '#127fc3' }} />
-                    Barra {b.id} — usado {b.usado} cm · retazo {b.retazo} cm
-                  </div>
-                ))}
-              </div>
-              <div className="ds-stat-row">
-                <span>Eficiencia global</span>
-                <span className="ds-stat-val">{resultado.aluminio.eficiencia_global}%</span>
-              </div>
-            </div>
+            </BrandCard>
 
             {/* Vidrio */}
-            <div className="ds-card">
-              <div className="ds-section-lbl">Vidrio</div>
-              <div className="ds-mat-row">
-                <span className="ds-mat-name">Planchas necesarias</span>
-                <span className="ds-mat-val">{resultado.vidrio.total_planchas} × {resultado.vidrio.plancha_ancho_usado}×{resultado.vidrio.plancha_alto_usado}</span>
+            <BrandCard title="Vidrio">
+              <div className="ds-card-body">
+                <div className="ds-mat-row">
+                  <span className="ds-mat-name">Planchas necesarias</span>
+                  <span className="ds-mat-val">{resultado.vidrio.total_planchas} × {resultado.vidrio.plancha_ancho_usado}×{resultado.vidrio.plancha_alto_usado}</span>
+                </div>
+                <BarPct pct={resultado.vidrio.eficiencia_global} color="#22c55e" />
+                <div className="ds-cortes-list">
+                  {(resultado.vidrio.planchas || []).map((p) => (
+                    <div key={p.id} className="ds-corte-item">
+                      <span className="ds-corte-dot" style={{ background: '#22c55e' }} />
+                      Plancha {p.id} — {(p.cortes || []).length} panel{(p.cortes || []).length === 1 ? '' : 'es'} · {p.eficiencia}% uso
+                    </div>
+                  ))}
+                </div>
+                <div className="ds-stat-row">
+                  <span>Eficiencia global</span>
+                  <span className="ds-stat-val">{resultado.vidrio.eficiencia_global}%</span>
+                </div>
               </div>
-              <BarPct pct={resultado.vidrio.eficiencia_global} color="#22c55e" />
-              <div className="ds-cortes-list">
-                {(resultado.vidrio.planchas || []).map((p) => (
-                  <div key={p.id} className="ds-corte-item">
-                    <span className="ds-corte-dot" style={{ background: '#22c55e' }} />
-                    Plancha {p.id} — {(p.cortes || []).length} panel{(p.cortes || []).length === 1 ? '' : 'es'} · {p.eficiencia}% uso
-                  </div>
-                ))}
-              </div>
-              <div className="ds-stat-row">
-                <span>Eficiencia global</span>
-                <span className="ds-stat-val">{resultado.vidrio.eficiencia_global}%</span>
-              </div>
-            </div>
+            </BrandCard>
 
             {/* Precio del servicio */}
             {precioDisplay && (
-              <div className="ds-card">
-                <div className="ds-section-lbl">Precio del servicio</div>
-                <div className="ds-cost-row">
-                  <span className="ds-cost-val">{precioDisplay}</span>
-                  <span className="ds-cost-sub">incluye materiales e instalación</span>
+              <BrandCard title="Precio del servicio">
+                <div className="ds-card-body">
+                  <div className="ds-cost-row">
+                    <span className="ds-cost-val">{precioDisplay}</span>
+                    <span className="ds-cost-sub">incluye materiales e instalación</span>
+                  </div>
                 </div>
-              </div>
+              </BrandCard>
             )}
 
             <BrandCtaButton variant="secondary" icon={<IconTrash size={14} />} onClick={() => setResultado(null)}>
